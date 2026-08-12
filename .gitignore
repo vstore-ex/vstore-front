@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Local env files
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Test and QA artifacts
+coverage/
+playwright-report/
+test-results/
+qa-artifacts/
+qa-*.png
+
+# Editor and OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.zed/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+
+# Temporary files
+tmp/
+temp/
+.cache/
+
+# Local tool state
+.claude/*.local.*
+.claude/worktrees/
+.worktrees/

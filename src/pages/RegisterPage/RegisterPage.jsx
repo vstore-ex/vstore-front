@@ -1,0 +1,294 @@
+import { useEffect, useState } from 'react'
+import { loginUser, registerUser } from '../../api/auth'
+import { validateLogin } from '../../utils/validation'
+import chevronLeft from '../../assets/icon-chevron-left.svg'
+import authPanel from '../../assets/auth-panel.png'
+import authQr from '../../assets/auth-qr.png'
+import hcaptchaIcon from '../../assets/hcaptcha-icon.svg'
+import './RegisterPage.css'
+
+const initialLoginForm = {
+  username: '',
+  password: '',
+}
+
+const initialRegisterForm = {
+  email: '',
+  password: '',
+  acceptedTerms: true,
+  human: false,
+}
+
+function getUsernameFromEmail(email) {
+  return email.split('@')[0].trim().replace(/[^a-zA-Z0-9_]/g, '_') || 'user'
+}
+
+function validateCreateAccount(form) {
+  const nextErrors = {}
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+    nextErrors.email = 'Enter a valid email.'
+  }
+
+  if (form.password.length < 6) {
+    nextErrors.password = 'Password must be at least 6 characters.'
+  }
+
+  if (!form.acceptedTerms) {
+    nextErrors.acceptedTerms = 'You must accept the terms.'
+  }
+
+  if (!form.human) {
+    nextErrors.human = 'Please confirm that you are human.'
+  }
+
+  return nextErrors
+}
+
+function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
+  const [mode, setMode] = useState(initialMode)
+  const [loginForm, setLoginForm] = useState(initialLoginForm)
+  const [registerForm, setRegisterForm] = useState(initialRegisterForm)
+  const [errors, setErrors] = useState({})
+  const [status, setStatus] = useState({ type: '', message: '' })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const isRegister = mode === 'register'
+  const isCreated = mode === 'created'
+  const activeForm = isRegister ? registerForm : loginForm
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [])
+
+  function switchMode(nextMode) {
+    setMode(nextMode)
+    setErrors({})
+    setStatus({ type: '', message: '' })
+  }
+
+  function updateField(event) {
+    const { checked, name, type, value } = event.target
+    const setter = isRegister ? setRegisterForm : setLoginForm
+
+    setter((current) => ({ ...current, [name]: type === 'checkbox' ? checked : value }))
+    setErrors((current) => ({ ...current, [name]: '' }))
+    setStatus({ type: '', message: '' })
+  }
+
+  async function handleSubmit(event) {
+    event.preventDefault()
+
+    const nextErrors = isRegister ? validateCreateAccount(registerForm) : validateLogin(loginForm)
+    setErrors(nextErrors)
+
+    if (Object.keys(nextErrors).length > 0) {
+      setStatus({ type: 'error', message: 'Please fix the highlighted fields.' })
+      return
+    }
+
+    setIsSubmitting(true)
+    setStatus({ type: '', message: '' })
+
+    try {
+      const result = isRegister
+        ? await registerUser({
+            username: getUsernameFromEmail(registerForm.email),
+            email: registerForm.email.trim(),
+            password: registerForm.password,
+            full_name: getUsernameFromEmail(registerForm.email),
+            phone: '',
+          })
+        : await loginUser({
+            username: loginForm.username.trim(),
+            password: loginForm.password,
+          })
+
+      setStatus({ type: 'success', message: result.message })
+      if (isRegister) {
+        setRegisterForm(initialRegisterForm)
+        setMode('created')
+      } else {
+        setLoginForm(initialLoginForm)
+        onAuthenticated?.(result.data)
+        onClose()
+      }
+    } catch (error) {
+      setStatus({
+        type: 'error',
+        message: error.message || 'Could not connect to auth server.',
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  return (
+    <section className="auth-page auth-overlay" aria-label="Authentication">
+      <button className="auth-back" type="button" aria-label="Go back" onClick={onClose}>
+        <img src={chevronLeft} alt="" />
+      </button>
+
+      <div className="auth-shell">
+        {!isCreated && (
+          <h1 id="auth-title" className="auth-title">
+            {isRegister ? 'Create an account' : 'Log in'}
+          </h1>
+        )}
+
+        {isCreated ? (
+          <div className="auth-card auth-card--created">
+            <img className="auth-card__texture" src={authPanel} alt="" aria-hidden="true" />
+            <h2>Account created!</h2>
+            <p>An email has been sent to you.</p>
+            <button className="auth-submit" type="button" onClick={() => switchMode('login')}>
+              LOG IN
+            </button>
+          </div>
+        ) : (
+        <form
+          className={`auth-card ${isRegister ? 'auth-card--create' : 'auth-card--figma'}`}
+          onSubmit={handleSubmit}
+          noValidate
+        >
+          <img className="auth-card__texture" src={authPanel} alt="" aria-hidden="true" />
+
+          <div className="auth-form-column">
+            {isRegister && (
+              <div className="auth-field">
+                <label htmlFor="email">PUT YOUR EMAIL HERE</label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={registerForm.email}
+                  onChange={updateField}
+                  autoComplete="email"
+                  aria-invalid={Boolean(errors.email)}
+                />
+                {errors.email && <span className="field-error">{errors.email}</span>}
+              </div>
+            )}
+
+            {!isRegister && (
+              <div className="auth-field">
+                <label htmlFor="username">SIGN IN WITH ACCOUNT NAME</label>
+                <input
+                  id="username"
+                  name="username"
+                  value={activeForm.username}
+                  onChange={updateField}
+                  autoComplete="username"
+                  aria-invalid={Boolean(errors.username)}
+                />
+                {errors.username && <span className="field-error">{errors.username}</span>}
+              </div>
+            )}
+
+            <div className="auth-field">
+              <label htmlFor="password">{isRegister ? 'CREATE A PASSWORD' : 'PASSWORD'}</label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                value={activeForm.password}
+                onChange={updateField}
+                autoComplete={isRegister ? 'new-password' : 'current-password'}
+                aria-invalid={Boolean(errors.password)}
+              />
+              {errors.password && <span className="field-error">{errors.password}</span>}
+            </div>
+
+            {isRegister && (
+              <>
+                <label className="auth-terms">
+                  <input
+                    name="acceptedTerms"
+                    type="checkbox"
+                    checked={registerForm.acceptedTerms}
+                    onChange={updateField}
+                  />
+                  <span>
+                    I am 13 years of age or older and agree to the terms of the Steam Subscriber
+                    Agreement and the Valve Privacy Policy.
+                  </span>
+                </label>
+                {errors.acceptedTerms && (
+                  <span className="field-error auth-check-error">{errors.acceptedTerms}</span>
+                )}
+
+                <label className="auth-captcha">
+                  <span className="auth-captcha__left">
+                    <input
+                      name="human"
+                      type="checkbox"
+                      checked={registerForm.human}
+                      onChange={updateField}
+                    />
+                    <span>I am human</span>
+                  </span>
+                  <span className="auth-captcha__brand">
+                    <img src={hcaptchaIcon} alt="" />
+                    <span>hCaptcha</span>
+                    <small>Privacy-Terms</small>
+                  </span>
+                </label>
+                {errors.human && <span className="field-error auth-check-error">{errors.human}</span>}
+              </>
+            )}
+
+            {!isRegister && (
+              <>
+                <div className="auth-actions">
+                  <button className="auth-submit" type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? 'PLEASE WAIT...' : 'SIGN IN'}
+                  </button>
+                  <button className="auth-help" type="button">
+                    Help, i cant log in
+                  </button>
+                </div>
+
+                <div className="auth-switch">
+                  <p>no account?</p>
+                  <button type="button" onClick={() => switchMode('register')}>
+                    Create a new one!
+                  </button>
+                </div>
+              </>
+            )}
+
+            {isRegister && (
+              <button className="auth-submit auth-submit--create" type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'PLEASE WAIT...' : 'SIGN IN'}
+              </button>
+            )}
+
+            {status.message && (
+              <p className={`form-status form-status--${status.type}`} role="status">
+                {status.message}
+              </p>
+            )}
+          </div>
+
+          {!isRegister && (
+            <aside className="qr-panel" aria-label="QR code sign in">
+              <p className="qr-panel__title">SIGN IN WITH QRCODE</p>
+              <img className="qr-panel__image" src={authQr} alt="QR code for sign in" />
+              <p className="qr-panel__copy">
+                Use out app or other means to scan this QRcode and log in into your account
+              </p>
+            </aside>
+          )}
+        </form>
+        )}
+      </div>
+    </section>
+  )
+}
+
+export default RegisterPage
