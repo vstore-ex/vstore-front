@@ -24,6 +24,16 @@ playwright-report/
 test-results/
 qa-artifacts/
 qa-*.png
+design-qa.md
+*-qa.md
+
+# Local assistant notes / prompts
+.codex/
+.agents/
+prompts/
+conversation/
+conversation*.md
+codex*.md
 
 # Editor and OS files
 .DS_Store
