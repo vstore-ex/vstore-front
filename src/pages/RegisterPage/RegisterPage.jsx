@@ -115,7 +115,7 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
         setMode('created')
       } else {
         setLoginForm(initialLoginForm)
-        onAuthenticated?.(result.data)
+        await onAuthenticated?.(result.data)
         onClose()
       }
     } catch (error) {

@@ -12,6 +12,7 @@ import WishlistPage from './pages/WishlistPage/WishlistPage'
 import { buildCartItems, defaultCartProductIds } from './data/cart'
 import { getProductById } from './data/products'
 import { buildWishlistItems, defaultWishlistProductIds } from './data/wishlist'
+import { getCurrentUser, getStoredAuthSession } from './api/auth'
 import './App.css'
 
 const AUTH_STORAGE_KEY = 'vstore:isAuthenticated'
@@ -54,7 +55,7 @@ function navigateTo(path) {
 }
 
 function getInitialAuthState() {
-  return localStorage.getItem(AUTH_STORAGE_KEY) === 'true'
+  return Boolean(getStoredAuthSession()) || localStorage.getItem(AUTH_STORAGE_KEY) === 'true'
 }
 
 function getInitialCartProductIds() {
@@ -102,6 +103,28 @@ function App() {
   useEffect(() => {
     localStorage.setItem(AUTH_STORAGE_KEY, String(isAuthenticated))
   }, [isAuthenticated])
+
+  useEffect(() => {
+    let ignore = false
+
+    async function syncAuthSession() {
+      if (!getStoredAuthSession() && localStorage.getItem(AUTH_STORAGE_KEY) !== 'true') {
+        return
+      }
+
+      const user = await getCurrentUser().catch(() => null)
+
+      if (ignore) return
+
+      setIsAuthenticated(Boolean(user))
+    }
+
+    syncAuthSession()
+
+    return () => {
+      ignore = true
+    }
+  }, [])
 
   useEffect(() => {
     function syncRoute() {
@@ -157,7 +180,13 @@ function App() {
     setPendingAction(null)
   }
 
-  function handleAuthenticated() {
+  async function handleAuthenticated(authenticatedUser = null) {
+    const user = authenticatedUser || (await getCurrentUser().catch(() => null))
+
+    if (!user) {
+      throw new Error('Signed in, but the backend did not return a usable auth session.')
+    }
+
     setIsAuthenticated(true)
 
     if (pendingAction?.type === 'open-cart') {
