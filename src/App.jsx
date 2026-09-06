@@ -12,7 +12,7 @@ import WishlistPage from './pages/WishlistPage/WishlistPage'
 import { buildCartItems, defaultCartProductIds } from './data/cart'
 import { getProductById } from './data/products'
 import { buildWishlistItems, defaultWishlistProductIds } from './data/wishlist'
-import { getCurrentUser, getStoredAuthSession } from './api/auth'
+import { getCurrentUser } from './api/auth'
 import './App.css'
 
 const AUTH_STORAGE_KEY = 'vstore:isAuthenticated'
@@ -55,7 +55,7 @@ function navigateTo(path) {
 }
 
 function getInitialAuthState() {
-  return Boolean(getStoredAuthSession()) || localStorage.getItem(AUTH_STORAGE_KEY) === 'true'
+  return localStorage.getItem(AUTH_STORAGE_KEY) === 'true'
 }
 
 function getInitialCartProductIds() {
@@ -108,10 +108,6 @@ function App() {
     let ignore = false
 
     async function syncAuthSession() {
-      if (!getStoredAuthSession() && localStorage.getItem(AUTH_STORAGE_KEY) !== 'true') {
-        return
-      }
-
       const user = await getCurrentUser().catch(() => null)
 
       if (ignore) return
