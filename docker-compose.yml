@@ -4,8 +4,8 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        # Injects the backend API URL into Vite during container build; defaults to Azure backend
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-https://vstore-backend.lemonbush-87bea63a.italynorth.azurecontainerapps.io/api/v1}
+        # Injects the backend API URL into Vite during container build; defaults to relative /api/v1
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api/v1}
     container_name: vstore-frontend
     # Map unprivileged Nginx port (8080) to host port 8080
     ports:
