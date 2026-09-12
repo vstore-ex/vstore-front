@@ -1,0 +1,21 @@
+# Dependencies and build outputs
+node_modules
+dist
+
+# Version control and CI workflows
+.git
+.github
+
+# Environment variables and secrets (keep .env.example)
+.env
+.env.*
+!.env.example
+
+# Logs and OS system files
+*.log
+.DS_Store
+
+# Local QA scripts, artifacts, and test reports
+scripts
+playwright-report
+test-results
