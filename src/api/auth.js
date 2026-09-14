@@ -87,7 +87,7 @@ export async function loginUser(payload) {
 }
 
 export async function getCurrentUser() {
-  const response = await fetch(`${API_BASE_URL}/me`, {
+  const response = await fetch(`${API_BASE_URL}/users/me`, {
     credentials: 'include',
   })
 
