@@ -1,6 +1,5 @@
-const REMOTE_API_BASE_URL =
-  'https://vstore-backend.lemonbush-87bea63a.italynorth.azurecontainerapps.io/api/v1'
-const DEFAULT_API_BASE_URL = import.meta.env.DEV ? '/api/v1' : REMOTE_API_BASE_URL
+// Relative API path (/api/v1) for same-origin reverse-proxied production & dev
+const DEFAULT_API_BASE_URL = '/api/v1'
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL).replace(/\/$/, '')
 
