@@ -75,9 +75,10 @@ jobs:
     needs: [build-docker]
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    environment: production
     concurrency: production
     steps:
-      - name: Pull and restart frontend via SSH
+      - name: Pull, restart frontend and verify health
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -85,8 +86,41 @@ jobs:
           key: ${{ secrets.SSH_KEY || secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
           script: |
-            set -e
-            cd ${{ secrets.DEPLOY_PATH || '/opt/vstore' }}
+            set -euo pipefail
+            DEPLOY_PATH="${{ secrets.DEPLOY_PATH || '/opt/vstore' }}"
+            cd "$DEPLOY_PATH"
+
+            # Acquire deployment lock to prevent race conditions with other repositories
+            exec 200>"$DEPLOY_PATH/.deploy.lock"
+            echo "==> Acquiring deployment lock..."
+            flock -w 300 200 || { echo "ERROR: Timeout waiting for deployment lock!"; exit 1; }
+
+            echo "==> Pulling latest frontend image..."
             docker compose pull frontend
+
+            echo "==> Restarting frontend..."
             docker compose up -d --no-deps frontend
+
+            echo "==> Verifying frontend health..."
+            RETRIES=15
+            HEALTHY=false
+            for i in $(seq 1 $RETRIES); do
+              if curl -sf http://127.0.0.1:3000/healthz > /dev/null 2>&1; then
+                echo "Frontend is healthy!"
+                HEALTHY=true
+                break
+              fi
+              echo "Waiting for frontend health check ($i/$RETRIES)..."
+              sleep 2
+            done
+
+            if [ "$HEALTHY" != "true" ]; then
+              echo "ERROR: Frontend failed health check!"
+              docker compose logs --tail=50 frontend
+              exit 1
+            fi
+
+            echo "==> Cleaning up unused images..."
             docker image prune -f
+
+            echo "==> Frontend deployment completed successfully."
