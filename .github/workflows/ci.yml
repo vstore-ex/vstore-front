@@ -95,6 +95,10 @@ jobs:
             echo "==> Acquiring deployment lock..."
             flock -w 300 200 || { echo "ERROR: Timeout waiting for deployment lock!"; exit 1; }
 
+            # Record currently running image ID for rollback before pulling new image
+            PREV_IMAGE=$(docker inspect --format='{{.Image}}' $(docker compose ps -q frontend 2>/dev/null) 2>/dev/null || true)
+            echo "==> Active frontend image ID before deploy: ${PREV_IMAGE:-none}"
+
             echo "==> Pulling latest frontend image..."
             docker compose pull frontend
 
@@ -117,6 +121,13 @@ jobs:
             if [ "$HEALTHY" != "true" ]; then
               echo "ERROR: Frontend failed health check!"
               docker compose logs --tail=50 frontend
+              if [ -n "$PREV_IMAGE" ]; then
+                echo "==> Initiating automated rollback to previous image: $PREV_IMAGE"
+                FRONTEND_IMAGE="$PREV_IMAGE" docker compose up -d --no-deps frontend
+                echo "==> Rollback completed. Restored previous container."
+              else
+                echo "==> No previous image found to rollback."
+              fi
               exit 1
             fi
 
