@@ -19,3 +19,11 @@ dist
 scripts
 playwright-report
 test-results
+
+# Local development worktrees and metadata must not enter the build context.
+.worktrees
+.codex
+.agents
+.claude
+tests
+docs

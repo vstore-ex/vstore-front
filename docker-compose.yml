@@ -7,9 +7,9 @@ services:
         # Injects the backend API URL into Vite during container build; defaults to relative /api/v1
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api/v1}
     container_name: vstore-frontend
-    # Map unprivileged Nginx port (8080) to host port 8080
+    # Publish the non-root container port on the frontend host port.
     ports:
-      - "8080:8080"
+      - "3000:8080"
     restart: unless-stopped
     # Periodic container health probe against the Nginx /healthz endpoint
     healthcheck:

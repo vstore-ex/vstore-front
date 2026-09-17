@@ -1,5 +1,14 @@
 # React + Vite
 
+## Production container
+
+See [container verification and backend handoff](docs/containerization.md).
+
+```sh
+docker build -t frontend-app:test .
+docker run --rm -p 3000:8080 frontend-app:test
+```
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:

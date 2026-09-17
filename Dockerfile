@@ -13,7 +13,7 @@ RUN --mount=type=cache,target=/root/.npm npm ci --no-audit
 COPY . .
 
 # Build-time environment variable injection for Vite (bakes into static JS assets)
-ARG VITE_API_BASE_URL=""
+ARG VITE_API_BASE_URL="/api/v1"
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
 # Compile and bundle static production assets to /app/dist
