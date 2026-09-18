@@ -31,11 +31,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Audit dependencies for vulnerabilities
-        run: npm audit --audit-level=high || echo "::warning::High or critical vulnerabilities detected in npm dependencies."
-
       - name: Run ESLint
         run: npm run lint
+
+      - name: Audit dependencies for vulnerabilities
+        run: npm audit --audit-level=high || echo "::warning::High or critical vulnerabilities detected in npm dependencies."
 
       - name: Build Vite application
         run: npm run build
@@ -84,7 +84,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # 0.35.0
         with:
           image-ref: "local-image:scan"
           format: "table"
@@ -115,14 +115,17 @@ jobs:
         id: check-ssh
         run: |
           if [ -z "${SSH_HOST}" ] || [ -z "${SSH_KEY}" ]; then
-            echo "::warning::SSH_HOST or SSH_KEY is not configured in secrets. Skipping deployment."
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-            exit 0
+            echo "::error::SSH_HOST or SSH_KEY is not configured in secrets. Deployment cannot proceed."
+            echo "### ❌ Deploy failed: missing SSH credentials" >> "$GITHUB_STEP_SUMMARY"
+            echo "Required secret \`SSH_HOST\` or \`SSH_KEY\` (or \`SSH_PRIVATE_KEY\`) is missing in repository/environment secrets." >> "$GITHUB_STEP_SUMMARY"
+            exit 1
           fi
 
           echo "==> Checking if production host ${SSH_HOST}:${SSH_PORT} is reachable..."
           if ! nc -z -w 5 "${SSH_HOST}" "${SSH_PORT}" 2>/dev/null && ! timeout 5 bash -c "</dev/tcp/${SSH_HOST}/${SSH_PORT}" 2>/dev/null; then
-            echo "::warning::Production server (${SSH_HOST}:${SSH_PORT}) is offline or unreachable. Skipping deployment."
+            echo "::warning::Production server (${SSH_HOST}:${SSH_PORT}) is offline or unreachable. Skipping remote deployment."
+            echo "### ⚠️ Deploy skipped: server unreachable" >> "$GITHUB_STEP_SUMMARY"
+            echo "Target host \`${SSH_HOST}:${SSH_PORT}\` is offline or SSH port is closed (connection timed out). Deployment was safely skipped." >> "$GITHUB_STEP_SUMMARY"
             echo "skip=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -136,15 +139,17 @@ jobs:
 
       - name: Pull, restart frontend and verify health
         if: steps.check-ssh.outputs.skip != 'true'
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@7eaf76671a0d7eec5d98ee897acda4f968735a17 # v1.2.0
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY || secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
+          fingerprint: ${{ secrets.SSH_FINGERPRINT }}
+          envs: GITHUB_SHA
           script: |
             set -euo pipefail
-            DEPLOY_PATH="${{ secrets.DEPLOY_PATH || '/opt/vstore' }}"
+            DEPLOY_PATH="${{ vars.DEPLOY_PATH || secrets.DEPLOY_PATH || '/opt/vstore' }}"
             cd "$DEPLOY_PATH"
 
             # Acquire deployment lock to prevent race conditions with other repositories
@@ -156,7 +161,10 @@ jobs:
             PREV_IMAGE=$(docker inspect --format='{{.Image}}' $(docker compose ps -q frontend 2>/dev/null) 2>/dev/null || true)
             echo "==> Active frontend image ID before deploy: ${PREV_IMAGE:-none}"
 
-            echo "==> Pulling latest frontend image..."
+            # Deploy with exact immutable commit SHA tag
+            IMAGE_TAG="sha-${GITHUB_SHA::7}"
+            export FRONTEND_IMAGE="ghcr.io/vstore-ex/vstore-front:${IMAGE_TAG}"
+            echo "==> Pulling frontend image: ${FRONTEND_IMAGE}..."
             docker compose pull frontend
 
             echo "==> Restarting frontend..."
