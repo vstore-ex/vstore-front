@@ -8,7 +8,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "test:e2e": "node scripts/test-registration.mjs",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:auth": "node tests/run-mode.mjs backend tests/auth.test.mjs"
   },
   "dependencies": {
     "@fontsource/inter": "^5.3.0",

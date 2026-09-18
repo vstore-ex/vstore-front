@@ -1,0 +1,75 @@
+
+export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '')
+let refreshPromise
+let generation = 0
+let refreshed = 0
+let ended = false
+export function resetSession(active = true) { generation += 1; ended = !active }
+export class ApiError extends Error {
+  constructor(message, status, detail) {
+    super(message); this.status = status; this.detail = detail
+    this.banned = status === 403 && /account banned/i.test(message)
+  }
+}
+function emit(name, detail) { window.dispatchEvent(new CustomEvent(name, { detail })) }
+function rejectSession(error, version) {
+  if (version !== generation || ended) return
+  ended = true
+  generation += 1
+  emit(error.banned ? 'vstore:account-banned' : 'vstore:session-expired', error.message)
+}
+export async function refreshSession() {
+  if (!refreshPromise) {
+    const version = generation
+    emit('vstore:refresh', true)
+    refreshPromise = apiRequest('/refresh', { method: 'POST', auth: false }).then(() => {
+      if (version === generation) refreshed += 1
+    }).catch(error => {
+      rejectSession(error, version)
+      throw error
+    }).finally(() => { refreshPromise = null; emit('vstore:refresh', false) })
+  }
+  return refreshPromise
+}
+export async function waitForRefresh() { await refreshPromise?.catch(() => {}) }
+
+export async function apiRequest(path, { body, headers, signal, timeout = 20000, auth = true, ...options } = {}) {
+  const version = generation
+  const refreshVersion = refreshed
+  const multipart = body instanceof FormData
+  const encoded = body instanceof URLSearchParams
+  const request = () => fetch(API_BASE_URL + path, {
+    ...options, credentials: 'include', cache: 'no-store',
+    headers: { ...(body && !multipart && !encoded ? { 'Content-Type': 'application/json' } : {}), ...headers },
+    body: body == null ? undefined : multipart || encoded || typeof body === 'string' ? body : JSON.stringify(body),
+    signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(timeout)]) : AbortSignal.timeout(timeout),
+  })
+  let response = await request()
+  if (response.status === 401 && auth && !ended && version === generation) {
+    if (refreshVersion === refreshed) await refreshSession()
+    signal?.throwIfAborted()
+    if (version !== generation) throw new ApiError('Your session has ended. Please sign in again.', 401)
+    response = await request()
+  }
+  const raw = await response.text()
+  let data
+  try { data = raw ? JSON.parse(raw) : null } catch { data = null }
+  if (!response.ok) {
+    const detail = data?.detail || data?.message
+    const message = Array.isArray(detail) ? detail.map(item => item.msg).join(' ') :
+      typeof detail === 'string' ? detail : `Request failed (${response.status}). Please try again.`
+    const error = new ApiError(message, response.status, detail)
+    if (error.banned || (auth && response.status === 401)) rejectSession(error, version)
+    throw error
+  }
+  return data
+}
+
+export function mediaUrl(value, origin) {
+  if (!value || typeof value !== 'string') return ''
+  try {
+    const base = new URL(API_BASE_URL, window.location.origin)
+    const url = new URL(value, origin || base.origin)
+    return ['http:', 'https:'].includes(url.protocol) ? url.href : ''
+  } catch { return '' }
+}
