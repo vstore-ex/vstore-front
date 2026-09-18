@@ -2,10 +2,13 @@ name: Frontend CI
 
 on:
   push:
-    branches: [main, fix/*, feat/*]
+    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -135,17 +138,16 @@ jobs:
             echo "==> Restarting frontend..."
             docker compose up -d --no-deps frontend
 
-            echo "==> Verifying frontend and API proxy health..."
+            echo "==> Verifying frontend web server health..."
             RETRIES=15
             HEALTHY=false
             for i in $(seq 1 $RETRIES); do
-              if curl -sf http://127.0.0.1:3000/healthz > /dev/null 2>&1 && \
-                 curl -sf http://127.0.0.1:3000/api/v1/games/ > /dev/null 2>&1; then
-                echo "Frontend static server and API proxy are healthy!"
+              if curl -sf http://127.0.0.1:3000/healthz > /dev/null 2>&1; then
+                echo "Frontend web server is healthy!"
                 HEALTHY=true
                 break
               fi
-              echo "Waiting for frontend and API proxy health check ($i/$RETRIES)..."
+              echo "Waiting for frontend health check ($i/$RETRIES)..."
               sleep 2
             done
 
@@ -160,6 +162,14 @@ jobs:
                 echo "==> No previous image found to rollback."
               fi
               exit 1
+            fi
+
+            # Secondary upstream verification (informational, does not trigger frontend rollback)
+            echo "==> Checking API proxy route to backend..."
+            if curl -sf http://127.0.0.1:3000/api/v1/games/ > /dev/null 2>&1; then
+              echo "API proxy connectivity verified."
+            else
+              echo "WARNING: Backend API route unreachable via proxy. Backend may be offline or deploying, but Frontend will NOT be rolled back."
             fi
 
             echo "==> Cleaning up unused images..."
