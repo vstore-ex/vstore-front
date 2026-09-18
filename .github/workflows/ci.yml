@@ -2,9 +2,17 @@ name: Frontend CI
 
 on:
   push:
-    branches: [main, fix/*, feat/*]
+    branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   build:
@@ -22,6 +30,12 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Audit dependencies for vulnerabilities
+        run: npm audit --audit-level=high || echo "::warning::High or critical vulnerabilities detected in npm dependencies."
+
+      - name: Run ESLint
+        run: npm run lint
 
       - name: Build Vite application
         run: npm run build
@@ -57,12 +71,132 @@ jobs:
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
             type=sha,format=short,prefix=sha-
 
-      - name: Build and push Docker image
+      - name: Build Docker image locally for security scanning
         uses: docker/build-push-action@v5
         with:
           context: .
-          push: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
-          tags: ${{ steps.meta.outputs.tags }}
+          load: true
+          tags: |
+            ${{ steps.meta.outputs.tags }}
+            local-image:scan
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          image-ref: "local-image:scan"
+          format: "table"
+          exit-code: "0"
+          ignore-unfixed: true
+          vuln-type: "os,library"
+          severity: "CRITICAL,HIGH"
+
+      - name: Push Docker image to GHCR
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+
+  deploy:
+    name: Deploy Frontend via SSH
+    needs: [build-docker]
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    environment: production
+    concurrency: production
+    steps:
+      - name: Check SSH deployment readiness
+        id: check-ssh
+        run: |
+          if [ -z "${SSH_HOST}" ] || [ -z "${SSH_KEY}" ]; then
+            echo "::warning::SSH_HOST or SSH_KEY is not configured in secrets. Skipping deployment."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "==> Checking if production host ${SSH_HOST}:${SSH_PORT} is reachable..."
+          if ! nc -z -w 5 "${SSH_HOST}" "${SSH_PORT}" 2>/dev/null && ! timeout 5 bash -c "</dev/tcp/${SSH_HOST}/${SSH_PORT}" 2>/dev/null; then
+            echo "::warning::Production server (${SSH_HOST}:${SSH_PORT}) is offline or unreachable. Skipping deployment."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "==> Production server is online and reachable."
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_KEY: ${{ secrets.SSH_KEY || secrets.SSH_PRIVATE_KEY }}
+          SSH_PORT: ${{ secrets.SSH_PORT || 22 }}
+
+      - name: Pull, restart frontend and verify health
+        if: steps.check-ssh.outputs.skip != 'true'
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY || secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            set -euo pipefail
+            DEPLOY_PATH="${{ secrets.DEPLOY_PATH || '/opt/vstore' }}"
+            cd "$DEPLOY_PATH"
+
+            # Acquire deployment lock to prevent race conditions with other repositories
+            exec 200>"$DEPLOY_PATH/.deploy.lock"
+            echo "==> Acquiring deployment lock..."
+            flock -w 300 200 || { echo "ERROR: Timeout waiting for deployment lock!"; exit 1; }
+
+            # Record currently running image ID for rollback before pulling new image
+            PREV_IMAGE=$(docker inspect --format='{{.Image}}' $(docker compose ps -q frontend 2>/dev/null) 2>/dev/null || true)
+            echo "==> Active frontend image ID before deploy: ${PREV_IMAGE:-none}"
+
+            echo "==> Pulling latest frontend image..."
+            docker compose pull frontend
+
+            echo "==> Restarting frontend..."
+            docker compose up -d --no-deps frontend
+
+            echo "==> Verifying frontend web server health..."
+            RETRIES=15
+            HEALTHY=false
+            for i in $(seq 1 $RETRIES); do
+              if curl -sf http://127.0.0.1:3000/healthz > /dev/null 2>&1; then
+                echo "Frontend web server is healthy!"
+                HEALTHY=true
+                break
+              fi
+              echo "Waiting for frontend health check ($i/$RETRIES)..."
+              sleep 2
+            done
+
+            if [ "$HEALTHY" != "true" ]; then
+              echo "ERROR: Frontend failed health check!"
+              docker compose logs --tail=50 frontend
+              if [ -n "$PREV_IMAGE" ]; then
+                echo "==> Initiating automated rollback to previous image: $PREV_IMAGE"
+                FRONTEND_IMAGE="$PREV_IMAGE" docker compose up -d --no-deps frontend
+                echo "==> Rollback completed. Restored previous container."
+              else
+                echo "==> No previous image found to rollback."
+              fi
+              exit 1
+            fi
+
+            # Secondary upstream verification (informational, does not trigger frontend rollback)
+            echo "==> Checking API proxy route to backend..."
+            if curl -sf http://127.0.0.1:3000/api/v1/games/ > /dev/null 2>&1; then
+              echo "API proxy connectivity verified."
+            else
+              echo "WARNING: Backend API route unreachable via proxy. Backend may be offline or deploying, but Frontend will NOT be rolled back."
+            fi
+
+            echo "==> Cleaning up unused images..."
+            docker image prune -f
+
+            echo "==> Frontend deployment completed successfully."
