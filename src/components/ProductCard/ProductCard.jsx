@@ -1,4 +1,5 @@
 import './ProductCard.css'
+import { MediaImage } from '../Catalog/Media'
 
 function ProductCard({ product, onSelect }) {
   function handleClick(event) {
@@ -10,7 +11,7 @@ function ProductCard({ product, onSelect }) {
     <article className="product-card">
       <a className="product-card__button" href={`#/products/${product.id}`} onClick={handleClick}>
         <span className="product-card__media">
-          <img className="product-card__image" src={product.image} alt={product.title} />
+          <MediaImage className="product-card__image" src={product.image} alt={product.title} />
         </span>
 
         <span className="product-card__type">{product.type}</span>

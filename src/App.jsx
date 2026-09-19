@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import Header from './components/Header/Header'
 import Footer from './components/Footer/Footer'
 import AccountPage from './pages/AccountPage/AccountPage'
-import AchievementsPage from './pages/AchievementsPage/AchievementsPage'
 import CartPage from './pages/CartPage/CartPage'
 import DiscoverPage from './pages/DiscoverPage/DiscoverPage'
 import ProductDetailPage from './pages/ProductDetailPage/ProductDetailPage'
@@ -10,7 +9,6 @@ import RegisterPage from './pages/RegisterPage/RegisterPage'
 import SupportPage from './pages/SupportPage/SupportPage'
 import WishlistPage from './pages/WishlistPage/WishlistPage'
 import { buildCartItems, defaultCartProductIds } from './data/cart'
-import { getProductById } from './data/products'
 import { buildWishlistItems, defaultWishlistProductIds } from './data/wishlist'
 import { getCurrentUser } from './api/auth'
 import './App.css'
@@ -22,8 +20,8 @@ const WISHLIST_STORAGE_KEY = 'vstore:wishlistProductIds'
 const defaultRoute = { view: 'discover', productId: null }
 
 function parseRouteFromHash() {
-  const hash = decodeURIComponent(window.location.hash.replace(/^#\/?/, ''))
-  const parts = hash.split('/').filter(Boolean)
+  const hash = window.location.hash.replace(/^#\/?/, '')
+  const parts = hash.split('?')[0].split('/').filter(Boolean)
 
   if (!parts.length || parts[0] === 'discover') {
     return defaultRoute
@@ -96,7 +94,6 @@ function App() {
   const [cartProductIds, setCartProductIds] = useState(getInitialCartProductIds)
   const [wishlistProductIds, setWishlistProductIds] = useState(getInitialWishlistProductIds)
 
-  const selectedProduct = selectedProductId ? getProductById(selectedProductId) : null
   const cartItems = buildCartItems(cartProductIds)
   const wishlistItems = buildWishlistItems(wishlistProductIds)
 
@@ -125,13 +122,6 @@ function App() {
   useEffect(() => {
     function syncRoute() {
       const route = parseRouteFromHash()
-      const routeProduct = route.productId ? getProductById(route.productId) : null
-
-      if (route.productId && !routeProduct) {
-        navigateTo('discover')
-        return
-      }
-
       if (['account', 'cart', 'wishlist'].includes(route.view) && !isAuthenticated) {
         const actionByView = {
           account: null,
@@ -212,12 +202,6 @@ function App() {
 
   function openDiscover() {
     navigateTo('discover')
-  }
-
-  function openAchievements() {
-    if (selectedProductId) {
-      navigateTo(`products/${selectedProductId}/achievements`)
-    }
   }
 
   function openAccount() {
@@ -321,14 +305,14 @@ function App() {
         onWishlist={openWishlist}
         onAccount={openAccount}
       />
-      {selectedProduct && currentView === 'achievements' ? (
-        <AchievementsPage product={selectedProduct} />
-      ) : selectedProduct ? (
+      {['product', 'achievements'].includes(currentView) ? (
         <ProductDetailPage
-          product={selectedProduct}
+          key={selectedProductId}
+          id={selectedProductId}
+          showAchievements={currentView === 'achievements'}
+          onViewAllAchievements={() => navigateTo(`products/${selectedProductId}/achievements`)}
           onAddToCart={handleAddToCart}
           onAddToWishlist={handleAddToWishlist}
-          onViewAllAchievements={openAchievements}
         />
       ) : currentView === 'account' ? (
         <AccountPage />
