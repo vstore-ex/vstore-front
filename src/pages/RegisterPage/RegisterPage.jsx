@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { loginUser, registerUser } from '../../api/auth'
+import { registerUser, registrationErrors } from '../../api/auth'
+import { useAuth } from '../../auth/context'
 import { validateLogin } from '../../utils/validation'
 import chevronLeft from '../../assets/icon-chevron-left.svg'
 import authPanel from '../../assets/auth-panel.png'
@@ -13,18 +14,16 @@ const initialLoginForm = {
 }
 
 const initialRegisterForm = {
+  username: '',
   email: '',
   password: '',
   acceptedTerms: true,
   human: false,
 }
 
-function getUsernameFromEmail(email) {
-  return email.split('@')[0].trim().replace(/[^a-zA-Z0-9_]/g, '_') || 'user'
-}
-
 function validateCreateAccount(form) {
   const nextErrors = {}
+  if (!form.username.trim()) nextErrors.username = 'Enter an account name.'
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
     nextErrors.email = 'Enter a valid email.'
@@ -46,6 +45,7 @@ function validateCreateAccount(form) {
 }
 
 function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
+  const { login } = useAuth()
   const [mode, setMode] = useState(initialMode)
   const [loginForm, setLoginForm] = useState(initialLoginForm)
   const [registerForm, setRegisterForm] = useState(initialRegisterForm)
@@ -83,6 +83,7 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
 
   async function handleSubmit(event) {
     event.preventDefault()
+    if (isSubmitting) return
 
     const nextErrors = isRegister ? validateCreateAccount(registerForm) : validateLogin(loginForm)
     setErrors(nextErrors)
@@ -98,19 +99,20 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
     try {
       const result = isRegister
         ? await registerUser({
-            username: getUsernameFromEmail(registerForm.email),
+            username: registerForm.username.trim(),
             email: registerForm.email.trim(),
             password: registerForm.password,
-            full_name: getUsernameFromEmail(registerForm.email),
+            full_name: registerForm.username.trim(),
             phone: '',
           })
-        : await loginUser({
+        : await login({
             username: loginForm.username.trim(),
             password: loginForm.password,
           })
 
       setStatus({ type: 'success', message: result.message })
       if (isRegister) {
+        setLoginForm({ username: registerForm.username.trim(), password: '' })
         setRegisterForm(initialRegisterForm)
         setMode('created')
       } else {
@@ -119,6 +121,7 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
         onClose()
       }
     } catch (error) {
+      if (isRegister) setErrors(registrationErrors(error))
       setStatus({
         type: 'error',
         message: error.message || 'Could not connect to auth server.',
@@ -130,7 +133,7 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
 
   return (
     <section className="auth-page auth-overlay" aria-label="Authentication">
-      <button className="auth-back" type="button" aria-label="Go back" onClick={onClose}>
+      <button className="auth-back" type="button" aria-label="Go back" onClick={onClose} disabled={isSubmitting}>
         <img src={chevronLeft} alt="" />
       </button>
 
@@ -145,7 +148,7 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
           <div className="auth-card auth-card--created">
             <img className="auth-card__texture" src={authPanel} alt="" aria-hidden="true" />
             <h2>Account created!</h2>
-            <p>An email has been sent to you.</p>
+            <p>Your account is ready. You can sign in now.</p>
             <button className="auth-submit" type="button" onClick={() => switchMode('login')}>
               LOG IN
             </button>
@@ -175,9 +178,9 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
               </div>
             )}
 
-            {!isRegister && (
+            {(
               <div className="auth-field">
-                <label htmlFor="username">SIGN IN WITH ACCOUNT NAME</label>
+                <label htmlFor="username">{isRegister ? 'CREATE AN ACCOUNT NAME' : 'SIGN IN WITH ACCOUNT NAME'}</label>
                 <input
                   id="username"
                   name="username"
@@ -255,7 +258,7 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
 
                 <div className="auth-switch">
                   <p>no account?</p>
-                  <button type="button" onClick={() => switchMode('register')}>
+                  <button type="button" disabled={isSubmitting} onClick={() => switchMode('register')}>
                     Create a new one!
                   </button>
                 </div>

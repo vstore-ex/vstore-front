@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Header from './components/Header/Header'
 import Footer from './components/Footer/Footer'
 import AccountPage from './pages/AccountPage/AccountPage'
@@ -12,18 +12,19 @@ import WishlistPage from './pages/WishlistPage/WishlistPage'
 import { buildCartItems, defaultCartProductIds } from './data/cart'
 import { getProductById } from './data/products'
 import { buildWishlistItems, defaultWishlistProductIds } from './data/wishlist'
-import { getCurrentUser } from './api/auth'
+import { useAuth } from './auth/context'
+import './auth/Auth.css'
 import './App.css'
 
-const AUTH_STORAGE_KEY = 'vstore:isAuthenticated'
 const CART_STORAGE_KEY = 'vstore:cartProductIds'
 const WISHLIST_STORAGE_KEY = 'vstore:wishlistProductIds'
 
 const defaultRoute = { view: 'discover', productId: null }
 
 function parseRouteFromHash() {
-  const hash = decodeURIComponent(window.location.hash.replace(/^#\/?/, ''))
-  const parts = hash.split('/').filter(Boolean)
+  const [path, query] = window.location.hash.replace(/^#\/?/, '').split('?')
+  const parts = path.split('/').filter(Boolean)
+  if (parts[0] === 'login') return { view: 'login', productId: null, next: new URLSearchParams(query).get('next') || 'discover' }
 
   if (!parts.length || parts[0] === 'discover') {
     return defaultRoute
@@ -36,7 +37,7 @@ function parseRouteFromHash() {
     }
   }
 
-  if (['account', 'cart', 'wishlist', 'support'].includes(parts[0])) {
+  if (['account', 'orders', 'cart', 'wishlist', 'support'].includes(parts[0])) {
     return { view: parts[0], productId: null }
   }
 
@@ -52,10 +53,6 @@ function navigateTo(path) {
   }
 
   window.location.hash = nextHash
-}
-
-function getInitialAuthState() {
-  return localStorage.getItem(AUTH_STORAGE_KEY) === 'true'
 }
 
 function getInitialCartProductIds() {
@@ -89,7 +86,8 @@ function getInitialWishlistProductIds() {
 function App() {
   const initialRoute = parseRouteFromHash()
   const [authMode, setAuthMode] = useState(null)
-  const [isAuthenticated, setIsAuthenticated] = useState(getInitialAuthState)
+  const { currentUser: user, isAuthenticated, status, error, isLoggingOut, logout, updateUser } = useAuth()
+  const completedLogin = useRef(false)
   const [selectedProductId, setSelectedProductId] = useState(initialRoute.productId)
   const [currentView, setCurrentView] = useState(initialRoute.view)
   const [pendingAction, setPendingAction] = useState(null)
@@ -101,47 +99,12 @@ function App() {
   const wishlistItems = buildWishlistItems(wishlistProductIds)
 
   useEffect(() => {
-    localStorage.setItem(AUTH_STORAGE_KEY, String(isAuthenticated))
-  }, [isAuthenticated])
-
-  useEffect(() => {
-    let ignore = false
-
-    async function syncAuthSession() {
-      const user = await getCurrentUser().catch(() => null)
-
-      if (ignore) return
-
-      setIsAuthenticated(Boolean(user))
-    }
-
-    syncAuthSession()
-
-    return () => {
-      ignore = true
-    }
-  }, [])
-
-  useEffect(() => {
     function syncRoute() {
       const route = parseRouteFromHash()
       const routeProduct = route.productId ? getProductById(route.productId) : null
 
       if (route.productId && !routeProduct) {
         navigateTo('discover')
-        return
-      }
-
-      if (['account', 'cart', 'wishlist'].includes(route.view) && !isAuthenticated) {
-        const actionByView = {
-          account: null,
-          cart: { type: 'open-cart' },
-          wishlist: { type: 'open-wishlist' },
-        }
-
-        setSelectedProductId(null)
-        setCurrentView('discover')
-        openAuth('login', actionByView[route.view])
         return
       }
 
@@ -156,7 +119,20 @@ function App() {
     return () => {
       window.removeEventListener('hashchange', syncRoute)
     }
-  }, [isAuthenticated])
+  }, [])
+
+  useEffect(() => {
+    if (status === 'loading' || status === 'banned' || status === 'error' || isLoggingOut) return
+    if (['account', 'orders', 'cart', 'wishlist'].includes(currentView) && !isAuthenticated) {
+      navigateTo('login?next=' + currentView)
+    }
+  }, [status, isLoggingOut, currentView, isAuthenticated])
+
+  useEffect(() => {
+    const expired = () => { if (isAuthenticated) navigateTo('login?next=' + currentView) }
+    window.addEventListener('vstore:session-expired', expired)
+    return () => window.removeEventListener('vstore:session-expired', expired)
+  }, [currentView, isAuthenticated])
 
   useEffect(() => {
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartProductIds))
@@ -172,18 +148,16 @@ function App() {
   }
 
   function closeAuth() {
+    if (currentView === 'login' && !completedLogin.current) navigateTo('discover')
+    completedLogin.current = false
     setAuthMode(null)
     setPendingAction(null)
   }
 
-  async function handleAuthenticated(authenticatedUser = null) {
-    const user = authenticatedUser || (await getCurrentUser().catch(() => null))
-
-    if (!user) {
-      throw new Error('Signed in, but the backend did not return a usable auth session.')
-    }
-
-    setIsAuthenticated(true)
+  async function handleAuthenticated() {
+    completedLogin.current = true
+    const route = parseRouteFromHash()
+    if (route.view === 'login') navigateTo(['account', 'orders', 'cart', 'wishlist'].includes(route.next) ? route.next : 'discover')
 
     if (pendingAction?.type === 'open-cart') {
       openCartPage()
@@ -236,23 +210,8 @@ function App() {
     navigateTo('wishlist')
   }
 
-  function openCart() {
-    if (!isAuthenticated) {
-      openAuth('login', { type: 'open-cart' })
-      return
-    }
-
-    openCartPage()
-  }
-
-  function openWishlist() {
-    if (!isAuthenticated) {
-      openAuth('login', { type: 'open-wishlist' })
-      return
-    }
-
-    openWishlistPage()
-  }
+  function openCart() { openCartPage() }
+  function openWishlist() { openWishlistPage() }
 
   function addProductToCart(productId) {
     setCartProductIds((currentIds) =>
@@ -309,6 +268,19 @@ function App() {
     setCartProductIds([])
   }
 
+  async function signOut(all = false) {
+    setAuthMode(null); setPendingAction(null); navigateTo('discover')
+    try { await logout(all) } catch { /* The auth context displays the server error. */ }
+  }
+  if (status === 'loading') return <main className="store-page"><p className="store-status" role="status">Loading account...</p></main>
+  if (status === 'banned') return <main className="store-page"><section className="store-status" role="alert">
+    <h1>Account blocked</h1><p>Your account is blocked. Contact support for assistance.</p>
+    <button type="button" disabled={isLoggingOut} onClick={() => signOut()}>Sign out</button>
+  </section></main>
+  if (status === 'error') return <main className="store-page"><section className="store-status" role="alert">
+    <p>{error}</p><button type="button" onClick={() => window.location.reload()}>Retry loading account</button>
+  </section></main>
+
   return (
     <main className="store-page">
       <Header
@@ -320,8 +292,13 @@ function App() {
         onCart={openCart}
         onWishlist={openWishlist}
         onAccount={openAccount}
+        onSignOut={() => signOut()}
+        isLoggingOut={isLoggingOut}
       />
-      {selectedProduct && currentView === 'achievements' ? (
+      {error && <div className="store-status" role="alert">{error}
+        {error.startsWith('Could not complete sign out') && <button type="button" disabled={isLoggingOut} onClick={() => signOut()}>Retry sign out</button>}
+      </div>}
+      {['account', 'orders', 'cart', 'wishlist'].includes(currentView) && !user ? <p className="store-status" role="status">Please sign in to continue.</p> : selectedProduct && currentView === 'achievements' ? (
         <AchievementsPage product={selectedProduct} />
       ) : selectedProduct ? (
         <ProductDetailPage
@@ -330,8 +307,8 @@ function App() {
           onAddToWishlist={handleAddToWishlist}
           onViewAllAchievements={openAchievements}
         />
-      ) : currentView === 'account' ? (
-        <AccountPage />
+      ) : ['account', 'orders'].includes(currentView) ? (
+        <AccountPage user={user} onUpdated={updateUser} onLogoutAll={() => signOut(true)} isLoggingOut={isLoggingOut} />
       ) : currentView === 'cart' ? (
         <CartPage
           items={cartItems}
@@ -351,9 +328,9 @@ function App() {
         <DiscoverPage onProductSelect={openProduct} />
       )}
       <Footer />
-      {authMode && (
+      {(authMode || currentView === 'login') && !isLoggingOut && (
         <RegisterPage
-          initialMode={authMode}
+          initialMode={authMode || 'login'}
           onClose={closeAuth}
           onAuthenticated={handleAuthenticated}
         />

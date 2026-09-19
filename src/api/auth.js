@@ -1,32 +1,6 @@
-// Relative API path (/api/v1) for same-origin reverse-proxied production & dev
-const DEFAULT_API_BASE_URL = '/api/v1'
+import { apiRequest, refreshSession, waitForRefresh } from './client'
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL).replace(/\/$/, '')
-
-function getApiMessage(data, fallback) {
-  if (!data) return fallback
-  if (typeof data.detail === 'string') return data.detail
-  if (typeof data.message === 'string') return data.message
-  if (Array.isArray(data.detail)) {
-    return data.detail.map((item) => item.msg || item.message || String(item)).join(' ')
-  }
-
-  return fallback
-}
-
-async function parseApiResponse(response) {
-  const text = await response.text()
-
-  if (!text) return null
-
-  try {
-    return JSON.parse(text)
-  } catch {
-    return { message: text }
-  }
-}
-
-function normalizeUser(data) {
+export function normalizeUser(data) {
   if (!data) return null
 
   return {
@@ -35,78 +9,46 @@ function normalizeUser(data) {
     email: data.email ?? '',
     role: data.role ?? data.role_name ?? 'User',
     permissions: data.permissions ?? null,
+    avatar: data.avatar ?? null,
+    fullName: data.full_name ?? '',
+    phone: data.phone ?? '',
+    stats: data.stats ?? {},
   }
 }
 
 export async function registerUser(payload) {
-  const response = await fetch(`${API_BASE_URL}/auth/register/`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    body: JSON.stringify(payload),
-  })
-  const data = await parseApiResponse(response)
-
-  if (!response.ok) {
-    throw new Error(getApiMessage(data, 'Registration failed.'))
-  }
-
-  return {
-    data,
-    message: getApiMessage(data, 'Account created successfully. You can sign in now.'),
-  }
+  const data = await apiRequest('/auth/register/', { method: 'POST', body: payload, auth: false })
+  return { data, message: 'Account created successfully. You can sign in now.' }
 }
-
 export async function loginUser(payload) {
-  const formData = new URLSearchParams()
-  formData.set('username', payload.username)
-  formData.set('password', payload.password)
-
-  const response = await fetch(`${API_BASE_URL}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    credentials: 'include',
-    body: formData,
-  })
-  const data = await parseApiResponse(response)
-
-  if (!response.ok) {
-    throw new Error(getApiMessage(data, 'Login failed.'))
-  }
-
-  const user = await getCurrentUser()
-
-  if (!user) {
-    throw new Error('Signed in, but the session cookie was not received.')
-  }
-
-  return {
-    data: user,
-    message: getApiMessage(data, 'Signed in successfully.'),
-  }
+  await waitForRefresh()
+  await apiRequest('/login', { method: 'POST', body: new URLSearchParams(payload), auth: false })
+  return { data: await getCurrentUser(), message: 'Signed in successfully.' }
 }
-
 export async function getCurrentUser() {
-  const response = await fetch(`${API_BASE_URL}/users/me`, {
-    credentials: 'include',
-  })
-
-  if (!response.ok) {
-    return null
-  }
-
-  const data = await parseApiResponse(response)
+  const data = await apiRequest('/users/me')
+  if (data?.id == null || typeof data.username !== 'string') throw new Error('The server returned an invalid account.')
   return normalizeUser(data)
 }
-
-export async function logoutUser() {
-  const response = await fetch(`${API_BASE_URL}/auth/logout`, {
-    method: 'POST',
-    credentials: 'include',
-  })
-
-  if (!response.ok) {
-    const data = await response.json().catch(() => null)
-    throw new Error(getApiMessage(data, 'Logout failed.'))
-  }
+export const refreshUser = refreshSession
+export async function logoutUser(all = false) {
+  await waitForRefresh()
+  // logout-all requires a valid access cookie to revoke the other devices.
+  if (all) await refreshSession()
+  await apiRequest(all ? '/logout-all' : '/logout', { method: 'POST', auth: false })
+}
+export async function updateUser(body) {
+  return normalizeUser(await apiRequest('/users/me', { method: 'PATCH', body }))
+}
+export async function updateAvatar(file) {
+  const body = new FormData(); body.append('file', file)
+  return normalizeUser(await apiRequest('/users/me/avatar', { method: 'PATCH', body, timeout: 120000 }))
+}
+export function registrationErrors(error) {
+  if (Array.isArray(error.detail)) return Object.fromEntries(error.detail.map(item => [item.loc?.at(-1), item.msg]))
+  if (error.status !== 400) return {}
+  if (/email/i.test(error.message)) return { email: error.message }
+  if (/username/i.test(error.message)) return { username: error.message }
+  if (/already exists/i.test(error.message)) return { username: 'Username or email already exists.', email: 'Username or email already exists.' }
+  return {}
 }
