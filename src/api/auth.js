@@ -24,7 +24,7 @@ export async function loginUser(payload) {
   await waitForRefresh()
   const res = await apiRequest('/auth/login', { method: 'POST', body: new URLSearchParams(payload), auth: false })
   if (res?.access_token) {
-    try { localStorage.setItem('vstore:token', res.access_token) } catch { /* Storage disabled */ }
+    try { localStorage.setItem('vstore:token', res.access_token) } catch { /* storage disabled */ }
   }
   return { data: await getCurrentUser(), message: 'Signed in successfully.' }
 }
@@ -41,7 +41,7 @@ export async function logoutUser(all = false) {
   try {
     await apiRequest(all ? '/auth/logout-all' : '/auth/logout', { method: 'POST', auth: false })
   } finally {
-    try { localStorage.removeItem('vstore:token') } catch { /* Storage disabled */ }
+    try { localStorage.removeItem('vstore:token') } catch { /* storage disabled */ }
   }
 }
 export async function updateUser(body) {

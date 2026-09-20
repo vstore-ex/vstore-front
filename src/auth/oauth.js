@@ -18,7 +18,7 @@ export function rememberOAuthDestination() {
   const hash = window.location.hash
   const next = hash.startsWith('#/login') ? '#/' + (new URLSearchParams(hash.split('?')[1]).get('next') || 'discover') : hash
   // Only a navigation destination is stored, never credentials or auth state.
-  try { sessionStorage.setItem(RETURN_KEY, safeDestination(next)) } catch { /* Storage can be disabled. */ }
+  try { sessionStorage.setItem(RETURN_KEY, safeDestination(next)) } catch { /* storage can be disabled. */ }
 }
 export function consumeOAuthDestination() {
   try {
