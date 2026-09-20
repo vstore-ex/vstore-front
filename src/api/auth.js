@@ -22,7 +22,10 @@ export async function registerUser(payload) {
 }
 export async function loginUser(payload) {
   await waitForRefresh()
-  await apiRequest('/auth/login', { method: 'POST', body: new URLSearchParams(payload), auth: false })
+  const res = await apiRequest('/auth/login', { method: 'POST', body: new URLSearchParams(payload), auth: false })
+  if (res?.access_token) {
+    try { localStorage.setItem('vstore:token', res.access_token) } catch { /* storage disabled */ }
+  }
   return { data: await getCurrentUser(), message: 'Signed in successfully.' }
 }
 export async function getCurrentUser() {
@@ -35,7 +38,11 @@ export async function logoutUser(all = false) {
   await waitForRefresh()
   // logout-all requires a valid access cookie to revoke the other devices.
   if (all) await refreshSession()
-  await apiRequest(all ? '/auth/logout-all' : '/auth/logout', { method: 'POST', auth: false })
+  try {
+    await apiRequest(all ? '/auth/logout-all' : '/auth/logout', { method: 'POST', auth: false })
+  } finally {
+    try { localStorage.removeItem('vstore:token') } catch { /* storage disabled */ }
+  }
 }
 export async function updateUser(body) {
   return normalizeUser(await apiRequest('/users/me', { method: 'PATCH', body }))
