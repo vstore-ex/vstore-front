@@ -11,6 +11,8 @@ import WishlistPage from './pages/WishlistPage/WishlistPage'
 import { buildCartItems, defaultCartProductIds } from './data/cart'
 import { buildWishlistItems, defaultWishlistProductIds } from './data/wishlist'
 import { useAuth } from './auth/context'
+import OAuthCallbackPage from './pages/OAuthCallbackPage/OAuthCallbackPage'
+import { isOAuthCallback } from './auth/oauth'
 import './auth/Auth.css'
 import './App.css'
 
@@ -257,6 +259,7 @@ function App() {
     setAuthMode(null); setPendingAction(null); navigateTo('discover')
     try { await logout(all) } catch { /* The auth context displays the server error. */ }
   }
+  if (isOAuthCallback) return <OAuthCallbackPage />
   if (status === 'loading') return <main className="store-page"><p className="store-status" role="status">Loading account...</p></main>
   if (status === 'banned') return <main className="store-page"><section className="store-status" role="alert">
     <h1>Account blocked</h1><p>Your account is blocked. Contact support for assistance.</p>

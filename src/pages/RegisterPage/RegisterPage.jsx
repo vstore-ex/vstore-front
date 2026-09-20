@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { registerUser, registrationErrors } from '../../api/auth'
+import { registerUser, registrationErrors, getGoogleAuthorizationUrl } from '../../api/auth'
+import { rememberOAuthDestination } from '../../auth/oauth'
 import { useAuth } from '../../auth/context'
 import { validateLogin } from '../../utils/validation'
 import chevronLeft from '../../assets/icon-chevron-left.svg'
@@ -52,6 +53,7 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
   const [errors, setErrors] = useState({})
   const [status, setStatus] = useState({ type: '', message: '' })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isGoogleConnecting, setGoogleConnecting] = useState(false)
 
   const isRegister = mode === 'register'
   const isCreated = mode === 'created'
@@ -60,8 +62,11 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
   useEffect(() => {
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
+    const restored = () => { setIsSubmitting(false); setGoogleConnecting(false) }
+    window.addEventListener('pageshow', restored)
 
     return () => {
+      window.removeEventListener('pageshow', restored)
       document.body.style.overflow = previousOverflow
     }
   }, [])
@@ -79,6 +84,19 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
     setter((current) => ({ ...current, [name]: type === 'checkbox' ? checked : value }))
     setErrors((current) => ({ ...current, [name]: '' }))
     setStatus({ type: '', message: '' })
+  }
+
+  async function handleGoogleSignIn() {
+    if (isSubmitting) return
+    setIsSubmitting(true); setGoogleConnecting(true); setStatus({ type: '', message: '' })
+    try {
+      const url = await getGoogleAuthorizationUrl()
+      rememberOAuthDestination()
+      window.location.assign(url)
+    } catch (error) {
+      setStatus({ type: 'error', message: error.message || 'Could not start Google sign-in.' })
+      setIsSubmitting(false); setGoogleConnecting(false)
+    }
   }
 
   async function handleSubmit(event) {
@@ -162,6 +180,10 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
           <img className="auth-card__texture" src={authPanel} alt="" aria-hidden="true" />
 
           <div className="auth-form-column">
+            <button className="auth-google" type="button" disabled={isSubmitting} onClick={handleGoogleSignIn}>
+              {isGoogleConnecting ? 'Connecting to Google...' : 'Continue with Google'}
+            </button>
+            <p className="auth-method-divider">or use your account name</p>
             {isRegister && (
               <div className="auth-field">
                 <label htmlFor="email">PUT YOUR EMAIL HERE</label>
