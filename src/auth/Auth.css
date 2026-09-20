@@ -1,0 +1,14 @@
+.store-status { max-width: 1140px; margin: 24px auto; padding: 16px; overflow-wrap: anywhere; }
+.store-status button { margin-left: 16px; }
+.store-form { display: grid; gap: 16px; max-width: 600px; margin: 24px 0; text-align: left; }
+.store-form label { display: grid; gap: 8px; min-width: 0; }
+.store-form input { width: 100%; min-width: 0; padding: 12px; border: 1px solid #70777e; border-radius: 4px; background: #292f36; color: #eee; font: inherit; }
+.store-form button { justify-self: start; }
+.store-page button:disabled { opacity: .55; cursor: wait; }
+.order-list article { padding: 16px 0; border-bottom: 1px solid #545b63; }
+.account-page--current .account-hero { flex-wrap: wrap; }
+.account-page--current .account-hero__identity { min-width: 0; }
+.account-page--current { min-height: 60vh; }
+.account-page--current .account-hero__identity h1 { font-size: 32px; overflow-wrap: anywhere; }
+.account-page--current .account-hero__stats { max-width: 100%; flex-wrap: wrap; gap: 20px; padding-right: 0; }
+.account-page--current .account-hero__avatar { object-fit: cover; }

@@ -23,14 +23,12 @@ function Header({
   onCart,
   onWishlist,
   onAccount,
+  onSignOut,
+  isLoggingOut = false,
 }) {
   function handleActionClick(label) {
     if (label === 'Account') {
-      if (isAuthenticated) {
-        onAccount?.()
-      } else {
-        onSignIn?.()
-      }
+      onAccount?.()
     }
 
     if (label === 'Cart') {
@@ -98,7 +96,12 @@ function Header({
           ))}
         </div>
 
-        {!isAuthenticated && (
+        {(isAuthenticated || isLoggingOut) && (
+          <button className="button button--secondary" type="button" onClick={onSignOut} disabled={isLoggingOut}>
+            {isLoggingOut ? 'Signing out...' : 'Sign out'}
+          </button>
+        )}
+        {!isAuthenticated && !isLoggingOut && (
           <button className="button button--secondary" type="button" onClick={onSignIn}>
             Sign in
           </button>

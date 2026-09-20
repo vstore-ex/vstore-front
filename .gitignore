@@ -55,3 +55,6 @@ temp/
 .claude/*.local.*
 .claude/worktrees/
 .worktrees/
+
+# Local authentication notes
+/docs/authentication.md
