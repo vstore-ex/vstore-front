@@ -22,7 +22,7 @@ export async function registerUser(payload) {
 }
 export async function loginUser(payload) {
   await waitForRefresh()
-  await apiRequest('/login', { method: 'POST', body: new URLSearchParams(payload), auth: false })
+  await apiRequest('/auth/login', { method: 'POST', body: new URLSearchParams(payload), auth: false })
   return { data: await getCurrentUser(), message: 'Signed in successfully.' }
 }
 export async function getCurrentUser() {
@@ -35,7 +35,7 @@ export async function logoutUser(all = false) {
   await waitForRefresh()
   // logout-all requires a valid access cookie to revoke the other devices.
   if (all) await refreshSession()
-  await apiRequest(all ? '/logout-all' : '/logout', { method: 'POST', auth: false })
+  await apiRequest(all ? '/auth/logout-all' : '/auth/logout', { method: 'POST', auth: false })
 }
 export async function updateUser(body) {
   return normalizeUser(await apiRequest('/users/me', { method: 'PATCH', body }))
@@ -51,4 +51,15 @@ export function registrationErrors(error) {
   if (/username/i.test(error.message)) return { username: error.message }
   if (/already exists/i.test(error.message)) return { username: 'Username or email already exists.', email: 'Username or email already exists.' }
   return {}
+}
+
+export async function getGoogleAuthorizationUrl() {
+  const data = await apiRequest('/auth/google/login?redirect=false', { auth: false })
+  let url
+  try { url = new URL(data?.authorization_url) } catch { throw new Error('Google sign-in is unavailable. Please try again.') }
+  if (url.origin !== 'https://accounts.google.com' || url.pathname !== '/o/oauth2/v2/auth' ||
+      !data?.state || url.searchParams.get('state') !== data.state) {
+    throw new Error('Google sign-in is unavailable. Please try again.')
+  }
+  return url.href
 }

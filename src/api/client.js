@@ -22,7 +22,7 @@ export async function refreshSession() {
   if (!refreshPromise) {
     const version = generation
     emit('vstore:refresh', true)
-    refreshPromise = apiRequest('/refresh', { method: 'POST', auth: false }).then(() => {
+    refreshPromise = apiRequest('/auth/refresh', { method: 'POST', auth: false }).then(() => {
       if (version === generation) refreshed += 1
     }).catch(error => {
       rejectSession(error, version)
