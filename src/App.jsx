@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import Header from './components/Header/Header'
 import Footer from './components/Footer/Footer'
 import AccountPage from './pages/AccountPage/AccountPage'
-import AchievementsPage from './pages/AchievementsPage/AchievementsPage'
 import CartPage from './pages/CartPage/CartPage'
 import DiscoverPage from './pages/DiscoverPage/DiscoverPage'
 import ProductDetailPage from './pages/ProductDetailPage/ProductDetailPage'
@@ -10,7 +9,6 @@ import RegisterPage from './pages/RegisterPage/RegisterPage'
 import SupportPage from './pages/SupportPage/SupportPage'
 import WishlistPage from './pages/WishlistPage/WishlistPage'
 import { buildCartItems, defaultCartProductIds } from './data/cart'
-import { getProductById } from './data/products'
 import { buildWishlistItems, defaultWishlistProductIds } from './data/wishlist'
 import { useAuth } from './auth/context'
 import './auth/Auth.css'
@@ -94,19 +92,12 @@ function App() {
   const [cartProductIds, setCartProductIds] = useState(getInitialCartProductIds)
   const [wishlistProductIds, setWishlistProductIds] = useState(getInitialWishlistProductIds)
 
-  const selectedProduct = selectedProductId ? getProductById(selectedProductId) : null
   const cartItems = buildCartItems(cartProductIds)
   const wishlistItems = buildWishlistItems(wishlistProductIds)
 
   useEffect(() => {
     function syncRoute() {
       const route = parseRouteFromHash()
-      const routeProduct = route.productId ? getProductById(route.productId) : null
-
-      if (route.productId && !routeProduct) {
-        navigateTo('discover')
-        return
-      }
 
       setSelectedProductId(route.productId)
       setCurrentView(route.view)
@@ -186,12 +177,6 @@ function App() {
 
   function openDiscover() {
     navigateTo('discover')
-  }
-
-  function openAchievements() {
-    if (selectedProductId) {
-      navigateTo(`products/${selectedProductId}/achievements`)
-    }
   }
 
   function openAccount() {
@@ -298,14 +283,16 @@ function App() {
       {error && <div className="store-status" role="alert">{error}
         {error.startsWith('Could not complete sign out') && <button type="button" disabled={isLoggingOut} onClick={() => signOut()}>Retry sign out</button>}
       </div>}
-      {['account', 'orders', 'cart', 'wishlist'].includes(currentView) && !user ? <p className="store-status" role="status">Please sign in to continue.</p> : selectedProduct && currentView === 'achievements' ? (
-        <AchievementsPage product={selectedProduct} />
-      ) : selectedProduct ? (
+      {['account', 'orders', 'cart', 'wishlist'].includes(currentView) && !user ? (
+        <p className="store-status" role="status">Please sign in to continue.</p>
+      ) : ['product', 'achievements'].includes(currentView) ? (
         <ProductDetailPage
-          product={selectedProduct}
+          key={selectedProductId}
+          id={selectedProductId}
+          showAchievements={currentView === 'achievements'}
+          onViewAllAchievements={() => navigateTo(`products/${selectedProductId}/achievements`)}
           onAddToCart={handleAddToCart}
           onAddToWishlist={handleAddToWishlist}
-          onViewAllAchievements={openAchievements}
         />
       ) : ['account', 'orders'].includes(currentView) ? (
         <AccountPage user={user} onUpdated={updateUser} onLogoutAll={() => signOut(true)} isLoggingOut={isLoggingOut} />
