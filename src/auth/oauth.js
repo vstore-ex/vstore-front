@@ -1,8 +1,14 @@
 const RETURN_KEY = 'vstore:oauth:return'
 export const isOAuthCallback = /^\/oauth\/callback\/?$/.test(window.location.pathname)
 export const oauthCallbackFailed = isOAuthCallback && new URLSearchParams(window.location.search).has('error')
-// The session comes from HttpOnly cookies. Never consume the token query value.
-if (isOAuthCallback) window.history.replaceState(null, '', window.location.pathname)
+if (isOAuthCallback) {
+  const params = new URLSearchParams(window.location.search)
+  const token = params.get('token')
+  if (token) {
+    try { localStorage.setItem('vstore:token', token) } catch { /* storage disabled */ }
+  }
+  window.history.replaceState(null, '', window.location.pathname)
+}
 
 function safeDestination(hash) {
   return typeof hash === 'string' && /^#\/(?:discover(?:\?[^#]*)?|account|orders|cart|wishlist|support|products\/\d+(?:\/achievements)?)$/.test(hash)

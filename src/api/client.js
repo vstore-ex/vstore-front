@@ -22,9 +22,13 @@ export async function refreshSession() {
   if (!refreshPromise) {
     const version = generation
     emit('vstore:refresh', true)
-    refreshPromise = apiRequest('/auth/refresh', { method: 'POST', auth: false }).then(() => {
+    refreshPromise = apiRequest('/auth/refresh', { method: 'POST', auth: false }).then((data) => {
+      if (data?.access_token) {
+        try { localStorage.setItem('vstore:token', data.access_token) } catch { /* Storage disabled */ }
+      }
       if (version === generation) refreshed += 1
     }).catch(error => {
+      try { localStorage.removeItem('vstore:token') } catch { /* Storage disabled */ }
       rejectSession(error, version)
       throw error
     }).finally(() => { refreshPromise = null; emit('vstore:refresh', false) })
@@ -38,9 +42,12 @@ export async function apiRequest(path, { body, headers, signal, timeout = 20000,
   const refreshVersion = refreshed
   const multipart = body instanceof FormData
   const encoded = body instanceof URLSearchParams
+  let token = null
+  try { token = localStorage.getItem('vstore:token') } catch { /* Storage disabled */ }
+  const authHeaders = auth && token ? { Authorization: `Bearer ${token}` } : {}
   const request = () => fetch(API_BASE_URL + path, {
     ...options, credentials: 'include', cache: 'no-store',
-    headers: { ...(body && !multipart && !encoded ? { 'Content-Type': 'application/json' } : {}), ...headers },
+    headers: { ...(body && !multipart && !encoded ? { 'Content-Type': 'application/json' } : {}), ...authHeaders, ...headers },
     body: body == null ? undefined : multipart || encoded || typeof body === 'string' ? body : JSON.stringify(body),
     signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(timeout)]) : AbortSignal.timeout(timeout),
   })

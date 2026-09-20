@@ -22,6 +22,7 @@ export default function AuthProvider({ children }) {
     const initialVersion = version.current
     const clear = (nextStatus, message = '') => {
       version.current += 1; resetSession(false); updateUser(null); setStatus(nextStatus); setError(message)
+      try { localStorage.removeItem('vstore:token') } catch { /* storage disabled */ }
     }
     const expired = () => clear('anonymous', identity.current ? 'Your session has ended. Please sign in again.' : '')
     const banned = () => clear('banned', 'Your account is blocked. Contact support for assistance.')
