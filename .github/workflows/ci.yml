@@ -23,10 +23,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Set up Node.js 20
+      - name: Set up Node.js 22
         uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
-          node-version: 20
+          node-version: 22
           cache: "npm"
 
       - name: Install dependencies
@@ -44,172 +44,22 @@ jobs:
   build-docker:
     name: Build & Push Docker Image
     needs: [build]
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    uses: vstore-ex/vstore-infra/.github/workflows/build-and-push.yml@main
     permissions:
       contents: read
       packages: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@c47758b77c9736f4b2ef4073d4d51994fabfe349 # v3.7.1
-
-      - name: Log in to GitHub Container Registry
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@70b2cdc6480c1a8b86edf1777157f8f437de2166 # v5.5.1
-        with:
-          images: ghcr.io/${{ github.repository }}
-          tags: |
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-            type=sha,format=short,prefix=sha-
-
-      - name: Build Docker image locally for security scanning
-        uses: docker/build-push-action@4f58ea79222b3b9dc2c8bbdd6debcef730109a75 # v6.9.0
-        with:
-          context: .
-          load: true
-          tags: |
-            ${{ steps.meta.outputs.tags }}
-            local-image:scan
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # 0.35.0
-        with:
-          image-ref: "local-image:scan"
-          format: "table"
-          exit-code: "0"
-          ignore-unfixed: true
-          vuln-type: "os,library"
-          severity: "CRITICAL,HIGH"
-
-      - name: Push Docker image to GHCR
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-        uses: docker/build-push-action@4f58ea79222b3b9dc2c8bbdd6debcef730109a75 # v6.9.0
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
 
   deploy:
     name: Deploy Frontend via SSH
     needs: [build-docker]
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-    environment:
-      name: production
-      url: ${{ vars.STORE_URL || 'http://127.0.0.1:3000' }}
-    concurrency: production
-    steps:
-      - name: Check SSH deployment readiness
-        id: check-ssh
-        run: |
-          if [ -z "${SSH_HOST}" ] || [ -z "${SSH_KEY}" ]; then
-            echo "::error::SSH_HOST or SSH_KEY is not configured in secrets. Deployment cannot proceed."
-            echo "### ❌ Deploy failed: missing SSH credentials" >> "$GITHUB_STEP_SUMMARY"
-            echo "Required secret \`SSH_HOST\` or \`SSH_KEY\` (or \`SSH_PRIVATE_KEY\`) is missing in repository/environment secrets." >> "$GITHUB_STEP_SUMMARY"
-            exit 1
-          fi
-
-          echo "==> Checking if production host ${SSH_HOST}:${SSH_PORT} is reachable..."
-          if ! nc -z -w 5 "${SSH_HOST}" "${SSH_PORT}" 2>/dev/null && ! timeout 5 bash -c "</dev/tcp/${SSH_HOST}/${SSH_PORT}" 2>/dev/null; then
-            echo "::warning::Production server (${SSH_HOST}:${SSH_PORT}) is offline or unreachable. Skipping remote deployment."
-            echo "### ⚠️ Deploy skipped: server unreachable" >> "$GITHUB_STEP_SUMMARY"
-            echo "Target host \`${SSH_HOST}:${SSH_PORT}\` is offline or SSH port is closed (connection timed out). Deployment was safely skipped." >> "$GITHUB_STEP_SUMMARY"
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          echo "==> Production server is online and reachable."
-          echo "skip=false" >> "$GITHUB_OUTPUT"
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_KEY: ${{ secrets.SSH_KEY || secrets.SSH_PRIVATE_KEY }}
-          SSH_PORT: ${{ secrets.SSH_PORT || 22 }}
-
-      - name: Pull, restart frontend and verify health
-        if: steps.check-ssh.outputs.skip != 'true'
-        uses: appleboy/ssh-action@7eaf76671a0d7eec5d98ee897acda4f968735a17 # v1.2.0
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY || secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
-          fingerprint: ${{ secrets.SSH_FINGERPRINT }}
-          envs: GITHUB_SHA
-          script: |
-            set -euo pipefail
-            DEPLOY_PATH="${{ vars.DEPLOY_PATH || secrets.DEPLOY_PATH || '/opt/vstore' }}"
-            cd "$DEPLOY_PATH"
-
-            # Acquire deployment lock to prevent race conditions with other repositories
-            exec 200>"$DEPLOY_PATH/.deploy.lock"
-            echo "==> Acquiring deployment lock..."
-            flock -w 300 200 || { echo "ERROR: Timeout waiting for deployment lock!"; exit 1; }
-
-            # Record currently running image ID for rollback before pulling new image
-            PREV_IMAGE=$(docker inspect --format='{{.Image}}' $(docker compose ps -q frontend 2>/dev/null) 2>/dev/null || true)
-            echo "==> Active frontend image ID before deploy: ${PREV_IMAGE:-none}"
-
-            # Deploy with exact immutable commit SHA tag
-            IMAGE_TAG="sha-${GITHUB_SHA::7}"
-            export FRONTEND_IMAGE="ghcr.io/vstore-ex/vstore-front:${IMAGE_TAG}"
-            echo "==> Pulling frontend image: ${FRONTEND_IMAGE}..."
-            docker compose pull frontend
-
-            echo "==> Restarting frontend..."
-            docker compose up -d --no-deps frontend
-
-            echo "==> Verifying frontend web server health..."
-            RETRIES=15
-            HEALTHY=false
-            for i in $(seq 1 $RETRIES); do
-              if curl -sf http://127.0.0.1:3000/healthz > /dev/null 2>&1; then
-                echo "Frontend web server is healthy!"
-                HEALTHY=true
-                break
-              fi
-              echo "Waiting for frontend health check ($i/$RETRIES)..."
-              sleep 2
-            done
-
-            if [ "$HEALTHY" != "true" ]; then
-              echo "ERROR: Frontend failed health check!"
-              docker compose logs --tail=50 frontend
-              if [ -n "$PREV_IMAGE" ]; then
-                echo "==> Initiating automated rollback to previous image: $PREV_IMAGE"
-                FRONTEND_IMAGE="$PREV_IMAGE" docker compose up -d --no-deps frontend
-                echo "==> Rollback completed. Restored previous container."
-              else
-                echo "==> No previous image found to rollback."
-              fi
-              exit 1
-            fi
-
-            # Secondary upstream verification (informational, does not trigger frontend rollback)
-            echo "==> Checking API proxy route to backend..."
-            if curl -sf http://127.0.0.1:3000/api/v1/games/ > /dev/null 2>&1; then
-              echo "API proxy connectivity verified."
-            else
-              echo "WARNING: Backend API route unreachable via proxy. Backend may be offline or deploying, but Frontend will NOT be rolled back."
-            fi
-
-            echo "==> Cleaning up unused images..."
-            docker image prune -f
-
-            echo "==> Frontend deployment completed successfully."
+    uses: vstore-ex/vstore-infra/.github/workflows/deploy-service.yml@main
+    permissions:
+      contents: read
+    with:
+      services: frontend
+      image: ${{ needs.build-docker.outputs.image }}
+      image-env-var: FRONTEND_IMAGE
+      health-url: http://127.0.0.1:3000/healthz
+    secrets: inherit

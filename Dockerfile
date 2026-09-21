@@ -24,6 +24,13 @@ RUN npm run build
 # -----------------------------------------------------------------------------
 FROM nginxinc/nginx-unprivileged:1.27-alpine
 
+# Patch alpine base packages at build time: the base tag carries a frozen
+# apk snapshot (alpine 3.21.3) with fixable HIGH/CRITICAL CVEs; without this
+# the Trivy CI gate (exit-code 1) blocks every release.
+USER root
+RUN apk --no-cache upgrade && rm -rf /var/cache/apk/*
+USER 101
+
 # Copy custom Nginx configuration and compiled static assets
 COPY nginx/default.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/dist /usr/share/nginx/html
