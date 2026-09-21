@@ -1,16 +1,19 @@
-# React + Vite
+# VStore Storefront
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+[![Frontend CI](https://github.com/vstore-ex/vstore-front/actions/workflows/ci.yml/badge.svg)](https://github.com/vstore-ex/vstore-front/actions/workflows/ci.yml)
 
-Currently, two official plugins are available:
+Customer storefront for the VStore game store platform. React 19 + Vite, served by unprivileged nginx; API consumed same-origin via `/api/v1`.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Development
 
-## React Compiler
+```bash
+npm ci
+npm run dev      # Vite dev server (proxies /api to the backend)
+npm run lint
+npm run build
+npm run test:e2e
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## CI/CD
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Every PR runs lint, npm audit and the Vite build. Pushes to `main` build the Docker image, scan it with Trivy (blocking gate), push it to GHCR and deploy it to production via the reusable workflows from [vstore-infra](https://github.com/vstore-ex/vstore-infra).
