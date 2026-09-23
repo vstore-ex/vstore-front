@@ -9,6 +9,7 @@ import RegisterPage from './pages/RegisterPage/RegisterPage'
 import SupportPage from './pages/SupportPage/SupportPage'
 import WishlistPage from './pages/WishlistPage/WishlistPage'
 import { useCart } from './cart/context'
+import { useWishlist } from './wishlist/context'
 import { useAuth } from './auth/context'
 import OAuthCallbackPage from './pages/OAuthCallbackPage/OAuthCallbackPage'
 import { isOAuthCallback } from './auth/oauth'
@@ -62,6 +63,7 @@ function App() {
   const [currentView, setCurrentView] = useState(initialRoute.view)
   const [pendingAction, setPendingAction] = useState(null)
   const cart = useCart()
+  const wishlist = useWishlist()
   useEffect(() => {
     function syncRoute() {
       const route = parseRouteFromHash()
@@ -175,6 +177,7 @@ function App() {
         onSignOut={() => signOut()}
         isLoggingOut={isLoggingOut}
         cartCount={cart.count}
+        wishlistCount={wishlist?.count ?? 0}
       />
       {error && <div className="store-status" role="alert">{error}
         {error.startsWith('Could not complete sign out') && <button type="button" disabled={isLoggingOut} onClick={() => signOut()}>Retry sign out</button>}

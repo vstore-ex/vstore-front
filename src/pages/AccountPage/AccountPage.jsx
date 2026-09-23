@@ -3,6 +3,7 @@ import { mediaUrl } from '../../api/client'
 import useOrders from '../../hooks/useOrders'
 import { formatMoney } from '../../api/cart'
 import { useCart } from '../../cart/context'
+import { useWishlist } from '../../wishlist/context'
 import { updateUser, updateAvatar } from '../../api/auth'
 import fallbackAvatar from '../../assets/account/account-avatar.png'
 import Library from './Library'
@@ -13,9 +14,11 @@ export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const orders = useOrders()
+  const wishlist = useWishlist()
   const { currency } = useCart()
-  const stats = Object.fromEntries(Object.entries(user.stats || {}).filter(([label]) => label.toLowerCase() !== 'games'))
+  const stats = Object.fromEntries(Object.entries(user.stats || {}).filter(([label]) => !['games', 'wishlist'].includes(label.toLowerCase())))
   stats.Games = orders.loading ? '...' : orders.error ? 'Unavailable' : orders.ownedIds.length
+  stats.Wishlist = wishlist?.loading ? '...' : (wishlist?.count ?? 0)
   async function save(event) {
     event.preventDefault(); setBusy(true); setMessage('')
     try {
