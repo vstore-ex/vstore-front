@@ -43,7 +43,7 @@ export default function WishlistPage() {
         </div></div>
       <div className="wishlist-item__side"><strong>{item.price}</strong><div className="wishlist-item__actions">
         <button className="wishlist-item__remove" disabled={busy || wishlist.loading} onClick={() => wishlist.remove(item.id).catch(() => {})}>Remove</button>
-        {orders.ownedIds.includes(item.id) ? <a href="#/account">In your library</a> : <button className="wishlist-item__cart" disabled={busy || wishlist.loading || cart.loading || orders.loading || !!orders.error} onClick={() => move(item.id)}>{movingId === item.id ? 'Moving...' : 'Move to cart'}</button>}
+        {orders.ownedIds.includes(String(item.id)) ? <a href="#/account">In your library</a> : <button className="wishlist-item__cart" disabled={busy || wishlist.loading || cart.loading || orders.loading || !!orders.error} onClick={() => move(item.id)}>{movingId === item.id ? 'Moving...' : 'Move to cart'}</button>}
       </div></div>
     </article>)}</section>
   </div></div>
