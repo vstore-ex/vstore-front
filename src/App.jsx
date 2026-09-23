@@ -9,14 +9,12 @@ import RegisterPage from './pages/RegisterPage/RegisterPage'
 import SupportPage from './pages/SupportPage/SupportPage'
 import WishlistPage from './pages/WishlistPage/WishlistPage'
 import { useCart } from './cart/context'
-import { buildWishlistItems, defaultWishlistProductIds } from './data/wishlist'
 import { useAuth } from './auth/context'
 import OAuthCallbackPage from './pages/OAuthCallbackPage/OAuthCallbackPage'
 import { isOAuthCallback } from './auth/oauth'
 import './auth/Auth.css'
 import './App.css'
 
-const WISHLIST_STORAGE_KEY = 'vstore:wishlistProductIds'
 
 const defaultRoute = { view: 'discover', productId: null }
 
@@ -55,20 +53,6 @@ function navigateTo(path) {
   window.location.hash = nextHash
 }
 
-function getInitialWishlistProductIds() {
-  try {
-    const storedWishlist = JSON.parse(localStorage.getItem(WISHLIST_STORAGE_KEY))
-
-    if (Array.isArray(storedWishlist)) {
-      return storedWishlist
-    }
-  } catch {
-    localStorage.removeItem(WISHLIST_STORAGE_KEY)
-  }
-
-  return defaultWishlistProductIds
-}
-
 function App() {
   const initialRoute = parseRouteFromHash()
   const [authMode, setAuthMode] = useState(null)
@@ -78,10 +62,6 @@ function App() {
   const [currentView, setCurrentView] = useState(initialRoute.view)
   const [pendingAction, setPendingAction] = useState(null)
   const cart = useCart()
-  const [wishlistProductIds, setWishlistProductIds] = useState(getInitialWishlistProductIds)
-
-  const wishlistItems = buildWishlistItems(wishlistProductIds)
-
   useEffect(() => {
     function syncRoute() {
       const route = parseRouteFromHash()
@@ -112,10 +92,6 @@ function App() {
     return () => window.removeEventListener('vstore:session-expired', expired)
   }, [currentView, isAuthenticated])
 
-  useEffect(() => {
-    localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(wishlistProductIds))
-  }, [wishlistProductIds])
-
   function openAuth(mode, action = null) {
     setPendingAction(action)
     setAuthMode(mode)
@@ -131,18 +107,13 @@ function App() {
   async function handleAuthenticated() {
     completedLogin.current = true
     const route = parseRouteFromHash()
-    if (route.view === 'login') navigateTo(/^(?:account|orders|wishlist|cart(?:\?add=\d+)?)$/.test(route.next) ? route.next : 'discover')
+    if (route.view === 'login') navigateTo(/^(?:account|orders|(?:wishlist|cart)(?:\?add=\d+)?)$/.test(route.next) ? route.next : 'discover')
 
     if (pendingAction?.type === 'open-cart') {
       openCartPage()
     }
 
     if (pendingAction?.type === 'open-wishlist') {
-      openWishlistPage()
-    }
-
-    if (pendingAction?.type === 'add-to-wishlist') {
-      addProductToWishlist(pendingAction.productId)
       openWishlistPage()
     }
 
@@ -175,31 +146,6 @@ function App() {
 
   function openCart() { openCartPage() }
   function openWishlist() { openWishlistPage() }
-
-  function addProductToWishlist(productId) {
-    setWishlistProductIds((currentIds) =>
-      currentIds.includes(productId) ? currentIds : [...currentIds, productId],
-    )
-  }
-
-  function handleAddToWishlist(product) {
-    if (!isAuthenticated) {
-      openAuth('login', { type: 'add-to-wishlist', productId: product.id })
-      return
-    }
-
-    addProductToWishlist(product.id)
-    openWishlistPage()
-  }
-
-  function removeWishlistItem(productId) {
-    setWishlistProductIds((currentIds) => currentIds.filter((id) => id !== productId))
-  }
-
-  async function moveWishlistItemToCart(productId) {
-    try { await cart.addToCart(productId); removeWishlistItem(productId); openCartPage() }
-    catch { /* The shared cart error is displayed below. */ }
-  }
 
   async function signOut(all = false) {
     setAuthMode(null); setPendingAction(null); navigateTo('discover')
@@ -241,24 +187,18 @@ function App() {
           id={selectedProductId}
           showAchievements={currentView === 'achievements'}
           onViewAllAchievements={() => navigateTo(`products/${selectedProductId}/achievements`)}
-          onAddToWishlist={handleAddToWishlist}
         />
       ) : ['account', 'orders'].includes(currentView) ? (
         <AccountPage user={user} onUpdated={updateUser} onLogoutAll={() => signOut(true)} isLoggingOut={isLoggingOut} />
       ) : currentView === 'cart' ? (
         <CartPage />
       ) : currentView === 'wishlist' ? (
-        <WishlistPage
-          items={wishlistItems}
-          onAddToCart={moveWishlistItemToCart}
-          onRemove={removeWishlistItem}
-        />
+        <WishlistPage />
       ) : currentView === 'support' ? (
         <SupportPage />
       ) : (
         <DiscoverPage onProductSelect={openProduct} />
       )}
-      {currentView === 'wishlist' && cart.error && <p className="store-status" role="alert">{cart.error}</p>}
       <Footer />
       {(authMode || currentView === 'login') && !isLoggingOut && (
         <RegisterPage

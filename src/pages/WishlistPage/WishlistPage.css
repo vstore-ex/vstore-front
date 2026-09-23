@@ -462,3 +462,9 @@
     justify-content: flex-start;
   }
 }
+
+.wishlist-item__info a { color: inherit; overflow-wrap: anywhere; }
+.wishlist-item__main, .wishlist-item__info { min-width: 0; }
+.wishlist-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.wishlist-control { margin-top: 8px; }
+.wishlist-item button:disabled { opacity: .5; cursor: wait; }
