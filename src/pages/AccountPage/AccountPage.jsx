@@ -5,6 +5,7 @@ import { formatMoney } from '../../api/cart'
 import { useCart } from '../../cart/context'
 import { updateUser, updateAvatar } from '../../api/auth'
 import fallbackAvatar from '../../assets/account/account-avatar.png'
+import Library from './Library'
 import './AccountPage.css'
 
 export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut }) {
@@ -13,6 +14,8 @@ export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut
   const [message, setMessage] = useState('')
   const orders = useOrders()
   const { currency } = useCart()
+  const stats = Object.fromEntries(Object.entries(user.stats || {}).filter(([label]) => label.toLowerCase() !== 'games'))
+  stats.Games = orders.loading ? '...' : orders.error ? 'Unavailable' : orders.ownedIds.length
   async function save(event) {
     event.preventDefault(); setBusy(true); setMessage('')
     try {
@@ -36,9 +39,10 @@ export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut
     <section className="account-hero" aria-label="Account profile">
       <img className="account-hero__avatar" src={mediaUrl(user.avatar) || fallbackAvatar} alt="" />
       <div className="account-hero__identity"><p>{user.role}</p><h1>{user.username}</h1><p>{user.fullName}</p></div>
-      <div className="account-hero__stats">{Object.entries(user.stats).map(([label, value]) =>
+      <div className="account-hero__stats">{Object.entries(stats).map(([label, value]) =>
         <div className="account-stat" key={label}><span>{label}</span><strong>{value}</strong></div>)}</div>
     </section>
+    <Library />
     <section className="account-section"><h2>Profile settings</h2>
       <form className="store-form" onSubmit={save}>
         {Object.entries({ full_name: 'Full name', email: 'Email', phone: 'Phone' }).map(([name, label]) =>

@@ -1,4 +1,5 @@
 import './ProductCard.css'
+import WishlistButton from '../Wishlist/WishlistButton'
 import AddToCartButton from '../Cart/AddToCartButton'
 import { MediaImage } from '../Catalog/Media'
 
@@ -31,6 +32,7 @@ function ProductCard({ product, onSelect }) {
         )}
       </a>
       <AddToCartButton productId={product.id} />
+      <WishlistButton productId={product.id} />
     </article>
   )
 }
