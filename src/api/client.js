@@ -42,15 +42,17 @@ export async function apiRequest(path, { body, headers, signal, timeout = 20000,
   const refreshVersion = refreshed
   const multipart = body instanceof FormData
   const encoded = body instanceof URLSearchParams
-  let token = null
-  try { token = localStorage.getItem('vstore:token') } catch { /* storage disabled */ }
-  const authHeaders = auth && token ? { Authorization: `Bearer ${token}` } : {}
-  const request = () => fetch(API_BASE_URL + path, {
-    ...options, credentials: 'include', cache: 'no-store',
-    headers: { ...(body && !multipart && !encoded ? { 'Content-Type': 'application/json' } : {}), ...authHeaders, ...headers },
-    body: body == null ? undefined : multipart || encoded || typeof body === 'string' ? body : JSON.stringify(body),
-    signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(timeout)]) : AbortSignal.timeout(timeout),
-  })
+  const request = () => {
+    let token = null
+    try { token = localStorage.getItem('vstore:token') } catch { /* storage disabled */ }
+    const authHeaders = auth && token ? { Authorization: `Bearer ${token}` } : {}
+    return fetch(API_BASE_URL + path, {
+      ...options, credentials: 'include', cache: 'no-store',
+      headers: { ...(body && !multipart && !encoded ? { 'Content-Type': 'application/json' } : {}), ...authHeaders, ...headers },
+      body: body == null ? undefined : multipart || encoded || typeof body === 'string' ? body : JSON.stringify(body),
+      signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(timeout)]) : AbortSignal.timeout(timeout),
+    })
+  }
   let response = await request()
   if (response.status === 401 && auth && !ended && version === generation) {
     if (refreshVersion === refreshed) await refreshSession()

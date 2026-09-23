@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { mediaUrl } from '../../api/client'
-import useResource from '../../hooks/useResource'
+import useOrders from '../../hooks/useOrders'
+import { formatMoney } from '../../api/cart'
+import { useCart } from '../../cart/context'
 import { updateUser, updateAvatar } from '../../api/auth'
-const priceLabel = value => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(value))
 import fallbackAvatar from '../../assets/account/account-avatar.png'
 import './AccountPage.css'
 
@@ -10,7 +11,8 @@ export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut
   const [values, setValues] = useState({ full_name: user.fullName, email: user.email, phone: user.phone || '' })
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
-  const orders = useResource('/me/orders/')
+  const orders = useOrders()
+  const { currency } = useCart()
   async function save(event) {
     event.preventDefault(); setBusy(true); setMessage('')
     try {
@@ -51,12 +53,12 @@ export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut
       <button className="button button--secondary" disabled={isLoggingOut || busy} onClick={onLogoutAll}>Sign out of all devices</button>
     </section>
     <section className="account-section"><h2>Orders</h2>
-      {orders.loading && <p role="status">Loading orders...</p>}{orders.error && <p role="alert">{orders.error}</p>}
-      {orders.data?.length === 0 && <p>No orders yet.</p>}
+      {orders.loading && <p role="status">Loading orders...</p>}{orders.error && <div role="alert">{orders.error}<button type="button" onClick={orders.retry}>Retry orders</button></div>}
+      {!orders.loading && !orders.error && orders.data?.length === 0 && <p>No orders yet.</p>}
       <div className="order-list">{orders.data?.map(order => <article key={order.id}>
-        <h3>Order #{order.id}</h3><p>{new Date(order.created_at).toLocaleDateString()} / {priceLabel(order.total)}</p>
+        <h3>Order #{order.id}</h3><p>{new Date(order.created_at).toLocaleDateString()} / {formatMoney(order.total, order.currency || currency)}</p>
         <ul>{order.items.map(item => <li key={item.product_id}>
-          <a href={`#/products/${item.product_id}`}>Game #{item.product_id}</a> / {priceLabel(item.price_at_purchase)}
+          <a href={`#/products/${item.product_id}`}>Game #{item.product_id}</a> / {formatMoney(item.price_at_purchase, order.currency || currency)}
         </li>)}</ul>
       </article>)}</div>
     </section>
