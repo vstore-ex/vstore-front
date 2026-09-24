@@ -1,3 +1,5 @@
+import MarkdownView from '../../components/Markdown/MarkdownView'
+import ProductReviews from '../../components/ProductReviews/ProductReviews'
 import AchievementsPage from '../AchievementsPage/AchievementsPage'
 import WishlistButton from '../../components/Wishlist/WishlistButton'
 import AddToCartButton from '../../components/Cart/AddToCartButton'
@@ -29,7 +31,8 @@ export default function ProductDetailPage({ id, showAchievements, onViewAllAchie
         </div>
       </aside>
     </div>
-    <section className="detail-section"><h2>About this game</h2><p className="catalog-description">{game.description_md || 'No description available yet.'}</p></section>
+    <section className="detail-section"><h2>About this game</h2><MarkdownView>{game.description_md || 'No description available yet.'}</MarkdownView></section>
+    <ProductReviews key={game.id} gameId={game.id} />
     {game.requirements && <section className="detail-section"><h2>System requirements</h2><p className="catalog-description">{game.requirements}</p></section>}
     <section className="detail-section"><h2>Achievements</h2><button className="button button--secondary" onClick={onViewAllAchievements}>Show all achievements</button></section>
     {game.meta_info && <section className="detail-section"><h2>Additional information</h2><p className="catalog-description">{game.meta_info}</p></section>}

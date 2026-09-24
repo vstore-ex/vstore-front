@@ -2,7 +2,9 @@ import { useMemo, useState } from 'react'
 import Pagination from '../../components/Pagination/Pagination'
 import chevronRight from '../../assets/icon-chevron-right.svg'
 import searchIcon from '../../assets/icon-search.svg'
-import { supportTopics } from '../../data/support'
+import MarkdownView from '../../components/Markdown/MarkdownView'
+import ContentStatus from '../../components/Markdown/ContentStatus'
+import usePublicContent from '../../hooks/usePublicContent'
 import './SupportPage.css'
 
 const TOPICS_PER_PAGE = 8
@@ -23,37 +25,31 @@ function SupportTopic({ topic, isOpen, onToggle }) {
 
       {isOpen && (
         <div className="support-topic__panel" id={`${topic.id}-panel`}>
-          <p>{topic.description}</p>
+          <MarkdownView>{topic.content_md}</MarkdownView>
         </div>
       )}
     </article>
   )
 }
 
-function SupportPage({ topics = supportTopics }) {
+function SupportPage() {
   const [query, setQuery] = useState('')
-  const [openTopicId, setOpenTopicId] = useState(topics[0]?.id)
+  const [openTopicId, setOpenTopicId] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
 
+  const resource = usePublicContent(`/articles?page=${currentPage}&page_size=${TOPICS_PER_PAGE}`)
+  const topics = resource.data?.items
   const visibleTopics = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase()
 
     if (!normalizedQuery) {
-      return topics
+      return topics || []
     }
 
-    return topics.filter((topic) =>
-      `${topic.title} ${topic.description}`.toLowerCase().includes(normalizedQuery),
+    return (topics || []).filter((topic) =>
+      `${topic.title} ${topic.content_md}`.toLowerCase().includes(normalizedQuery),
     )
   }, [query, topics])
-
-  const totalPages = Math.max(1, Math.ceil(visibleTopics.length / TOPICS_PER_PAGE))
-  const safeCurrentPage = Math.min(currentPage, totalPages)
-
-  const currentTopics = useMemo(() => {
-    const start = (safeCurrentPage - 1) * TOPICS_PER_PAGE
-    return visibleTopics.slice(start, start + TOPICS_PER_PAGE)
-  }, [safeCurrentPage, visibleTopics])
 
   function handleTopicToggle(topicId) {
     setOpenTopicId((current) => (current === topicId ? null : topicId))
@@ -64,21 +60,21 @@ function SupportPage({ topics = supportTopics }) {
       <div className="support-page__inner">
         <h1>Support</h1>
 
-        <label className="support-search" aria-label="Find help">
+        <label className="support-search" aria-label="Find help on this page">
           <img src={searchIcon} alt="" />
           <input
             type="search"
-            placeholder="Find help"
+            placeholder="Find help on this page"
             value={query}
             onChange={(event) => {
               setQuery(event.target.value)
-              setCurrentPage(1)
             }}
           />
         </label>
 
         <section className="support-topics" aria-label="Support topics">
-          {currentTopics.map((topic) => (
+          <ContentStatus resource={resource} />
+          {visibleTopics.map((topic) => (
             <SupportTopic
               topic={topic}
               isOpen={openTopicId === topic.id}
@@ -87,7 +83,7 @@ function SupportPage({ topics = supportTopics }) {
             />
           ))}
 
-          {visibleTopics.length === 0 && (
+          {!resource.loading && !resource.error && visibleTopics.length === 0 && (
             <div className="support-empty">
               <p>No help topics found.</p>
             </div>
@@ -98,10 +94,10 @@ function SupportPage({ topics = supportTopics }) {
           activeClassName="support-pagination__active"
           ariaLabel="Support pages"
           className="support-pagination"
-          currentPage={safeCurrentPage}
-          onPageChange={setCurrentPage}
+          currentPage={currentPage}
+          onPageChange={page => { setCurrentPage(page); setOpenTopicId(null); setQuery('') }}
           pageSize={TOPICS_PER_PAGE}
-          totalItems={visibleTopics.length}
+          totalItems={resource.data?.total || 0}
         />
 
         <section className="support-contact" aria-label="Contact support">

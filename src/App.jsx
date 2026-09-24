@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import NewsDetailPage from './pages/NewsDetailPage/NewsDetailPage'
 import Header from './components/Header/Header'
 import Footer from './components/Footer/Footer'
 import AccountPage from './pages/AccountPage/AccountPage'
@@ -23,6 +24,7 @@ function parseRouteFromHash() {
   const route = window.location.hash ? window.location.hash.replace(/^#\/?/, '') : window.location.pathname.replace(/^\//, '') + window.location.search
   const [path, query] = route.split('?')
   const parts = path.split('/').filter(Boolean)
+  if (parts[0] === 'news') return { view: 'news', productId: parts[1] || null }
   if (parts[0] === 'login') return { view: 'login', productId: null, next: new URLSearchParams(query).get('next') || 'discover' }
 
   if (!parts.length || parts[0] === 'discover') {
@@ -197,6 +199,8 @@ function App() {
         <CartPage />
       ) : currentView === 'wishlist' ? (
         <WishlistPage />
+      ) : currentView === 'news' ? (
+        <NewsDetailPage key={selectedProductId || 'news-list'} id={selectedProductId} />
       ) : currentView === 'support' ? (
         <SupportPage />
       ) : (
