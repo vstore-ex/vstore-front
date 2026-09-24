@@ -2,7 +2,7 @@ import userIcon from '../../assets/icon-user-circle.svg'
 import heartIcon from '../../assets/icon-heart.svg'
 import cartIcon from '../../assets/icon-cart.svg'
 import globeIcon from '../../assets/icon-globe.svg'
-import searchIcon from '../../assets/icon-search.svg'
+import StoreSearch from './StoreSearch'
 import logoMark from '../../assets/logo-mark.svg'
 import './Header.css'
 
@@ -77,10 +77,7 @@ function Header({
           ))}
         </nav>
 
-        <label className="search-field" aria-label="Search store">
-          <img className="search-field__icon" src={searchIcon} alt="" />
-          <input className="search-field__input" type="search" placeholder="Search store" />
-        </label>
+        <StoreSearch />
       </div>
 
       <div className="header-actions">
