@@ -1,10 +1,12 @@
 import AchievementsPage from '../AchievementsPage/AchievementsPage'
+import WishlistButton from '../../components/Wishlist/WishlistButton'
+import AddToCartButton from '../../components/Cart/AddToCartButton'
 import useCatalogResource from '../../hooks/useCatalogResource'
 import MediaGallery, { MediaImage } from '../../components/Catalog/Media'
 import ResourceStatus from '../../components/Catalog/ResourceStatus'
 import './ProductDetailPage.css'
 import '../../components/Catalog/Catalog.css'
-export default function ProductDetailPage({ id, showAchievements, onViewAllAchievements, onAddToCart, onAddToWishlist }) {
+export default function ProductDetailPage({ id, showAchievements, onViewAllAchievements }) {
   const resource = useCatalogResource('game', String(id))
   if (resource.loading || resource.error) return <div className="product-detail-page"><ResourceStatus resource={resource} label="game" />
     {resource.error && <a className="catalog-back" href="#/discover">Back to catalog</a>}</div>
@@ -22,8 +24,8 @@ export default function ProductDetailPage({ id, showAchievements, onViewAllAchie
         <div className="product-tags">{game.tags.map(tag => <a key={tag.id} href={`#/discover?page=1&tag_id=${encodeURIComponent(tag.id)}`}>{tag.name}</a>)}</div>
         <p className="catalog-price">{game.originalPrice && <del>{game.originalPrice} </del>}{game.price}</p>
         <div className="product-actions">
-          <button className="product-action product-action--accent" onClick={() => onAddToCart(game)}>Add to cart</button>
-          <button className="product-action product-action--secondary" onClick={() => onAddToWishlist(game)}>Wishlist</button>
+          <AddToCartButton productId={game.id} className="product-action product-action--accent" />
+          <WishlistButton productId={game.id} className="product-action product-action--secondary" />
         </div>
       </aside>
     </div>

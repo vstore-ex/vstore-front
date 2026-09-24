@@ -25,6 +25,8 @@ function Header({
   onAccount,
   onSignOut,
   isLoggingOut = false,
+  cartCount = 0,
+  wishlistCount = 0,
 }) {
   function handleActionClick(label) {
     if (label === 'Account') {
@@ -88,10 +90,19 @@ function Header({
               className={`icon-button${activeView === label.toLowerCase() ? ' icon-button--active' : ''}`}
               type="button"
               aria-label={label}
+              aria-describedby={
+                label === 'Cart' && cartCount > 0
+                  ? 'cart-count'
+                  : label === 'Wishlist' && wishlistCount > 0
+                    ? 'wishlist-count'
+                    : undefined
+              }
               onClick={() => handleActionClick(label)}
               key={label}
             >
               <img src={icon} alt="" />
+              {label === 'Cart' && cartCount > 0 && <span id="cart-count" className="cart-count" aria-live="polite" aria-label={`${cartCount} items in cart`}>{cartCount}</span>}
+              {label === 'Wishlist' && wishlistCount > 0 && <span id="wishlist-count" className="cart-count wishlist-count" aria-live="polite" aria-label={`${wishlistCount} items in wishlist`}>{wishlistCount}</span>}
             </button>
           ))}
         </div>

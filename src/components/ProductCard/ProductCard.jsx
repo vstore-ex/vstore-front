@@ -1,4 +1,6 @@
 import './ProductCard.css'
+import WishlistButton from '../Wishlist/WishlistButton'
+import AddToCartButton from '../Cart/AddToCartButton'
 import { MediaImage } from '../Catalog/Media'
 
 function ProductCard({ product, onSelect }) {
@@ -29,6 +31,8 @@ function ProductCard({ product, onSelect }) {
           <span className="product-card__price">{product.price}</span>
         )}
       </a>
+      <AddToCartButton productId={product.id} />
+      <WishlistButton productId={product.id} />
     </article>
   )
 }

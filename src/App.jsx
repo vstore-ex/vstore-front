@@ -8,21 +8,20 @@ import ProductDetailPage from './pages/ProductDetailPage/ProductDetailPage'
 import RegisterPage from './pages/RegisterPage/RegisterPage'
 import SupportPage from './pages/SupportPage/SupportPage'
 import WishlistPage from './pages/WishlistPage/WishlistPage'
-import { buildCartItems, defaultCartProductIds } from './data/cart'
-import { buildWishlistItems, defaultWishlistProductIds } from './data/wishlist'
+import { useCart } from './cart/context'
+import { useWishlist } from './wishlist/context'
 import { useAuth } from './auth/context'
 import OAuthCallbackPage from './pages/OAuthCallbackPage/OAuthCallbackPage'
 import { isOAuthCallback } from './auth/oauth'
 import './auth/Auth.css'
 import './App.css'
 
-const CART_STORAGE_KEY = 'vstore:cartProductIds'
-const WISHLIST_STORAGE_KEY = 'vstore:wishlistProductIds'
 
 const defaultRoute = { view: 'discover', productId: null }
 
 function parseRouteFromHash() {
-  const [path, query] = window.location.hash.replace(/^#\/?/, '').split('?')
+  const route = window.location.hash ? window.location.hash.replace(/^#\/?/, '') : window.location.pathname.replace(/^\//, '') + window.location.search
+  const [path, query] = route.split('?')
   const parts = path.split('/').filter(Boolean)
   if (parts[0] === 'login') return { view: 'login', productId: null, next: new URLSearchParams(query).get('next') || 'discover' }
 
@@ -55,34 +54,6 @@ function navigateTo(path) {
   window.location.hash = nextHash
 }
 
-function getInitialCartProductIds() {
-  try {
-    const storedCart = JSON.parse(localStorage.getItem(CART_STORAGE_KEY))
-
-    if (Array.isArray(storedCart)) {
-      return storedCart
-    }
-  } catch {
-    localStorage.removeItem(CART_STORAGE_KEY)
-  }
-
-  return defaultCartProductIds
-}
-
-function getInitialWishlistProductIds() {
-  try {
-    const storedWishlist = JSON.parse(localStorage.getItem(WISHLIST_STORAGE_KEY))
-
-    if (Array.isArray(storedWishlist)) {
-      return storedWishlist
-    }
-  } catch {
-    localStorage.removeItem(WISHLIST_STORAGE_KEY)
-  }
-
-  return defaultWishlistProductIds
-}
-
 function App() {
   const initialRoute = parseRouteFromHash()
   const [authMode, setAuthMode] = useState(null)
@@ -91,12 +62,8 @@ function App() {
   const [selectedProductId, setSelectedProductId] = useState(initialRoute.productId)
   const [currentView, setCurrentView] = useState(initialRoute.view)
   const [pendingAction, setPendingAction] = useState(null)
-  const [cartProductIds, setCartProductIds] = useState(getInitialCartProductIds)
-  const [wishlistProductIds, setWishlistProductIds] = useState(getInitialWishlistProductIds)
-
-  const cartItems = buildCartItems(cartProductIds)
-  const wishlistItems = buildWishlistItems(wishlistProductIds)
-
+  const cart = useCart()
+  const wishlist = useWishlist()
   useEffect(() => {
     function syncRoute() {
       const route = parseRouteFromHash()
@@ -127,14 +94,6 @@ function App() {
     return () => window.removeEventListener('vstore:session-expired', expired)
   }, [currentView, isAuthenticated])
 
-  useEffect(() => {
-    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartProductIds))
-  }, [cartProductIds])
-
-  useEffect(() => {
-    localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(wishlistProductIds))
-  }, [wishlistProductIds])
-
   function openAuth(mode, action = null) {
     setPendingAction(action)
     setAuthMode(mode)
@@ -150,23 +109,13 @@ function App() {
   async function handleAuthenticated() {
     completedLogin.current = true
     const route = parseRouteFromHash()
-    if (route.view === 'login') navigateTo(['account', 'orders', 'cart', 'wishlist'].includes(route.next) ? route.next : 'discover')
+    if (route.view === 'login') navigateTo(/^(?:account|orders|(?:wishlist|cart)(?:\?add=\d+)?)$/.test(route.next) ? route.next : 'discover')
 
     if (pendingAction?.type === 'open-cart') {
       openCartPage()
     }
 
     if (pendingAction?.type === 'open-wishlist') {
-      openWishlistPage()
-    }
-
-    if (pendingAction?.type === 'add-to-cart') {
-      addProductToCart(pendingAction.productId)
-      openCartPage()
-    }
-
-    if (pendingAction?.type === 'add-to-wishlist') {
-      addProductToWishlist(pendingAction.productId)
       openWishlistPage()
     }
 
@@ -200,61 +149,6 @@ function App() {
   function openCart() { openCartPage() }
   function openWishlist() { openWishlistPage() }
 
-  function addProductToCart(productId) {
-    setCartProductIds((currentIds) =>
-      currentIds.includes(productId) ? currentIds : [...currentIds, productId],
-    )
-  }
-
-  function addProductToWishlist(productId) {
-    setWishlistProductIds((currentIds) =>
-      currentIds.includes(productId) ? currentIds : [...currentIds, productId],
-    )
-  }
-
-  function handleAddToCart(product) {
-    if (!isAuthenticated) {
-      openAuth('login', { type: 'add-to-cart', productId: product.id })
-      return
-    }
-
-    addProductToCart(product.id)
-    openCartPage()
-  }
-
-  function handleAddToWishlist(product) {
-    if (!isAuthenticated) {
-      openAuth('login', { type: 'add-to-wishlist', productId: product.id })
-      return
-    }
-
-    addProductToWishlist(product.id)
-    openWishlistPage()
-  }
-
-  function removeCartItem(productId) {
-    setCartProductIds((currentIds) => currentIds.filter((id) => id !== productId))
-  }
-
-  function moveCartItemToWishlist(productId) {
-    addProductToWishlist(productId)
-    removeCartItem(productId)
-  }
-
-  function removeWishlistItem(productId) {
-    setWishlistProductIds((currentIds) => currentIds.filter((id) => id !== productId))
-  }
-
-  function moveWishlistItemToCart(productId) {
-    addProductToCart(productId)
-    removeWishlistItem(productId)
-    openCartPage()
-  }
-
-  function handleCheckout() {
-    setCartProductIds([])
-  }
-
   async function signOut(all = false) {
     setAuthMode(null); setPendingAction(null); navigateTo('discover')
     try { await logout(all) } catch { /* The auth context displays the server error. */ }
@@ -282,6 +176,8 @@ function App() {
         onAccount={openAccount}
         onSignOut={() => signOut()}
         isLoggingOut={isLoggingOut}
+        cartCount={cart.count}
+        wishlistCount={wishlist?.count ?? 0}
       />
       {error && <div className="store-status" role="alert">{error}
         {error.startsWith('Could not complete sign out') && <button type="button" disabled={isLoggingOut} onClick={() => signOut()}>Retry sign out</button>}
@@ -294,24 +190,13 @@ function App() {
           id={selectedProductId}
           showAchievements={currentView === 'achievements'}
           onViewAllAchievements={() => navigateTo(`products/${selectedProductId}/achievements`)}
-          onAddToCart={handleAddToCart}
-          onAddToWishlist={handleAddToWishlist}
         />
       ) : ['account', 'orders'].includes(currentView) ? (
         <AccountPage user={user} onUpdated={updateUser} onLogoutAll={() => signOut(true)} isLoggingOut={isLoggingOut} />
       ) : currentView === 'cart' ? (
-        <CartPage
-          items={cartItems}
-          onCheckout={handleCheckout}
-          onMoveToWishlist={moveCartItemToWishlist}
-          onRemove={removeCartItem}
-        />
+        <CartPage />
       ) : currentView === 'wishlist' ? (
-        <WishlistPage
-          items={wishlistItems}
-          onAddToCart={moveWishlistItemToCart}
-          onRemove={removeWishlistItem}
-        />
+        <WishlistPage />
       ) : currentView === 'support' ? (
         <SupportPage />
       ) : (
