@@ -9,7 +9,7 @@ import './WishlistPage.css'
 export default function WishlistPage() {
   const wishlist = useWishlist(), cart = useCart(), orders = useOrders()
   const consumed = useRef(false), moving = useRef(false)
-  const [movingId, setMovingId] = useState(null)
+  const [addingId, setAddingId] = useState(null)
   const [error, setError] = useState('')
   useEffect(() => {
     if (consumed.current) return
@@ -19,16 +19,17 @@ export default function WishlistPage() {
     window.history.replaceState(null, '', window.location.pathname + window.location.search + '#/wishlist')
     wishlist.add(id).catch(() => { /* Context displays the error. */ })
   }, [wishlist])
-  async function move(id) {
+  async function addToCart(id) {
     if (moving.current || orders.loading || orders.error || orders.ownedIds.includes(String(id))) return
-    moving.current = true; setMovingId(id); setError('')
+    moving.current = true; setAddingId(id); setError('')
     try {
-      const added = cart.items.some(item => String(item.product_id) === String(id)) || await cart.addToCart(id)
-      if (added && await wishlist.remove(id)) window.location.hash = '#/cart'
+      const inCart = cart.items.some(item => String(item.product_id) === String(id))
+      const added = inCart || await cart.addToCart(id)
+      if (added) window.location.hash = '#/cart'
     } catch (reason) { setError(cartError(reason)) }
-    finally { moving.current = false; setMovingId(null) }
+    finally { moving.current = false; setAddingId(null) }
   }
-  const busy = wishlist.busy || cart.busy || movingId != null
+  const busy = wishlist.busy || cart.busy || addingId != null
   return <div className="wishlist-page"><div className="wishlist-page__inner">
     <div className="wishlist-page__header"><h1>My Wishlist</h1><span>{wishlist.count} games</span></div>
     {wishlist.loading && <p role="status">Loading wishlist...</p>}
@@ -43,7 +44,7 @@ export default function WishlistPage() {
         </div></div>
       <div className="wishlist-item__side"><strong>{item.price}</strong><div className="wishlist-item__actions">
         <button className="wishlist-item__remove" disabled={busy || wishlist.loading} onClick={() => wishlist.remove(item.id).catch(() => {})}>Remove</button>
-        {orders.ownedIds.includes(String(item.id)) ? <a href="#/account">In your library</a> : <button className="wishlist-item__cart" disabled={busy || wishlist.loading || cart.loading || orders.loading || !!orders.error} onClick={() => move(item.id)}>{movingId === item.id ? 'Moving...' : 'Move to cart'}</button>}
+        {orders.ownedIds.includes(String(item.id)) ? <a href="#/account">In your library</a> : <button className="wishlist-item__cart" disabled={busy || wishlist.loading || cart.loading || orders.loading || !!orders.error} onClick={() => addToCart(item.id)}>{addingId === item.id ? 'Adding...' : 'Add to cart'}</button>}
       </div></div>
     </article>)}</section>
   </div></div>
