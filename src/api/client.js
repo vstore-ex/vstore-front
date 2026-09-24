@@ -75,6 +75,8 @@ export async function apiRequest(path, { body, headers, signal, timeout = 20000,
       message = detail.map(item => item.msg || item.message).filter(Boolean).join(' ')
     } else if (typeof detail === 'string') {
       message = detail
+    } else if (response.status === 413) {
+      message = 'The uploaded file is too large. Please choose a smaller image.'
     } else {
       message = `Request failed (${response.status}). Please try again.`
     }
