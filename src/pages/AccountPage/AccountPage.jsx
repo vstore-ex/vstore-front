@@ -12,35 +12,74 @@ import './AccountPage.css'
 export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut }) {
   const [values, setValues] = useState({ full_name: user.fullName, email: user.email, phone: user.phone || '' })
   const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const [avatarFile, setAvatarFile] = useState(null)
+  const [avatarPreview, setAvatarPreview] = useState(null)
+  const [avatarTimestamp, setAvatarTimestamp] = useState(() => Date.now())
   const orders = useOrders()
   const wishlist = useWishlist()
   const { currency } = useCart()
   const stats = Object.fromEntries(Object.entries(user.stats || {}).filter(([label]) => !['games', 'wishlist'].includes(label.toLowerCase())))
   stats.Games = orders.loading ? '...' : orders.error ? 'Unavailable' : orders.ownedIds.length
   stats.Wishlist = wishlist?.loading ? '...' : (wishlist?.count ?? 0)
-  async function save(event) {
-    event.preventDefault(); setBusy(true); setMessage('')
-    try {
-      onUpdated(await updateUser(values))
-      setMessage('Profile saved.')
-    } catch (error) { setMessage(error.message) } finally { setBusy(false) }
-  }
-  async function avatar(event) {
-    const file = event.target.files[0]
+
+  function handleAvatarChange(event) {
+    const file = event.target.files?.[0]
     if (!file) return
     if (!file.type.startsWith('image/')) {
-      setMessage('Choose an image file.'); return
+      setError('Please choose an image file (PNG, JPG, WEBP).')
+      setMessage('')
+      return
     }
-    setBusy(true); setMessage('')
-    try {
-      onUpdated(await updateAvatar(file))
-      setMessage('Avatar saved.')
-    } catch (error) { setMessage(error.message) } finally { setBusy(false); event.target.value = '' }
+    setError('')
+    setMessage('')
+    setAvatarFile(file)
+    setAvatarPreview(URL.createObjectURL(file))
   }
+
+  async function uploadAvatarDirect() {
+    if (!avatarFile) return
+    setBusy(true); setMessage(''); setError('')
+    try {
+      const updated = await updateAvatar(avatarFile)
+      onUpdated(updated)
+      setAvatarFile(null)
+      setAvatarPreview(null)
+      setAvatarTimestamp(Date.now())
+      setMessage('Avatar saved successfully.')
+    } catch (err) {
+      setError(err.message || 'Avatar upload failed.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function save(event) {
+    event.preventDefault(); setBusy(true); setMessage(''); setError('')
+    try {
+      let updated = user
+      if (avatarFile) {
+        updated = await updateAvatar(avatarFile)
+        setAvatarFile(null)
+        setAvatarPreview(null)
+        setAvatarTimestamp(Date.now())
+      }
+      updated = await updateUser(values)
+      onUpdated(updated)
+      setMessage('Profile saved.')
+    } catch (err) {
+      setError(err.message || 'Could not save profile.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const avatarSrc = avatarPreview || (user.avatar ? `${mediaUrl(user.avatar)}?t=${avatarTimestamp}` : fallbackAvatar)
+
   return <div className="account-page account-page--current"><div className="account-page__inner">
     <section className="account-hero" aria-label="Account profile">
-      <img className="account-hero__avatar" src={mediaUrl(user.avatar) || fallbackAvatar} alt="" />
+      <img className="account-hero__avatar" src={avatarSrc} alt="" />
       <div className="account-hero__identity"><p>{user.role}</p><h1>{user.username}</h1><p>{user.fullName}</p></div>
       <div className="account-hero__stats">{Object.entries(stats).map(([label, value]) =>
         <div className="account-stat" key={label}><span>{label}</span><strong>{value}</strong></div>)}</div>
@@ -51,9 +90,18 @@ export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut
         {Object.entries({ full_name: 'Full name', email: 'Email', phone: 'Phone' }).map(([name, label]) =>
           <label key={name}>{label}<input type={name === 'email' ? 'email' : name === 'phone' ? 'tel' : 'text'}
             value={values[name]} required={name === 'email'} onChange={e => setValues(v => ({ ...v, [name]: e.target.value }))} /></label>)}
-        <button className="button button--accent" disabled={busy}>Save profile</button>
-        <label>Avatar<input type="file" accept="image/*" disabled={busy} onChange={avatar} /></label>
-        {message && <p role="status">{message}</p>}
+        <label>Avatar<input type="file" accept="image/*" disabled={busy} onChange={handleAvatarChange} /></label>
+        {avatarFile && (
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: '-4px' }}>
+            <button type="button" className="button button--secondary" disabled={busy} onClick={uploadAvatarDirect}>
+              {busy ? 'Uploading...' : 'Upload avatar now'}
+            </button>
+            <span style={{ fontSize: '13px', opacity: 0.8 }}>({avatarFile.name})</span>
+          </div>
+        )}
+        <button className="button button--accent" disabled={busy}>{busy ? 'Saving...' : 'Save profile'}</button>
+        {error && <p className="store-form__error" role="alert" style={{ color: '#ff6b6b', margin: '4px 0 0' }}>{error}</p>}
+        {message && <p className="store-form__status" role="status" style={{ color: '#7bc74d', margin: '4px 0 0' }}>{message}</p>}
       </form>
     </section>
     <section className="account-section"><h2>Session settings</h2>

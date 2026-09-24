@@ -15,9 +15,13 @@ export function formatMoney(value, currency = 'UAH') {
   return new Intl.NumberFormat('en', { style: 'currency', currency }).format(Number(value))
 }
 export function cartError(error) {
+  if (error.status === 400 && /already own/i.test(error.message)) return 'You already own this game in your library.'
   if (error.status === 400 && /already in cart/i.test(error.message)) return 'This game is already in your cart.'
   if (error.status === 400 && /cart is empty/i.test(error.message)) return 'Your cart is empty. Add a game before placing an order.'
+  if (error.status === 403 && /purchases are disabled/i.test(error.message)) return 'Purchases are disabled for your account role.'
   if (error.status === 404) return 'This game is no longer available in your cart or catalog.'
+  if (error.status === 409) return 'An order is already being processed for your account. Please wait a moment.'
+  if (error.status === 429) return 'Too many requests. Please wait a moment before trying again.'
   if (error.status >= 500) return 'The server could not complete this action. Please try again.'
   return error.message || 'Could not connect to the store. Please try again.'
 }

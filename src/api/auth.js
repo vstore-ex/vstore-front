@@ -52,8 +52,11 @@ export async function updateAvatar(file) {
   return normalizeUser(await apiRequest('/users/me/avatar', { method: 'PATCH', body, timeout: 120000 }))
 }
 export function registrationErrors(error) {
+  if (Array.isArray(error.errors) && error.errors.length > 0) {
+    return Object.fromEntries(error.errors.map(item => [item.field, item.message]))
+  }
   if (Array.isArray(error.detail)) return Object.fromEntries(error.detail.map(item => [item.loc?.at(-1), item.msg]))
-  if (error.status !== 400) return {}
+  if (error.status !== 400 && error.status !== 422) return {}
   if (/email/i.test(error.message)) return { email: error.message }
   if (/username/i.test(error.message)) return { username: error.message }
   if (/already exists/i.test(error.message)) return { username: 'Username or email already exists.', email: 'Username or email already exists.' }

@@ -44,7 +44,6 @@ jobs:
   build-docker:
     name: Build & Push Docker Image
     needs: [build]
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     uses: vstore-ex/vstore-infra/.github/workflows/build-and-push.yml@main
     permissions:
       contents: read

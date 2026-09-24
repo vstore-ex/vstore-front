@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../auth/context'
+import { useCart } from '../cart/context'
 import { WishlistContext } from './context'
 import * as api from '../api/wishlist'
-function WishlistSession({ owner, children }) {
+function WishlistSession({ owner, orderVersion, children }) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(owner != null)
   const [error, setError] = useState('')
@@ -24,6 +25,10 @@ function WishlistSession({ owner, children }) {
     window.addEventListener('focus', sync)
     return () => { active.current = false; version.current += 1; window.removeEventListener('focus', sync) }
   }, [owner, refresh])
+  useEffect(() => {
+    if (owner == null || !orderVersion) return
+    refresh()
+  }, [orderVersion, refresh, owner])
   async function mutate(action) {
     if (owner == null) throw new Error('Please sign in to use your wishlist.')
     if (lock.current) return false
@@ -48,5 +53,6 @@ function WishlistSession({ owner, children }) {
 }
 export default function WishlistProvider({ children }) {
   const { currentUser } = useAuth()
-  return <WishlistSession key={currentUser?.id ?? 'guest'} owner={currentUser?.id}>{children}</WishlistSession>
+  const { orderVersion } = useCart()
+  return <WishlistSession key={currentUser?.id ?? 'guest'} owner={currentUser?.id} orderVersion={orderVersion}>{children}</WishlistSession>
 }
