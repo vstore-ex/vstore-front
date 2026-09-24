@@ -6,8 +6,11 @@ let refreshed = 0
 let ended = false
 export function resetSession(active = true) { generation += 1; ended = !active }
 export class ApiError extends Error {
-  constructor(message, status, detail) {
+  constructor(message, status, detail, problem = null) {
     super(message); this.status = status; this.detail = detail
+    this.problem = problem
+    this.errors = Array.isArray(problem?.errors) ? problem.errors : []
+    this.requestId = problem?.request_id || null
     this.banned = status === 403 && /account banned/i.test(message)
   }
 }
@@ -65,9 +68,20 @@ export async function apiRequest(path, { body, headers, signal, timeout = 20000,
   try { data = raw ? JSON.parse(raw) : null } catch { data = null }
   if (!response.ok) {
     const detail = data?.detail || data?.message
-    const message = Array.isArray(detail) ? detail.map(item => item.msg).join(' ') :
-      typeof detail === 'string' ? detail : `Request failed (${response.status}). Please try again.`
-    const error = new ApiError(message, response.status, detail)
+    let message
+    if (Array.isArray(data?.errors) && data.errors.length > 0) {
+      message = data.errors.map(item => item.message || item.msg).filter(Boolean).join('. ')
+    } else if (Array.isArray(detail)) {
+      message = detail.map(item => item.msg || item.message).filter(Boolean).join(' ')
+    } else if (typeof detail === 'string') {
+      message = detail
+    } else {
+      message = `Request failed (${response.status}). Please try again.`
+    }
+    const error = new ApiError(message, response.status, detail, data)
+    error.requestId = data?.request_id || response.headers.get('X-Request-ID') || null
+    const retryAfter = response.headers.get('Retry-After')
+    error.retryAfter = retryAfter ? parseInt(retryAfter, 10) : null
     if (error.banned || (auth && response.status === 401)) rejectSession(error, version)
     throw error
   }
