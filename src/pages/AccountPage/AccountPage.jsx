@@ -17,7 +17,7 @@ export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut
   const wishlist = useWishlist()
   const { currency } = useCart()
   const stats = Object.fromEntries(Object.entries(user.stats || {}).filter(([label]) => !['games', 'wishlist'].includes(label.toLowerCase())))
-  stats.Games = orders.loading ? '...' : orders.error ? 'Unavailable' : orders.ownedIds.length
+  stats.Games = orders.loading ? '...' : orders.error && !orders.hasData ? 'Unavailable' : orders.ownedIds.length
   stats.Wishlist = wishlist?.loading ? '...' : (wishlist?.count ?? 0)
   async function save(event) {
     event.preventDefault(); setBusy(true); setMessage('')

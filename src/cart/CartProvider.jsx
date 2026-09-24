@@ -26,7 +26,7 @@ function CartSession({ owner, children }) {
   useEffect(() => {
     active.current = true
     refresh()
-    const sync = () => { if (owner != null && !lock.current) { setLoading(true); refresh() } }
+    const sync = () => { if (owner != null && !lock.current) { refresh() } }
     window.addEventListener('focus', sync)
     return () => { active.current = false; requestVersion.current += 1; window.removeEventListener('focus', sync) }
   }, [refresh, owner])

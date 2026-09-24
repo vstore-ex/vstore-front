@@ -20,7 +20,7 @@ export default function WishlistPage() {
     wishlist.add(id).catch(() => { /* Context displays the error. */ })
   }, [wishlist])
   async function move(id) {
-    if (moving.current || orders.loading || orders.error || orders.ownedIds.includes(String(id))) return
+    if (moving.current || orders.loading || orders.ownedIds.includes(String(id))) return
     moving.current = true; setMovingId(id); setError('')
     try {
       const added = cart.items.some(item => String(item.product_id) === String(id)) || await cart.addToCart(id)
@@ -34,7 +34,6 @@ export default function WishlistPage() {
     {wishlist.loading && <p role="status">Loading wishlist...</p>}
     {wishlist.error && <div role="alert"><p>{wishlist.error}</p><button disabled={busy || wishlist.loading} onClick={wishlist.refresh}>Retry wishlist</button></div>}
     {error && <p role="alert">{error}</p>}
-    {orders.error && <p role="alert">Could not check your library. <button onClick={orders.retry}>Retry library</button></p>}
     {!wishlist.loading && !wishlist.error && !wishlist.count && <section className="wishlist-empty"><h2>Your wishlist is empty</h2><a href="#/discover">Browse the catalog</a></section>}
     <section className="wishlist-list" aria-label="Wishlist items">{wishlist.items.map(item => <article className="wishlist-item" key={item.id}>
       <div className="wishlist-item__main"><MediaImage className="wishlist-item__cover" src={item.image} alt={item.title} />
@@ -43,7 +42,7 @@ export default function WishlistPage() {
         </div></div>
       <div className="wishlist-item__side"><strong>{item.price}</strong><div className="wishlist-item__actions">
         <button className="wishlist-item__remove" disabled={busy || wishlist.loading} onClick={() => wishlist.remove(item.id).catch(() => {})}>Remove</button>
-        {orders.ownedIds.includes(String(item.id)) ? <a href="#/account">In your library</a> : <button className="wishlist-item__cart" disabled={busy || wishlist.loading || cart.loading || orders.loading || !!orders.error} onClick={() => move(item.id)}>{movingId === item.id ? 'Moving...' : 'Move to cart'}</button>}
+        {orders.ownedIds.includes(String(item.id)) ? <a href="#/account">In your library</a> : <button className="wishlist-item__cart" disabled={busy || wishlist.loading || cart.loading || orders.loading} onClick={() => move(item.id)}>{movingId === item.id ? 'Moving...' : 'Move to cart'}</button>}
       </div></div>
     </article>)}</section>
   </div></div>

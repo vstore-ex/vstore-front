@@ -24,17 +24,20 @@ export default function OrdersProvider({ children }) {
       }
       if (!controller.signal.aborted) setResult({ owner, orderVersion, attempt, data })
     }).catch(error => {
-      if (!controller.signal.aborted) setResult({ owner, orderVersion, attempt, error: error.message })
+      if (!controller.signal.aborted) setResult(previous => ({ owner, orderVersion, attempt, error: error.message,
+        data: previous?.owner === owner ? previous.data : undefined }))
     })
     return () => controller.abort()
   }, [owner, orderVersion, attempt])
   const current = result?.owner === owner && result?.orderVersion === orderVersion && result?.attempt === attempt
-  const data = owner != null && current ? result.data || [] : []
+  const hasData = owner != null && result?.owner === owner && Array.isArray(result.data)
+  const data = hasData ? result.data : []
   // Prefer authoritative order status, including refunds, once the server returns it.
   const orders = owner != null && lastOrder && !data.some(order => order.id === lastOrder.id) ? [lastOrder, ...data] : data
   const ownedIds = [...new Set(orders.filter(order => order.status === 'paid')
     .flatMap(order => order.items).filter(item => item?.product_id != null).map(item => String(item.product_id)))]
   return <OrdersContext.Provider value={{ data: orders, ownedIds,
-    loading: owner != null && !current, error: current ? result.error : '',
+    hasData, loading: owner != null && !hasData && !current,
+    refreshing: owner != null && !current, error: owner != null && result?.owner === owner ? result.error : '',
     retry: () => setAttempt(value => value + 1) }}>{children}</OrdersContext.Provider>
 }

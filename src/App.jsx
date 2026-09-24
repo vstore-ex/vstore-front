@@ -8,6 +8,8 @@ import ProductDetailPage from './pages/ProductDetailPage/ProductDetailPage'
 import RegisterPage from './pages/RegisterPage/RegisterPage'
 import SupportPage from './pages/SupportPage/SupportPage'
 import WishlistPage from './pages/WishlistPage/WishlistPage'
+import { protectedDestination } from './auth/returnDestination'
+import useOrders from './hooks/useOrders'
 import { useCart } from './cart/context'
 import { useWishlist } from './wishlist/context'
 import { useAuth } from './auth/context'
@@ -63,6 +65,7 @@ function App() {
   const [currentView, setCurrentView] = useState(initialRoute.view)
   const [pendingAction, setPendingAction] = useState(null)
   const cart = useCart()
+  const orders = useOrders()
   const wishlist = useWishlist()
   useEffect(() => {
     function syncRoute() {
@@ -84,12 +87,12 @@ function App() {
   useEffect(() => {
     if (status === 'loading' || status === 'banned' || status === 'error' || isLoggingOut) return
     if (['account', 'orders', 'cart', 'wishlist'].includes(currentView) && !isAuthenticated) {
-      navigateTo('login?next=' + currentView)
+      navigateTo('login?next=' + encodeURIComponent(protectedDestination()))
     }
   }, [status, isLoggingOut, currentView, isAuthenticated])
 
   useEffect(() => {
-    const expired = () => { if (isAuthenticated) navigateTo('login?next=' + currentView) }
+    const expired = () => { if (isAuthenticated) navigateTo('login?next=' + encodeURIComponent(protectedDestination())) }
     window.addEventListener('vstore:session-expired', expired)
     return () => window.removeEventListener('vstore:session-expired', expired)
   }, [currentView, isAuthenticated])
@@ -179,6 +182,9 @@ function App() {
         cartCount={cart.count}
         wishlistCount={wishlist?.count ?? 0}
       />
+      {isAuthenticated && orders.error && !['account', 'orders'].includes(currentView) && <div className="store-status" role="alert">
+        Could not update your library. Purchases remain available. <button className="button button--secondary" type="button" disabled={orders.refreshing} onClick={orders.retry}>Retry library</button>
+      </div>}
       {error && <div className="store-status" role="alert">{error}
         {error.startsWith('Could not complete sign out') && <button type="button" disabled={isLoggingOut} onClick={() => signOut()}>Retry sign out</button>}
       </div>}

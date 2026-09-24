@@ -1,4 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
+import CartItem from './CartItem'
+import { useWishlist } from '../../wishlist/context'
+import useOrders from '../../hooks/useOrders'
+import { wishlistError } from '../../api/wishlist'
 import { useCart } from '../../cart/context'
 import { cartError, formatMoney } from '../../api/cart'
 import './CartPage.css'
@@ -31,6 +35,12 @@ function Checkout({ cart, onClose, onSuccess }) {
 }
 export default function CartPage() {
   const cart = useCart()
+  const wishlist = useWishlist(), orders = useOrders()
+  const moving = useRef(false)
+  const active = useRef(false)
+  useEffect(() => { active.current = true; return () => { active.current = false } }, [])
+  const [movingId, setMovingId] = useState(null)
+  const [moveError, setMoveError] = useState('')
   const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [order, setOrder] = useState(null)
   const consumed = useRef(false)
@@ -43,6 +53,23 @@ export default function CartPage() {
     window.history.replaceState(null, '', window.location.pathname + window.location.search + '#/cart')
     cart.addToCart(id).catch(() => { /* The cart context displays the error. */ })
   }, [cart])
+  async function moveToWishlist(id) {
+    if (moving.current || orders.ownedIds.includes(String(id))) return
+    moving.current = true; setMovingId(id); setMoveError('')
+    try {
+      let saved = wishlist.items.some(item => item.id === String(id))
+      if (!saved) {
+        try { saved = await wishlist.add(id) }
+        catch (error) {
+          if (error.status === 400 && /already in wishlist/i.test(error.message)) saved = true
+          else throw error
+        }
+      }
+      if (saved && active.current) await cart.removeFromCart(id)
+    } catch (error) { setMoveError(wishlistError(error)) }
+    finally { moving.current = false; setMovingId(null) }
+  }
+  const busy = cart.busy || wishlist.busy || movingId != null
   function run(action) { action().catch(() => { /* The cart context displays the error. */ }) }
   if (order) return <div className="cart-page"><section className="cart-page__inner" role="status">
     <h1>Order #{order.id}</h1><p>Your order has been created.</p><p>{formatMoney(order.total, cart.currency)}</p>
@@ -51,18 +78,17 @@ export default function CartPage() {
   </section></div>
   return <div className="cart-page server-cart"><div className="cart-page__inner">
     <div className="cart-page__header"><h1>My Cart</h1><span>{cart.count} items</span></div>
+    {moveError && <p role="alert">{moveError}</p>}
     {cart.loading && <p role="status">Loading cart...</p>}
-    {cart.error && <div role="alert"><p>{cart.error}</p><button className="button button--secondary" disabled={cart.busy || cart.loading} onClick={cart.refresh}>Retry cart</button></div>}
+    {cart.error && <div role="alert"><p>{cart.error}</p><button className="button button--secondary" disabled={busy || cart.loading} onClick={cart.refresh}>Retry cart</button></div>}
     {!cart.loading && !cart.error && !cart.count && <section className="cart-empty"><h2>Your cart is empty</h2><a href="#/discover">Browse the catalog</a></section>}
     {!!cart.count && <div className="cart-layout"><section className="cart-items" aria-label="Cart items">
-      {cart.items.map(item => <article className="cart-item server-cart-item" key={item.product_id}>
-        <div className="cart-item__info"><h2><a href={`#/products/${item.product_id}`}>{item.title}</a></h2></div>
-        <div className="cart-item__side"><strong>{formatMoney(item.price, cart.currency)}</strong>
-          <button type="button" disabled={cart.busy || cart.loading} onClick={() => run(() => cart.removeFromCart(item.product_id))}>Remove</button></div>
-      </article>)}
-      <button className="button button--secondary" disabled={cart.busy || cart.loading} onClick={() => run(cart.clearCart)}>Clear cart</button>
+      {cart.items.map(item => <CartItem key={item.product_id} item={item} currency={cart.currency}
+        disabled={busy || cart.loading} owned={orders.ownedIds.includes(String(item.product_id))}
+        onRemove={() => run(() => cart.removeFromCart(item.product_id))} onMove={() => moveToWishlist(item.product_id)} />)}
+      <button className="button button--secondary" disabled={busy || cart.loading} onClick={() => run(cart.clearCart)}>Clear cart</button>
     </section><aside className="cart-summary" aria-label="Cart summary"><Totals cart={cart} />
-      <button type="button" disabled={cart.busy || cart.loading || !!cart.error} onClick={() => setCheckoutOpen(true)}>Check Out</button>
+      <button type="button" disabled={busy || cart.loading || !!cart.error} onClick={() => setCheckoutOpen(true)}>Check Out</button>
     </aside></div>}
   </div>{checkoutOpen && <Checkout cart={cart} onClose={() => setCheckoutOpen(false)} onSuccess={created => { setCheckoutOpen(false); setOrder(created) }} />}</div>
 }
