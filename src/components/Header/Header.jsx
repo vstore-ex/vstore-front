@@ -1,9 +1,9 @@
-import userIcon from '../../assets/icon-user-circle.svg'
-import heartIcon from '../../assets/icon-heart.svg'
-import cartIcon from '../../assets/icon-cart.svg'
-import globeIcon from '../../assets/icon-globe.svg'
+import userIcon from '../../assets/discover/figma/2451d.svg'
+import heartIcon from '../../assets/discover/figma/0ac49.svg'
+import cartIcon from '../../assets/discover/figma/066ed.svg'
+import globeIcon from '../../assets/discover/figma/977c7.svg'
 import searchIcon from '../../assets/icon-search.svg'
-import logoMark from '../../assets/logo-mark.svg'
+import logoMark from '../../assets/discover/figma/ededd.svg'
 import './Header.css'
 
 const navItems = ['Discover', 'Support', 'News']

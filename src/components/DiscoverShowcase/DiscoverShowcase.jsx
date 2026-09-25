@@ -1,4 +1,5 @@
 import chevronRight from '../../assets/icon-chevron-right.svg'
+import { MediaImage } from '../Catalog/Media'
 import './DiscoverShowcase.css'
 
 function ShowcasePrice({ item }) {
@@ -24,7 +25,7 @@ function ShowcaseItem({ item, onSelect }) {
   return (
     <article className="showcase-item">
       <a className="showcase-item__button" href={`#/products/${item.id}`} onClick={handleClick}>
-        <img className="showcase-item__image" src={item.image} alt={item.title} />
+        <MediaImage className="showcase-item__image" src={item.image} alt={item.title} />
         <span className="showcase-item__body">
           <span className="showcase-item__title">{item.title}</span>
           <ShowcasePrice item={item} />
@@ -36,11 +37,11 @@ function ShowcaseItem({ item, onSelect }) {
 
 function ShowcaseColumn({ column, onItemSelect }) {
   return (
-    <section className="showcase-column" aria-labelledby={`${column.id}-title`}>
-      <a className="showcase-column__title" href={`#${column.id}`}>
+    <section className="showcase-column" id={column.id} aria-labelledby={`${column.id}-title`}>
+      <h2 className="showcase-column__title">
         <span id={`${column.id}-title`}>{column.title}</span>
         <img src={chevronRight} alt="" />
-      </a>
+      </h2>
 
       <div className="showcase-column__items">
         {column.items.map((item) => (
