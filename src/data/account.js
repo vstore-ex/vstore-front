@@ -1,4 +1,4 @@
-import accountAvatar from '../assets/account/account-avatar.png'
+import accountAvatar from '../assets/avatar.webp'
 import achievementBags from '../assets/account/ach-bags.png'
 import achievementFinalBoss from '../assets/account/ach-final-boss.png'
 import achievementFirstBattle from '../assets/account/ach-first-battle.png'

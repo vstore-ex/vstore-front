@@ -18,7 +18,7 @@ export default function ProductDetailPage({ id, showAchievements, onViewAllAchie
     <h1>{game.title}</h1><div className="product-detail-layout">
       <MediaGallery key={game.id} game={game} />
       <aside className="product-sidebar">
-        <MediaImage className="catalog-cover" src={game.image} alt={game.title} />
+        <MediaImage className="catalog-cover" src={game.headerImage || game.heroImage || game.image} alt={game.title} />
         <dl className="product-meta">{[['Developer', game.developer], ['Publisher', game.publisher], ['Rating', game.rating]].filter(([, value]) => value).map(([label, value]) =>
           <div className="product-meta__row" key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
         <div className="product-tags">{game.tags.map(tag => <a key={tag.id} href={`#/discover?page=1&tag_id=${encodeURIComponent(tag.id)}`}>{tag.name}</a>)}</div>
