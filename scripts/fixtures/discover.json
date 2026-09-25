@@ -1,0 +1,1830 @@
+{
+  "games": [
+    {
+      "id": 1,
+      "title": "Longvinter",
+      "price": "279.00",
+      "original_price": "279.00",
+      "is_free": false,
+      "developer": "Uuvana Studios",
+      "publisher": "Uuvana Studios",
+      "description_md": "Travel to Longvinter Island, build your camp, trade resources and explore with friends.",
+      "tags": [
+        {
+          "id": 10,
+          "name": "Adventure"
+        },
+        {
+          "id": 11,
+          "name": "Survival"
+        },
+        {
+          "id": 12,
+          "name": "Multiplayer"
+        }
+      ],
+      "banners": [
+        {
+          "id": 10,
+          "banner_type": "small_capsule",
+          "image_url": "asset:products/longvinter-hero.png"
+        },
+        {
+          "id": 11,
+          "banner_type": "main_hero",
+          "image_url": "asset:products/longvinter-hero.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 100,
+          "media_type": "image",
+          "url": "asset:products/longvinter-hero.png",
+          "sort_order": 0
+        },
+        {
+          "id": 101,
+          "media_type": "image",
+          "url": "asset:products/longvinter-thumb-1.png",
+          "sort_order": 1
+        },
+        {
+          "id": 102,
+          "media_type": "image",
+          "url": "asset:products/longvinter-thumb-2.png",
+          "sort_order": 2
+        },
+        {
+          "id": 103,
+          "media_type": "image",
+          "url": "asset:products/longvinter-thumb-3.png",
+          "sort_order": 3
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "FARCRY 5",
+      "price": "810.00",
+      "original_price": "1620.00",
+      "is_free": false,
+      "developer": "Ubisoft",
+      "publisher": "Ubisoft",
+      "description_md": "Explore Hope County, Montana, and lead the resistance in an open-world adventure.",
+      "tags": [
+        {
+          "id": 20,
+          "name": "Action"
+        },
+        {
+          "id": 21,
+          "name": "Open World"
+        },
+        {
+          "id": 22,
+          "name": "Co-op"
+        }
+      ],
+      "banners": [
+        {
+          "id": 20,
+          "banner_type": "small_capsule",
+          "image_url": "asset:products/farcry-5-card.png"
+        },
+        {
+          "id": 21,
+          "banner_type": "main_hero",
+          "image_url": "asset:products/farcry-5-card.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 200,
+          "media_type": "image",
+          "url": "asset:products/farcry-5-card.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "The End of the Sun",
+      "price": "515.00",
+      "original_price": "650.00",
+      "is_free": false,
+      "developer": null,
+      "publisher": null,
+      "description_md": "Explore a mysterious village and uncover its stories.",
+      "tags": [
+        {
+          "id": 30,
+          "name": "Adventure"
+        },
+        {
+          "id": 31,
+          "name": "Exploration"
+        }
+      ],
+      "banners": [
+        {
+          "id": 30,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover/end-of-sun.png"
+        },
+        {
+          "id": 31,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover/end-of-sun.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 300,
+          "media_type": "image",
+          "url": "asset:discover/end-of-sun.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Apex Legends",
+      "price": "0.00",
+      "original_price": "0.00",
+      "is_free": true,
+      "developer": "Respawn Entertainment",
+      "publisher": "Respawn Entertainment",
+      "description_md": "Choose your legend and team up for fast squad-based battles.",
+      "tags": [
+        {
+          "id": 40,
+          "name": "Shooter"
+        },
+        {
+          "id": 41,
+          "name": "Multiplayer"
+        }
+      ],
+      "banners": [
+        {
+          "id": 40,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover/apex-card.png"
+        },
+        {
+          "id": 41,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover/apex-thumb-1.png"
+        },
+        {
+          "id": 42,
+          "banner_type": "featured_panel",
+          "image_url": "asset:discover/apex-panel.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 400,
+          "media_type": "image",
+          "url": "asset:discover/apex-hero.png",
+          "sort_order": 0
+        },
+        {
+          "id": 401,
+          "media_type": "image",
+          "url": "asset:discover/apex-thumb-1.png",
+          "sort_order": 1
+        },
+        {
+          "id": 402,
+          "media_type": "image",
+          "url": "asset:discover/apex-thumb-2.png",
+          "sort_order": 2
+        }
+      ],
+      "featured_subtitle": "NEW SEASON",
+      "featured_crop": true,
+      "featured_image_url": "asset:discover/apex-hero.png"
+    },
+    {
+      "id": 5,
+      "title": "The WereCleaner",
+      "price": "325.00",
+      "original_price": "325.00",
+      "is_free": false,
+      "developer": null,
+      "publisher": null,
+      "description_md": "A night shift with a monstrous twist.",
+      "tags": [
+        {
+          "id": 50,
+          "name": "Indie"
+        },
+        {
+          "id": 51,
+          "name": "Stealth"
+        }
+      ],
+      "banners": [
+        {
+          "id": 50,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover/werecleaner.png"
+        },
+        {
+          "id": 51,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover/werecleaner.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 500,
+          "media_type": "image",
+          "url": "asset:discover/werecleaner.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "The Emberlands",
+      "price": "355.00",
+      "original_price": "450.00",
+      "is_free": false,
+      "developer": null,
+      "publisher": null,
+      "description_md": "Explore a colourful world and help its inhabitants.",
+      "tags": [
+        {
+          "id": 60,
+          "name": "Adventure"
+        },
+        {
+          "id": 61,
+          "name": "Exploration"
+        }
+      ],
+      "banners": [
+        {
+          "id": 60,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover/emberlands.png"
+        },
+        {
+          "id": 61,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover/emberlands.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 600,
+          "media_type": "image",
+          "url": "asset:discover/emberlands.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Kingdom Come Deliverance II",
+      "price": "1030.00",
+      "original_price": "1290.00",
+      "is_free": false,
+      "developer": "Warhorse Studios",
+      "publisher": "Warhorse Studios",
+      "description_md": "A story-driven adventure set in medieval Bohemia.",
+      "tags": [
+        {
+          "id": 70,
+          "name": "RPG"
+        },
+        {
+          "id": 71,
+          "name": "Open World"
+        }
+      ],
+      "banners": [
+        {
+          "id": 70,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover/kingdom-come.png"
+        },
+        {
+          "id": 71,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover/kingdom-come.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 700,
+          "media_type": "image",
+          "url": "asset:discover/kingdom-come.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Final Fantasy VII",
+      "price": "975.00",
+      "original_price": "975.00",
+      "is_free": false,
+      "developer": "Square Enix",
+      "publisher": "Square Enix",
+      "description_md": "Join Cloud and his allies on an unforgettable journey.",
+      "tags": [
+        {
+          "id": 80,
+          "name": "RPG"
+        },
+        {
+          "id": 81,
+          "name": "Adventure"
+        }
+      ],
+      "banners": [
+        {
+          "id": 80,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover/final-fantasy-vii.png"
+        },
+        {
+          "id": 81,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover/final-fantasy-vii.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 800,
+          "media_type": "image",
+          "url": "asset:discover/final-fantasy-vii.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Ranch Simulator",
+      "price": "70.00",
+      "original_price": "170.00",
+      "is_free": false,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 90,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover/figma/df928.png"
+        },
+        {
+          "id": 91,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover/figma/df928.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 900,
+          "media_type": "image",
+          "url": "asset:discover/figma/df928.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "FARCRY 3",
+      "price": "515.00",
+      "original_price": "720.00",
+      "is_free": false,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 100,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover/figma/4eb0a.png"
+        },
+        {
+          "id": 101,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover/figma/4eb0a.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 1000,
+          "media_type": "image",
+          "url": "asset:discover/figma/4eb0a.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "title": "FARCRY 4",
+      "price": "815.00",
+      "original_price": "1120.00",
+      "is_free": false,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 110,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover/figma/44f9b.png"
+        },
+        {
+          "id": 111,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover/figma/44f9b.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 1100,
+          "media_type": "image",
+          "url": "asset:discover/figma/44f9b.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "title": "FARCRY 6",
+      "price": "1010.00",
+      "original_price": "2070.00",
+      "is_free": false,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 120,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover/figma/258ca.png"
+        },
+        {
+          "id": 121,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover/figma/258ca.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 1200,
+          "media_type": "image",
+          "url": "asset:discover/figma/258ca.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "title": "Teenage Mutant Ninja Turtles: Splintered Fate",
+      "price": "515.00",
+      "original_price": "1030.00",
+      "is_free": false,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 130,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover/figma/41f90.png"
+        },
+        {
+          "id": 131,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover/figma/41f90.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 1300,
+          "media_type": "image",
+          "url": "asset:discover/figma/41f90.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "title": "Lego: Horizon Adventures",
+      "price": "600.00",
+      "original_price": "930.00",
+      "is_free": false,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 140,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover/figma/8e689.png"
+        },
+        {
+          "id": 141,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover/figma/8e689.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 1400,
+          "media_type": "image",
+          "url": "asset:discover/figma/8e689.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "title": "Disney Dreamlight Valley",
+      "price": "230.00",
+      "original_price": "550.00",
+      "is_free": false,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 150,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover/figma/9deb4.png"
+        },
+        {
+          "id": 151,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover/figma/9deb4.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 1500,
+          "media_type": "image",
+          "url": "asset:discover/figma/9deb4.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "title": "Garden Story",
+      "price": "0.00",
+      "original_price": "0.00",
+      "is_free": true,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 160,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover/figma/0748d.png"
+        },
+        {
+          "id": 161,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover/figma/0748d.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 1600,
+          "media_type": "image",
+          "url": "asset:discover/figma/0748d.png",
+          "sort_order": 0
+        }
+      ],
+      "free_soon": false,
+      "availability": "Free Now - Feb 27 at 05:00 PM"
+    },
+    {
+      "id": 17,
+      "title": "MAGES OF MYSTRALIA",
+      "price": "0.00",
+      "original_price": "0.00",
+      "is_free": true,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 170,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover/figma/1ed88.png"
+        },
+        {
+          "id": 171,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover/figma/1ed88.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 1700,
+          "media_type": "image",
+          "url": "asset:discover/figma/1ed88.png",
+          "sort_order": 0
+        }
+      ],
+      "free_soon": false,
+      "availability": "Free Now - Feb 27 at 05:00 PM"
+    },
+    {
+      "id": 18,
+      "title": "Them’s Fighting Herds",
+      "price": "0.00",
+      "original_price": "0.00",
+      "is_free": true,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 180,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover/figma/d41fe.png"
+        },
+        {
+          "id": 181,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover/figma/d41fe.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 1800,
+          "media_type": "image",
+          "url": "asset:discover/figma/d41fe.png",
+          "sort_order": 0
+        }
+      ],
+      "free_soon": true,
+      "availability": "Free Soon - Feb 30 at 05:00 PM"
+    },
+    {
+      "id": 19,
+      "title": "Marvel Rivals",
+      "price": "0.00",
+      "original_price": "0.00",
+      "is_free": true,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 190,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover-lists/marvel-rivals.png"
+        },
+        {
+          "id": 191,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover-lists/marvel-rivals.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 1900,
+          "media_type": "image",
+          "url": "asset:discover-lists/marvel-rivals.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "title": "Honkai: Star Rail",
+      "price": "0.00",
+      "original_price": "0.00",
+      "is_free": true,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 200,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover-lists/honkai-star-rail.png"
+        },
+        {
+          "id": 201,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover-lists/honkai-star-rail.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 2000,
+          "media_type": "image",
+          "url": "asset:discover-lists/honkai-star-rail.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "title": "Red Dead Redemption 2",
+      "price": "515.00",
+      "original_price": "1030.00",
+      "is_free": false,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 210,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover-lists/red-dead-2.png"
+        },
+        {
+          "id": 211,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover-lists/red-dead-2.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 2100,
+          "media_type": "image",
+          "url": "asset:discover-lists/red-dead-2.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "title": "Infinity Nikki",
+      "price": "0.00",
+      "original_price": "0.00",
+      "is_free": true,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 220,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover-lists/infinity-nikki.png"
+        },
+        {
+          "id": 221,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover-lists/infinity-nikki.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 2200,
+          "media_type": "image",
+          "url": "asset:discover-lists/infinity-nikki.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "title": "Genshin Impact",
+      "price": "0.00",
+      "original_price": "0.00",
+      "is_free": true,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 230,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover-lists/genshin-impact.png"
+        },
+        {
+          "id": 231,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover-lists/genshin-impact.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 2300,
+          "media_type": "image",
+          "url": "asset:discover-lists/genshin-impact.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "title": "Fortnite",
+      "price": "0.00",
+      "original_price": "0.00",
+      "is_free": true,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 240,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover-lists/fortnite.png"
+        },
+        {
+          "id": 241,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover-lists/fortnite.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 2400,
+          "media_type": "image",
+          "url": "asset:discover-lists/fortnite.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "title": "Rocket League",
+      "price": "0.00",
+      "original_price": "0.00",
+      "is_free": true,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 250,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover-lists/rocket-league.png"
+        },
+        {
+          "id": 251,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover-lists/rocket-league.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 2500,
+          "media_type": "image",
+          "url": "asset:discover-lists/rocket-league.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 26,
+      "title": "Red Dead Online",
+      "price": "515.00",
+      "original_price": "1030.00",
+      "is_free": false,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 260,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover-lists/red-dead-online.png"
+        },
+        {
+          "id": 261,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover-lists/red-dead-online.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 2600,
+          "media_type": "image",
+          "url": "asset:discover-lists/red-dead-online.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 27,
+      "title": "Grand Theft Auto V",
+      "price": "735.00",
+      "original_price": "735.00",
+      "is_free": false,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 270,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover-lists/gta-v.png"
+        },
+        {
+          "id": 271,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover-lists/gta-v.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 2700,
+          "media_type": "image",
+          "url": "asset:discover-lists/gta-v.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 28,
+      "title": "Valorant",
+      "price": "0.00",
+      "original_price": "0.00",
+      "is_free": true,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 280,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover-lists/valorant.png"
+        },
+        {
+          "id": 281,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover-lists/valorant.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 2800,
+          "media_type": "image",
+          "url": "asset:discover-lists/valorant.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 29,
+      "title": "Assasins Creed Shadows",
+      "price": "890.00",
+      "original_price": "890.00",
+      "is_free": false,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 290,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover-lists/assassins-creed-shadows.png"
+        },
+        {
+          "id": 291,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover-lists/assassins-creed-shadows.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 2900,
+          "media_type": "image",
+          "url": "asset:discover-lists/assassins-creed-shadows.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 30,
+      "title": "Miki Royale",
+      "price": "0.00",
+      "original_price": "0.00",
+      "is_free": true,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 300,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover-lists/miki-royale.png"
+        },
+        {
+          "id": 301,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover-lists/miki-royale.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 3000,
+          "media_type": "image",
+          "url": "asset:discover-lists/miki-royale.png",
+          "sort_order": 0
+        }
+      ],
+      "release_label": "Out on 3/10/25"
+    },
+    {
+      "id": 31,
+      "title": "33 Immortals",
+      "price": "0.00",
+      "original_price": "0.00",
+      "is_free": true,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 310,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover-lists/33-immortals.png"
+        },
+        {
+          "id": 311,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover-lists/33-immortals.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 3100,
+          "media_type": "image",
+          "url": "asset:discover-lists/33-immortals.png",
+          "sort_order": 0
+        }
+      ],
+      "release_label": "Coming soon"
+    },
+    {
+      "id": 32,
+      "title": "Borderlands 4",
+      "price": "0.00",
+      "original_price": "0.00",
+      "is_free": true,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 320,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover-lists/borderlands-4.png"
+        },
+        {
+          "id": 321,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover-lists/borderlands-4.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 3200,
+          "media_type": "image",
+          "url": "asset:discover-lists/borderlands-4.png",
+          "sort_order": 0
+        }
+      ],
+      "release_label": "Coming soon"
+    },
+    {
+      "id": 33,
+      "title": "The Last of Us™ Part II Remastered",
+      "price": "735.00",
+      "original_price": "735.00",
+      "is_free": false,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 330,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover-lists/the-last-of-us-2.png"
+        },
+        {
+          "id": 331,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover-lists/the-last-of-us-2.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 3300,
+          "media_type": "image",
+          "url": "asset:discover-lists/the-last-of-us-2.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 34,
+      "title": "Grand Theft Auto V: Premium Edition",
+      "price": "629.00",
+      "original_price": "629.00",
+      "is_free": false,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 340,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover/figma/daf4e.png"
+        },
+        {
+          "id": 341,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover/figma/daf4e.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 3400,
+          "media_type": "image",
+          "url": "asset:discover/figma/daf4e.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 35,
+      "title": "VALORANT",
+      "price": "0.00",
+      "original_price": "0.00",
+      "is_free": true,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 350,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover/figma/bcc44.png"
+        },
+        {
+          "id": 351,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover/figma/bcc44.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 3500,
+          "media_type": "image",
+          "url": "asset:discover/figma/bcc44.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 36,
+      "title": "Witch It",
+      "price": "369.00",
+      "original_price": "369.00",
+      "is_free": false,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 360,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover/figma/e0b61.png"
+        },
+        {
+          "id": 361,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover/figma/e0b61.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 3600,
+          "media_type": "image",
+          "url": "asset:discover/figma/e0b61.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 37,
+      "title": "Crosshair V2",
+      "price": "0.00",
+      "original_price": "0.00",
+      "is_free": true,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 370,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover/figma/5fa54.png"
+        },
+        {
+          "id": 371,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover/figma/5fa54.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 3700,
+          "media_type": "image",
+          "url": "asset:discover/figma/5fa54.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 38,
+      "title": "Farming Simulator 22",
+      "price": "459.00",
+      "original_price": "459.00",
+      "is_free": false,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 380,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover/figma/e8ea3.png"
+        },
+        {
+          "id": 381,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover/figma/e8ea3.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 3800,
+          "media_type": "image",
+          "url": "asset:discover/figma/e8ea3.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 39,
+      "title": "Zenless Zone Zero",
+      "price": "0.00",
+      "original_price": "0.00",
+      "is_free": true,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 390,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover/figma/741bc.png"
+        },
+        {
+          "id": 391,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover/figma/741bc.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 3900,
+          "media_type": "image",
+          "url": "asset:discover/figma/741bc.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 40,
+      "title": "Black Myth: Wukong",
+      "price": "1629.00",
+      "original_price": "1629.00",
+      "is_free": false,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 400,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover/figma/de96f.png"
+        },
+        {
+          "id": 401,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover/figma/de96f.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 4000,
+          "media_type": "image",
+          "url": "asset:discover/figma/de96f.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 41,
+      "title": "Star Trek Online",
+      "price": "0.00",
+      "original_price": "0.00",
+      "is_free": true,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 410,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover/figma/61068.png"
+        },
+        {
+          "id": 411,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover/figma/61068.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 4100,
+          "media_type": "image",
+          "url": "asset:discover/figma/61068.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 42,
+      "title": "Disney Speedstorm",
+      "price": "0.00",
+      "original_price": "0.00",
+      "is_free": true,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 420,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover/figma/c4108.png"
+        },
+        {
+          "id": 421,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover/figma/c4108.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 4200,
+          "media_type": "image",
+          "url": "asset:discover/figma/c4108.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 43,
+      "title": "Destiny 2",
+      "price": "0.00",
+      "original_price": "0.00",
+      "is_free": true,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 430,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover/figma/39995.png"
+        },
+        {
+          "id": 431,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover/figma/39995.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 4300,
+          "media_type": "image",
+          "url": "asset:discover/figma/39995.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 44,
+      "title": "Honkai Impact 3rd",
+      "price": "0.00",
+      "original_price": "0.00",
+      "is_free": true,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 440,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover/figma/970e2.png"
+        },
+        {
+          "id": 441,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover/figma/970e2.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 4400,
+          "media_type": "image",
+          "url": "asset:discover/figma/970e2.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 45,
+      "title": "Hell Let Loose - Deluxe Edition",
+      "price": "1629.00",
+      "original_price": "1629.00",
+      "is_free": false,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 450,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover/figma/7e767.png"
+        },
+        {
+          "id": 451,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover/figma/7e767.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 4500,
+          "media_type": "image",
+          "url": "asset:discover/figma/7e767.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 46,
+      "title": "Hell Let Loose - Ultimate Edition",
+      "price": "1449.00",
+      "original_price": "1449.00",
+      "is_free": false,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 460,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover/figma/0675f.png"
+        },
+        {
+          "id": 461,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover/figma/0675f.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 4600,
+          "media_type": "image",
+          "url": "asset:discover/figma/0675f.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 47,
+      "title": "Hell Let Loose",
+      "price": "999.00",
+      "original_price": "999.00",
+      "is_free": false,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 470,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover/figma/641c2.png"
+        },
+        {
+          "id": 471,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover/figma/641c2.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 4700,
+          "media_type": "image",
+          "url": "asset:discover/figma/641c2.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 48,
+      "title": "Turmoil",
+      "price": "239.00",
+      "original_price": "239.00",
+      "is_free": false,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 480,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover/figma/71020.png"
+        },
+        {
+          "id": 481,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover/figma/71020.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 4800,
+          "media_type": "image",
+          "url": "asset:discover/figma/71020.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 49,
+      "title": "Vampire Survivors",
+      "price": "78.00",
+      "original_price": "78.00",
+      "is_free": false,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 490,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover/figma/04fb7.png"
+        },
+        {
+          "id": 491,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover/figma/04fb7.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 4900,
+          "media_type": "image",
+          "url": "asset:discover/figma/04fb7.png",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": 50,
+      "title": "DREDGE - Digital Deluxe Edition",
+      "price": "549.00",
+      "original_price": "549.00",
+      "is_free": false,
+      "developer": "",
+      "publisher": "",
+      "description_md": "",
+      "tags": [],
+      "banners": [
+        {
+          "id": 500,
+          "banner_type": "small_capsule",
+          "image_url": "asset:discover/figma/d00a3.png"
+        },
+        {
+          "id": 501,
+          "banner_type": "main_hero",
+          "image_url": "asset:discover/figma/d00a3.png"
+        }
+      ],
+      "media": [
+        {
+          "id": 5000,
+          "media_type": "image",
+          "url": "asset:discover/figma/d00a3.png",
+          "sort_order": 0
+        }
+      ]
+    }
+  ],
+  "discover": {
+    "featured_game_id": 4,
+    "sections": [
+      {
+        "id": "discover-new",
+        "title": "Discover Something New",
+        "game_ids": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ]
+      },
+      {
+        "id": "winter-sale",
+        "title": "Winter Sale Spotlight",
+        "game_ids": [
+          3,
+          9,
+          10,
+          11,
+          2,
+          12
+        ]
+      },
+      {
+        "id": "popular-games",
+        "title": "Popular Games",
+        "game_ids": [
+          34,
+          35,
+          36,
+          37,
+          38,
+          39
+        ]
+      },
+      {
+        "id": "recently-updated",
+        "title": "Recently Updated",
+        "game_ids": [
+          40,
+          41,
+          42,
+          20,
+          43,
+          44
+        ],
+        "game_overrides": {
+          "20": {
+            "image_url": "asset:discover/figma/8664b.png"
+          }
+        }
+      },
+      {
+        "id": "now-on-store",
+        "title": "Now On The Store",
+        "game_ids": [
+          45,
+          46,
+          47,
+          48,
+          49,
+          50
+        ]
+      }
+    ],
+    "deals_game_ids": [
+      13,
+      14,
+      15
+    ],
+    "free_games_game_ids": [
+      16,
+      17,
+      18
+    ],
+    "ranked_columns": [
+      {
+        "id": "top-sellers",
+        "title": "Top Sellers",
+        "game_ids": [
+          19,
+          20,
+          21,
+          22,
+          23
+        ]
+      },
+      {
+        "id": "most-played",
+        "title": "Most Played",
+        "game_ids": [
+          24,
+          25,
+          21,
+          27,
+          28
+        ],
+        "game_overrides": {
+          "21": {
+            "image_url": "asset:discover-lists/red-dead-online.png"
+          }
+        }
+      },
+      {
+        "id": "upcoming",
+        "title": "Top Upcoming Wishlisted",
+        "game_ids": [
+          29,
+          30,
+          31,
+          32,
+          33
+        ]
+      }
+    ],
+    "promos": [
+      {
+        "id": "fortnite-promo-0",
+        "title": "Fortnite",
+        "description": "Feudal Gotham’s Dark Night, Ninja Knight Batman, and the malicious wildcard Karuta Harley Quinn strike with a vengeance.",
+        "image_url": "asset:discover/figma/9161a.png",
+        "link": "/#/products/24"
+      },
+      {
+        "id": "fortnite-promo-1",
+        "title": "Fortnite",
+        "description": "BANG! Take your shot with bounty hunters Spike Spiegel and Faye Valentine from COWBOY BEBOP.",
+        "image_url": "asset:discover/figma/45f8e.png",
+        "link": "/#/products/24"
+      },
+      {
+        "id": "fortnite-promo-2",
+        "title": "Fortnite",
+        "description": "My Hero Academia’s League of Villains emerges in Fortnite!",
+        "image_url": "asset:discover/figma/514c0.png",
+        "link": "/#/products/24"
+      }
+    ],
+    "mobile_banner": {
+      "title": "Vision Store Mobile",
+      "description": "Feudal Gotham’s Dark Night, Ninja Knight Batman, and the malicious wildcard Karuta Harley Quinn strike with a vengeance.",
+      "image_url": "asset:discover/figma/eecc1.png",
+      "link": "https://store.epicgames.com/mobile"
+    }
+  }
+}
