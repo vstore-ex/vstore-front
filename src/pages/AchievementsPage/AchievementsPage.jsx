@@ -63,10 +63,10 @@ function buildAchievementList(product, detail) {
         title,
         description,
         completion,
-        icon: product.image,
+        icon: product.iconImage || product.image,
       }))
   const baseAchievements = sourceAchievements.map((achievement, index) =>
-    normalizeAchievement(achievement, index, product.image),
+    normalizeAchievement(achievement, index, product.iconImage || product.image),
   )
   const amount = detail.achievementsCount ?? (detail.achievements?.length ? baseAchievements.length : 11)
 

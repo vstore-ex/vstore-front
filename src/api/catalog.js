@@ -12,11 +12,31 @@ const array = value => Array.isArray(value) ? value : []
 export const priceLabel = value => new Intl.NumberFormat('en', { style: 'currency', currency: 'UAH' }).format(Number(value) || 0)
 export function mapGame(game) {
   const banners = array(game.banners).filter(Boolean)
-  const cover = banners.find(b => b.banner_type === 'small_capsule') || banners[0]
-  const hero = banners.find(b => b.banner_type === 'main_hero') || cover
+  const getBanner = (type) => banners.find((b) => b.banner_type === type)?.image_url
+
+  // Vertical poster (3:4): library_poster -> small_capsule -> main_hero -> first banner
+  const poster = getBanner('library_poster') || getBanner('small_capsule') || getBanner('main_hero') || banners[0]?.image_url
+
+  // Horizontal hero: main_hero -> game_page_header -> library_hero -> small_capsule -> first banner
+  const hero = getBanner('main_hero') || getBanner('game_page_header') || getBanner('library_hero') || getBanner('small_capsule') || banners[0]?.image_url
+
+  // Game page header (16:9): game_page_header -> main_hero -> small_capsule -> first banner
+  const header = getBanner('game_page_header') || getBanner('main_hero') || getBanner('small_capsule') || banners[0]?.image_url
+
+  // Library hero (16:9): library_hero -> game_page_header -> main_hero -> poster
+  const libHero = getBanner('library_hero') || getBanner('game_page_header') || getBanner('main_hero') || poster
+
+  // Square icon: library_icon -> poster
+  const icon = getBanner('library_icon') || poster
+
+  // Small capsule: small_capsule -> game_page_header -> main_hero -> first banner
+  const capsule = getBanner('small_capsule') || getBanner('game_page_header') || getBanner('main_hero') || banners[0]?.image_url
+
   const original = Number(game.original_price), price = game.is_free ? 0 : Number(game.price)
-  return { ...game, id: String(game.id), type: 'Base Game', image: mediaUrl(cover?.image_url),
-    heroImage: mediaUrl(hero?.image_url), amount: price, price: game.is_free ? 'Free' : priceLabel(price),
+  return { ...game, id: String(game.id), type: 'Base Game', image: mediaUrl(poster),
+    posterImage: mediaUrl(poster), heroImage: mediaUrl(hero), headerImage: mediaUrl(header),
+    libraryHero: mediaUrl(libHero), libraryPoster: mediaUrl(poster), iconImage: mediaUrl(icon),
+    capsuleImage: mediaUrl(capsule), amount: price, price: game.is_free ? 'Free' : priceLabel(price),
     originalPrice: original > price ? priceLabel(original) : '',
     discount: original > price ? `-${Math.round((1 - price / original) * 100)}%` : '',
     tags: array(game.tags).filter(tag => tag?.id != null), banners,
