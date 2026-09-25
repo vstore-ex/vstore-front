@@ -58,3 +58,6 @@ temp/
 
 # Local authentication notes
 /docs/authentication.md
+
+# Local UI mock data
+/scripts/fixtures/

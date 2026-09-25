@@ -3,7 +3,14 @@ import { readFile, mkdir } from 'node:fs/promises'
 import { chromium } from 'playwright'
 import { createServer } from 'vite'
 
-const seed = JSON.parse(await readFile(new URL('./fixtures/discover.json', import.meta.url), 'utf8'))
+let seed
+try {
+  seed = JSON.parse(await readFile(new URL('./fixtures/discover.json', import.meta.url), 'utf8'))
+} catch (error) {
+  if (error.code !== 'ENOENT') throw error
+  console.log('SKIP: optional Discover UI check requires local scripts/fixtures/discover.json (ignored by Git). No tests were run.')
+  process.exit(0)
+}
 const resolveAssets = value => typeof value === 'string' && value.startsWith('asset:')
   ? '/src/assets/' + value.slice(6) : Array.isArray(value) ? value.map(resolveAssets)
     : value && typeof value === 'object' ? Object.fromEntries(Object.entries(value).map(([key, item]) => [key, resolveAssets(item)])) : value
