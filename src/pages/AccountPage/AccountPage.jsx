@@ -5,7 +5,7 @@ import { formatMoney } from '../../api/cart'
 import { useCart } from '../../cart/context'
 import { useWishlist } from '../../wishlist/context'
 import { updateUser, updateAvatar } from '../../api/auth'
-import fallbackAvatar from '../../assets/account/account-avatar.png'
+import fallbackAvatar from '../../assets/avatar.webp'
 import Library from './Library'
 import './AccountPage.css'
 
@@ -75,11 +75,25 @@ export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut
     }
   }
 
-  const avatarSrc = avatarPreview || (user.avatar ? `${mediaUrl(user.avatar)}?t=${avatarTimestamp}` : fallbackAvatar)
+  const avatarSrc = avatarPreview || (() => {
+    if (!user.avatar) return fallbackAvatar
+    const isExternal = user.avatar.startsWith('http://') || user.avatar.startsWith('https://')
+    return isExternal ? user.avatar : `${mediaUrl(user.avatar)}?t=${avatarTimestamp}`
+  })()
 
   return <div className="account-page account-page--current"><div className="account-page__inner">
     <section className="account-hero" aria-label="Account profile">
-      <img className="account-hero__avatar" src={avatarSrc} alt="" />
+      <img
+        className="account-hero__avatar"
+        src={avatarSrc}
+        alt=""
+        referrerPolicy="no-referrer"
+        onError={(e) => {
+          if (e.currentTarget.src !== fallbackAvatar) {
+            e.currentTarget.src = fallbackAvatar
+          }
+        }}
+      />
       <div className="account-hero__identity"><p>{user.role}</p><h1>{user.username}</h1><p>{user.fullName}</p></div>
       <div className="account-hero__stats">{Object.entries(stats).map(([label, value]) =>
         <div className="account-stat" key={label}><span>{label}</span><strong>{value}</strong></div>)}</div>
