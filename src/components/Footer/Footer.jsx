@@ -1,8 +1,8 @@
-import facebookIcon from '../../assets/footer-facebook.svg'
+import facebookIcon from '../../assets/discover/figma/2c987.svg'
 import twitterIcon from '../../assets/footer-twitter.svg'
-import youtubeIcon from '../../assets/footer-youtube.svg'
-import footerLogo from '../../assets/footer-logo-mark.svg'
-import chevronUp from '../../assets/footer-chevron-up.svg'
+import youtubeIcon from '../../assets/discover/figma/e8be7.svg'
+import footerLogo from '../../assets/discover/figma/d5ed2.svg'
+import chevronUp from '../../assets/discover/figma/0474f.svg'
 import './Footer.css'
 
 const socialLinks = [
