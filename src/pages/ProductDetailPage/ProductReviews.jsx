@@ -9,7 +9,9 @@ import negativeIcon from '../../assets/review-like-negative.svg'
 import helpfulIcon from '../../assets/product-helpful.svg'
 
 function ReviewCard({ review }) {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, currentUser } = useAuth()
+  const [confirmedVote, setConfirmedVote] = useState(null)
+  const helpful = isAuthenticated && confirmedVote?.userId === currentUser?.id ? confirmedVote.value : undefined
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
@@ -18,6 +20,7 @@ function ReviewCard({ review }) {
     setBusy(true); setError(''); setMessage('')
     try {
       const result = await voteHelpful(review.id)
+      if (['vote added', 'vote removed'].includes(result?.message)) setConfirmedVote({ userId: currentUser.id, value: result.message === 'vote added' })
       setMessage(result?.message === 'vote removed' ? 'Your helpful vote was removed.' : 'Your helpful vote was saved.')
     } catch (reason) { setError(reason.message) }
     finally { setBusy(false) }
@@ -34,7 +37,7 @@ function ReviewCard({ review }) {
     <div className="review-card__body">
       {review.content_md?.length > 600 ? <ExpandableContent>{content}</ExpandableContent> : content}
       <div className="review-card__helpful">Was review helpful?
-        <button type="button" disabled={busy} onClick={vote} aria-label="Mark review as helpful"><img src={helpfulIcon} alt="" /></button>
+        <button type="button" disabled={busy} aria-pressed={helpful} onClick={vote} aria-label="Mark review as helpful"><img src={helpfulIcon} alt="" /></button>
       </div>
       {message && <p className="review-feedback" role="status">{message}</p>}
       {error && <p className="review-feedback" role="alert">{error}</p>}
@@ -44,27 +47,22 @@ function ReviewCard({ review }) {
 
 export default function ProductReviews({ id, summary }) {
   const [page, setPage] = useState(1)
-  const [sort, setSort] = useState('recent')
-  const resource = useCatalogResource('reviews', JSON.stringify({ id, page, pageSize: 6 }))
-  const reviews = [...(resource.data?.items || [])].sort((a, b) =>
-    (new Date(b.created_at) - new Date(a.created_at)) * (sort === 'recent' ? 1 : -1))
+  const resource = useCatalogResource('reviews', JSON.stringify({ id, page, pageSize: 6 }), String(id))
+  const reviews = resource.data?.items || []
   return <section className="detail-section product-reviews">
     <div className="reviews-header"><h2>Customer reviews</h2>
       {summary && <p className="reviews-score">Review score: <strong>{summary.label}</strong> ({summary.count.toLocaleString('en')} reviews)</p>}
-      <label className="reviews-sort">Sort this page:
-        <select value={sort} onChange={event => setSort(event.target.value)}><option value="recent">Recent</option><option value="oldest">Oldest</option></select>
-      </label>
     </div>
-    <ResourceStatus resource={resource} label="reviews" />
+    <div className="reviews-status"><ResourceStatus resource={resource} label="reviews" /></div>
     {resource.data && (!reviews.length ? <p className="product-empty">No reviews yet.</p> : <>
-      <div className="review-grid">{[0, 1].map(column => <div className="review-column" key={column}>
+      <div className="review-grid" aria-busy={resource.loading}>{[0, 1].map(column => <div className="review-column" key={column}>
         {reviews.filter((_, index) => index % 2 === column).map(review => <ReviewCard key={review.id} review={review} />)}
       </div>)}</div>
     </>)}
     {(page > 1 || resource.data?.hasNext) && <nav className="product-pagination" aria-label="Review pages">
       <button type="button" disabled={page === 1 || resource.loading} onClick={() => setPage(value => value - 1)}>Previous</button>
-      <span aria-current="page">{page}</span>
-      <button type="button" disabled={!resource.data?.hasNext || resource.loading} onClick={() => setPage(value => value + 1)}>Next</button>
+      <span aria-current="page">{resource.data?.page || page}</span>
+      <button type="button" disabled={!resource.data?.hasNext || resource.loading || !!resource.error} onClick={() => setPage(value => value + 1)}>Next</button>
     </nav>}
   </section>
 }

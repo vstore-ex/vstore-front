@@ -13,7 +13,7 @@ export function productPresentation(game) {
   const text = value => typeof value === 'string' ? value : ''
   return {
     header: game.headerImage || game.heroImage || game.image,
-    summary: text(meta.short_description) || game.description_md?.split(/\n\s*\n/).find(p => p.trim() && !/^\s*[#!]/.test(p)) || '',
+    summary: text(meta.short_description) || text(game.description_md).split(/\n\s*\n/).find(p => p.trim() && !/^\s*[#!]/.test(p)) || '',
     releaseDate: text(meta.release_date),
     ratingImage: mediaUrl(meta.rating_image_url),
     ratingDescription: text(meta.rating_description),
@@ -25,6 +25,7 @@ export function productPresentation(game) {
 
 export async function getAchievements(key, signal) {
   const { id, page = 1, pageSize = 6 } = JSON.parse(key)
+  // Backend app/api/achievements.py:45 defines this separate route with page/page_size.
   const data = await apiRequest('/products/' + encodeURIComponent(id) + '/achievements?page=' + page + '&page_size=' + pageSize, { signal, auth: false })
   if (!Array.isArray(data?.items) || !Number.isInteger(data.total)) throw new Error('Could not read achievements.')
   return { ...data, items: data.items.filter(item => item?.id != null).map(item => ({
@@ -39,7 +40,7 @@ export async function getReviews(key, signal) {
   // Fetch one extra item to establish whether there really is another page.
   const data = await apiRequest('/games/' + encodeURIComponent(id) + '/reviews?skip=' + ((page - 1) * pageSize) + '&limit=' + (pageSize + 1), { signal, auth: false })
   if (!Array.isArray(data)) throw new Error('Could not read reviews.')
-  return { items: data.slice(0, pageSize), hasNext: data.length > pageSize }
+  return { page, items: data.slice(0, pageSize), hasNext: data.length > pageSize }
 }
 
 export const voteHelpful = id => apiRequest('/reviews/' + encodeURIComponent(id) + '/vote', {

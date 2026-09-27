@@ -4,7 +4,17 @@ import { MediaImage } from '../../components/Catalog/Media'
 import { mediaUrl } from '../../api/catalog'
 import chevron from '../../assets/product-chevron-down.svg'
 
+function MarkdownLink({ href, children }) {
+  let external = false
+  try {
+    const url = new URL(href, window.location.href)
+    external = ['http:', 'https:'].includes(url.protocol) && url.origin !== window.location.origin
+  } catch { /* Invalid destinations remain subject to Markdown's URL sanitizer. */ }
+  return <a href={href} target={external ? '_blank' : undefined} rel={external ? 'noopener noreferrer' : undefined}>{children}</a>
+}
+
 const markdownComponents = {
+  a: MarkdownLink,
   img: ({ src, alt }) => <MediaImage src={src} alt={alt} />,
 }
 export function ProductMarkdown({ children }) {
@@ -34,9 +44,10 @@ export function ExpandableContent({ children, className = '', limit = 250 }) {
 
 export function Requirements({ value }) {
   // GameOut.requirements is Markdown; two headed sections become Figma's columns.
-  const sections = value?.split(/(?=^(?:#{1,6}\s+|\*\*)(?:minimum|recommended)\b)/im).filter(part => part.trim()) || []
+  const markdown = typeof value === 'string' ? value.trim() : ''
+  const sections = markdown.split(/(?=^(?:#{1,6}\s+|\*\*)(?:minimum|recommended)\b)/im).filter(part => part.trim()) || []
   return <section className="detail-section product-requirements"><h2>System Requirements</h2>
-    {value ? <div className={sections.length > 1 ? 'requirements-grid' : ''}>
+    {markdown ? <div className={sections.length > 1 ? 'requirements-grid' : ''}>
       {sections.map((section, i) => <ProductMarkdown key={i}>{section}</ProductMarkdown>)}
     </div> : <p className="product-empty">System requirements are not available yet.</p>}
   </section>

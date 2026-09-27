@@ -1,12 +1,8 @@
+import { mediaUrl } from './client'
+export { mediaUrl } from './client'
+
 const API_BASE = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '')
 export const PAGE_SIZE = 24
-export function mediaUrl(value, base) {
-  if (typeof value !== 'string' || !value.trim()) return ''
-  try {
-    const url = new URL(value, base || new URL(API_BASE, window.location.origin).origin)
-    return ['http:', 'https:'].includes(url.protocol) ? url.href : ''
-  } catch { return '' }
-}
 export const offerUrl = value => mediaUrl(value, window.location.origin)
 const array = value => Array.isArray(value) ? value : []
 export const priceLabel = value => new Intl.NumberFormat('en', { style: 'currency', currency: 'UAH' }).format(Number(value) || 0)

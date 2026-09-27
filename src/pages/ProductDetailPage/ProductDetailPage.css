@@ -84,8 +84,6 @@
 .product-detail-page .product-reviews { margin-top: 80px; }
 .reviews-header { margin-bottom: 25px; }
 .product-detail-page .reviews-header h2 { margin-bottom: 18px; }
-.reviews-sort { display: flex; gap: 10px; align-items: center; font-size: 18px; }
-.reviews-sort select { color: #eee; background: #393e46; border: 0; border-radius: 4px; padding: 7px 28px 7px 10px; font: inherit; }
 .review-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
 .review-column { display: grid; gap: 16px; min-width: 0; }
 .review-card { min-width: 0; }
@@ -157,3 +155,7 @@
 
 .product-meta .product-review-score, .reviews-score strong { color: #7bc74d; }
 .reviews-score { margin: 0 0 18px; font-size: 18px; }
+
+.product-reviews .reviews-status { min-height: 28px; }
+.product-reviews .reviews-status .catalog-status { padding: 0; margin: 0; }
+.review-card__helpful button[aria-pressed="true"] { background: #7bc74d33; outline: 2px solid #7bc74d; border-radius: 2px; }
