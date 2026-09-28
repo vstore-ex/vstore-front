@@ -91,7 +91,7 @@ export async function apiRequest(path, { body, headers, signal, timeout = 20000,
 }
 
 export function mediaUrl(value, origin) {
-  if (!value || typeof value !== 'string') return ''
+  if (typeof value !== 'string' || !value.trim()) return ''
   try {
     const base = new URL(API_BASE_URL, window.location.origin)
     const url = new URL(value, origin || base.origin)

@@ -1,130 +1,32 @@
 import { useState } from 'react'
 import Pagination from '../../components/Pagination/Pagination'
+import ResourceStatus from '../../components/Catalog/ResourceStatus'
+import { MediaImage } from '../../components/Catalog/Media'
+import useCatalogResource from '../../hooks/useCatalogResource'
 import './AchievementsPage.css'
 
-const ACHIEVEMENTS_PER_PAGE = 11
-const FALLBACK_ACHIEVEMENT_TEMPLATES = [
-  ['First steps', 'Launch the game for the first time', 95],
-  ['Getting started', 'Complete the opening challenge', 88],
-  ['Explorer', 'Visit every major area', 76],
-  ['Collector', 'Find a rare item', 64],
-  ['Perfect run', 'Finish a stage without mistakes', 52],
-  ['Team player', 'Help another player complete a task', 43],
-  ['Secret found', 'Discover a hidden objective', 35],
-  ['Halfway there', 'Complete half of the available goals', 28],
-  ['Sharpshooter', 'Win a difficult encounter', 20],
-  ['No fear', 'Survive a dangerous situation', 15],
-  ['Completionist', 'Finish every core objective', 10],
-]
-
-function normalizeAchievement(achievement, index, fallbackImage) {
-  if (typeof achievement === 'string') {
-    return {
-      id: achievement,
-      title: achievement,
-      description: '',
-      completion: Math.max(10, 95 - index * 8),
-      icon: fallbackImage,
-    }
-  }
-
-  return {
-    icon: fallbackImage,
-    completion: Math.max(10, 95 - index * 8),
-    description: '',
-    ...achievement,
-  }
-}
-
-function AchievementRow({ achievement }) {
-  const progress = Math.max(0, Math.min(100, achievement.completion))
-
-  return (
-    <article className="achievement-row">
-      <img className="achievement-row__icon" src={achievement.icon} alt="" />
-
-      <div className="achievement-row__content">
-        <div className="achievement-row__fill" style={{ width: `${progress}%` }} aria-hidden="true" />
-        <div className="achievement-row__text">
-          <h2>{achievement.title}</h2>
-          {achievement.description && <p>{achievement.description}</p>}
+const PAGE_SIZE = 11
+export default function AchievementsPage({ product }) {
+  const [page, setPage] = useState(1)
+  const resource = useCatalogResource('achievements', JSON.stringify({ id: product.id, page, pageSize: PAGE_SIZE }))
+  return <div className="achievements-page"><div className="achievements-page__inner">
+    <a className="catalog-back" href={'#/products/' + encodeURIComponent(product.id)}>Back to {product.title}</a>
+    <h1>Achievements</h1>
+    <ResourceStatus resource={resource} label="achievements" />
+    {resource.data && <>
+      <p className="achievements-page__count">Amount of achievements: {resource.data.total}</p>
+      {!resource.data.items.length && <p>No achievements available yet.</p>}
+      <div className="achievements-list">{resource.data.items.map(achievement => <article className="achievement-row" key={achievement.id}>
+        <MediaImage className="achievement-row__icon" src={achievement.icon} alt={achievement.title} />
+        <div className="achievement-row__content">
+          {achievement.completion !== null && <div className="achievement-row__fill" style={{ width: achievement.completion + '%' }} aria-hidden="true" />}
+          <div className="achievement-row__text"><h2>{achievement.title}</h2>{achievement.description && <p>{achievement.description}</p>}</div>
+          {achievement.completion !== null && <span className="achievement-row__percent">{achievement.completion}%</span>}
         </div>
-        <span className="achievement-row__percent">{progress}%</span>
-      </div>
-    </article>
-  )
+      </article>)}</div>
+      <Pagination activeClassName="achievement-pagination__active" ariaLabel="Achievements pages"
+        className="achievement-pagination" currentPage={page} disabledClassName="achievement-pagination__muted"
+        maxVisiblePages={6} onPageChange={setPage} pageSize={PAGE_SIZE} totalItems={resource.data.total} />
+    </>}
+  </div></div>
 }
-
-function buildAchievementList(product, detail) {
-  const sourceAchievements = detail.achievements?.length
-    ? detail.achievements
-    : FALLBACK_ACHIEVEMENT_TEMPLATES.map(([title, description, completion]) => ({
-        id: `${product.id}-${title.toLowerCase().replace(/\s+/g, '-')}`,
-        title,
-        description,
-        completion,
-        icon: product.iconImage || product.image,
-      }))
-  const baseAchievements = sourceAchievements.map((achievement, index) =>
-    normalizeAchievement(achievement, index, product.iconImage || product.image),
-  )
-  const amount = detail.achievementsCount ?? (detail.achievements?.length ? baseAchievements.length : 11)
-
-  if (!baseAchievements.length || amount <= baseAchievements.length) {
-    return baseAchievements
-  }
-
-  return Array.from({ length: amount }, (_, index) => {
-    const source = baseAchievements[index % baseAchievements.length]
-    const pageIndex = Math.floor(index / baseAchievements.length)
-
-    return {
-      ...source,
-      id: `${source.id ?? source.title}-${index}`,
-      completion: Math.max(1, source.completion - pageIndex * 4),
-    }
-  })
-}
-
-function AchievementsPage({ product }) {
-  const [currentPage, setCurrentPage] = useState(1)
-  const detail = product.detail ?? {}
-  const achievements = buildAchievementList(product, detail)
-  const amount = detail.achievementsCount ?? achievements.length
-  const totalPages = Math.max(1, Math.ceil(achievements.length / ACHIEVEMENTS_PER_PAGE))
-  const safeCurrentPage = Math.min(currentPage, totalPages)
-  const firstAchievementIndex = (safeCurrentPage - 1) * ACHIEVEMENTS_PER_PAGE
-  const currentAchievements = achievements.slice(
-    firstAchievementIndex,
-    firstAchievementIndex + ACHIEVEMENTS_PER_PAGE,
-  )
-
-  return (
-    <div className="achievements-page">
-      <div className="achievements-page__inner">
-        <h1>Achievements</h1>
-        <p className="achievements-page__count">Amount of achievements: {amount}</p>
-
-        <div className="achievements-list">
-          {currentAchievements.map((achievement) => (
-            <AchievementRow achievement={achievement} key={achievement.id ?? achievement.title} />
-          ))}
-        </div>
-
-        <Pagination
-          activeClassName="achievement-pagination__active"
-          ariaLabel="Achievements pages"
-          className="achievement-pagination"
-          currentPage={safeCurrentPage}
-          disabledClassName="achievement-pagination__muted"
-          maxVisiblePages={6}
-          onPageChange={setCurrentPage}
-          pageSize={ACHIEVEMENTS_PER_PAGE}
-          totalItems={achievements.length}
-        />
-      </div>
-    </div>
-  )
-}
-
-export default AchievementsPage
