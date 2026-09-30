@@ -1,3 +1,4 @@
+import UserLink from '../../components/User/UserLink'
 import { useState } from 'react'
 import { useAuth } from '../../auth/context'
 import useFriends from '../../hooks/useFriends'
@@ -7,13 +8,13 @@ import './FriendsSection.css'
 const tabs = { friends: 'My friends', incoming: 'Incoming requests', outgoing: 'Outgoing requests' }
 const empty = { friends: 'No friends yet. Send an invitation using their user ID.', incoming: 'No incoming requests.', outgoing: 'No outgoing requests.' }
 function Profile({ user, id }) {
-  return <div className="friend-profile">
+  return <UserLink id={user?.id ?? id} className="friend-profile">
     <img src={user?.avatar || fallbackAvatar} alt="" onError={event => {
       if (!event.currentTarget.dataset.fallback) { event.currentTarget.dataset.fallback = 'true'; event.currentTarget.src = fallbackAvatar }
     }} />
     <div><strong>{user?.username ? '@' + user.username : 'User #' + id}</strong>
       {user?.full_name && <p>{user.full_name}</p>}<small>ID: {user?.id ?? id}</small></div>
-  </div>
+  </UserLink>
 }
 function FriendsPanel({ user }) {
   const state = useFriends(user.id)

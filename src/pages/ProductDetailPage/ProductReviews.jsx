@@ -1,3 +1,4 @@
+import UserLink from '../../components/User/UserLink'
 import ReviewEditor from './ReviewEditor'
 import { useState } from 'react'
 import useCatalogResource from '../../hooks/useCatalogResource'
@@ -17,7 +18,7 @@ function ReviewCard({ review, onSaved, onSignIn }) {
   return <article className={'review-card review-card--' + (review.is_positive ? 'positive' : 'negative')}>
     <header className="review-card__head">
       <img className="review-card__icon" src={review.is_positive ? positiveIcon : negativeIcon} alt="" />
-      <div className="review-card__summary"><strong>@{review.username}</strong>
+      <div className="review-card__summary"><UserLink id={review.user_id}><strong>@{review.username}</strong></UserLink>
         <span>{review.is_positive ? 'This user recommends this game' : 'This user doesn’t recommend this game'}</span></div>
       {!Number.isNaN(date.getTime()) && <time dateTime={review.created_at}>Posted on: {date.toLocaleDateString('en', { month: 'long', day: 'numeric' })}</time>}
     </header>
