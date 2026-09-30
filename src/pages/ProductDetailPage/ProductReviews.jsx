@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import ReviewEditor from './ReviewEditor'
+import { useRef, useState } from 'react'
 import useCatalogResource from '../../hooks/useCatalogResource'
 import ResourceStatus from '../../components/Catalog/ResourceStatus'
 import { useAuth } from '../../auth/context'
@@ -8,22 +9,27 @@ import positiveIcon from '../../assets/review-like-positive.svg'
 import negativeIcon from '../../assets/review-like-negative.svg'
 import helpfulIcon from '../../assets/product-helpful.svg'
 
-function ReviewCard({ review }) {
+function ReviewCard({ review, onSaved, onSignIn }) {
   const { isAuthenticated, currentUser } = useAuth()
+  const [editing, setEditing] = useState(false)
+  const submitting = useRef(false)
   const [confirmedVote, setConfirmedVote] = useState(null)
   const helpful = isAuthenticated && confirmedVote?.userId === currentUser?.id ? confirmedVote.value : undefined
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   async function vote() {
-    if (!isAuthenticated) { setMessage('Sign in to mark this review as helpful.'); return }
+    if (!isAuthenticated) { onSignIn?.(); return }
+    if (submitting.current) return
+    submitting.current = true
     setBusy(true); setError(''); setMessage('')
     try {
       const result = await voteHelpful(review.id)
       if (['vote added', 'vote removed'].includes(result?.message)) setConfirmedVote({ userId: currentUser.id, value: result.message === 'vote added' })
-      setMessage(result?.message === 'vote removed' ? 'Your helpful vote was removed.' : 'Your helpful vote was saved.')
+      if (!['vote added', 'vote removed'].includes(result?.message)) throw new Error('Could not confirm your vote. Please try again.')
+      setMessage(result.message === 'vote removed' ? 'Your helpful vote was removed.' : 'Your helpful vote was saved.')
     } catch (reason) { setError(reason.message) }
-    finally { setBusy(false) }
+    finally { submitting.current = false; setBusy(false) }
   }
   const date = new Date(review.created_at)
   const content = <ProductMarkdown>{review.content_md}</ProductMarkdown>
@@ -41,11 +47,16 @@ function ReviewCard({ review }) {
       </div>
       {message && <p className="review-feedback" role="status">{message}</p>}
       {error && <p className="review-feedback" role="alert">{error}</p>}
+      {String(currentUser?.id) === String(review.user_id) && isAuthenticated && !editing && <button type="button" className="product-text-button review-edit" onClick={() => setEditing(value => !value)}>Edit your review</button>}
+      {editing && isAuthenticated && String(currentUser.id) === String(review.user_id) && <ReviewEditor key={currentUser.id} gameId={review.game_id} review={review} onCancel={() => setEditing(false)} onSaved={() => { setEditing(false); onSaved() }} />}
     </div>
   </article>
 }
 
-export default function ProductReviews({ id, summary }) {
+export default function ProductReviews({ id, summary, onSignIn }) {
+  const { isAuthenticated, currentUser } = useAuth()
+  const [writing, setWriting] = useState(false)
+  const [notice, setNotice] = useState('')
   const [page, setPage] = useState(1)
   const resource = useCatalogResource('reviews', JSON.stringify({ id, page, pageSize: 6 }), String(id))
   const reviews = resource.data?.items || []
@@ -53,10 +64,17 @@ export default function ProductReviews({ id, summary }) {
     <div className="reviews-header"><h2>Customer reviews</h2>
       {summary && <p className="reviews-score">Review score: <strong>{summary.label}</strong> ({summary.count.toLocaleString('en')} reviews)</p>}
     </div>
+    <div className="review-compose">
+      {isAuthenticated ? <button className="product-text-button" type="button" onClick={() => { setWriting(value => !value); setNotice('') }}>Write a review</button>
+        : <button className="product-text-button" type="button" onClick={onSignIn}>Sign in to write a review</button>}
+      {writing && isAuthenticated && <ReviewEditor key={id + ':' + currentUser.id} gameId={id} onCancel={() => setWriting(false)}
+        onSaved={() => { setWriting(false); setNotice('Your review was posted.'); setPage(1); resource.retry() }} />}
+      {notice && <p role="status">{notice}</p>}
+    </div>
     <div className="reviews-status"><ResourceStatus resource={resource} label="reviews" /></div>
     {resource.data && (!reviews.length ? <p className="product-empty">No reviews yet.</p> : <>
       <div className="review-grid" aria-busy={resource.loading}>{[0, 1].map(column => <div className="review-column" key={column}>
-        {reviews.filter((_, index) => index % 2 === column).map(review => <ReviewCard key={review.id} review={review} />)}
+        {reviews.filter((_, index) => index % 2 === column).map(review => <ReviewCard key={review.id} review={review} onSignIn={onSignIn} onSaved={resource.retry} />)}
       </div>)}</div>
     </>)}
     {(page > 1 || resource.data?.hasNext) && <nav className="product-pagination" aria-label="Review pages">

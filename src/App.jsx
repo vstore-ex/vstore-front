@@ -188,6 +188,7 @@ function App() {
         <ProductDetailPage
           key={selectedProductId}
           id={selectedProductId}
+          onSignIn={() => openAuth('login')}
           showAchievements={currentView === 'achievements'}
           onViewAllAchievements={() => navigateTo(`products/${selectedProductId}/achievements`)}
         />

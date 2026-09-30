@@ -159,3 +159,17 @@
 .product-reviews .reviews-status { min-height: 28px; }
 .product-reviews .reviews-status .catalog-status { padding: 0; margin: 0; }
 .review-card__helpful button[aria-pressed="true"] { background: #7bc74d33; outline: 2px solid #7bc74d; border-radius: 2px; }
+
+.requirements-grid h3 { margin: 0 0 15px; font-size: 18px; }
+.requirements-values { margin: 0; }
+.requirements-values > div { display: flex; flex-wrap: wrap; gap: 4px 8px; margin-bottom: 5px; line-height: 23px; overflow-wrap: anywhere; }
+.requirements-values dt { color: #eeeeeeb3; font-size: 14px; font-weight: 600; }
+.requirements-values dd { margin: 0; font-size: 16px; }
+.review-compose { margin: 0 0 16px; }
+.review-editor { display: grid; gap: 16px; padding: 20px; margin-top: 16px; border: 1px solid #eeeeee33; border-radius: 7px; }
+.review-editor > label:first-child { display: grid; gap: 10px; }
+.review-editor textarea { width: 100%; resize: vertical; min-height: 120px; border: 1px solid #eeeeee66; border-radius: 5px; padding: 12px; font: inherit; color: #eee; background: #222831; }
+.review-editor__recommend { display: flex; align-items: center; gap: 8px; }
+.review-editor__actions { display: flex; flex-wrap: wrap; gap: 20px; }
+.review-editor__actions .product-action { width: auto; }
+.review-edit { margin-top: 14px; }
