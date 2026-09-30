@@ -43,6 +43,6 @@ export async function getReviews(key, signal) {
   return { page, items: data.slice(0, pageSize), hasNext: data.length > pageSize }
 }
 
-export const voteHelpful = id => apiRequest('/reviews/' + encodeURIComponent(id) + '/vote', {
-  method: 'POST', body: { reaction_type: 'helpful' },
+export const voteReview = (id, reactionType) => apiRequest('/reviews/' + encodeURIComponent(id) + '/vote', {
+  method: 'POST', body: { reaction_type: reactionType },
 })

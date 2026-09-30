@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import userIcon from '../../assets/discover/figma/2451d.svg'
 import heartIcon from '../../assets/discover/figma/0ac49.svg'
 import cartIcon from '../../assets/discover/figma/066ed.svg'
@@ -28,6 +29,18 @@ function Header({
   cartCount = 0,
   wishlistCount = 0,
 }) {
+  const readQuery = () => new URLSearchParams(window.location.hash.split('?')[1]).get('q') || ''
+  const [query, setQuery] = useState(readQuery)
+  useEffect(() => {
+    const sync = () => setQuery(new URLSearchParams(window.location.hash.split('?')[1]).get('q') || '')
+    window.addEventListener('hashchange', sync)
+    return () => window.removeEventListener('hashchange', sync)
+  }, [])
+  function search(event) {
+    event.preventDefault()
+    const value = query.trim()
+    window.location.hash = value ? '#/discover?' + new URLSearchParams({ q: value }) : '#/discover?view=catalog'
+  }
   function handleActionClick(label) {
     if (label === 'Account') {
       onAccount?.()
@@ -77,10 +90,10 @@ function Header({
           ))}
         </nav>
 
-        <label className="search-field" aria-label="Search store">
-          <img className="search-field__icon" src={searchIcon} alt="" />
-          <input className="search-field__input" type="search" placeholder="Search store" />
-        </label>
+        <form className="search-field" role="search" aria-label="Search store" onSubmit={search}>
+          <button className="search-field__submit" type="submit" aria-label="Search"><img className="search-field__icon" src={searchIcon} alt="" /></button>
+          <input className="search-field__input" type="search" aria-label="Search store" placeholder="Search store" maxLength={200} value={query} onChange={event => setQuery(event.target.value)} />
+        </form>
       </div>
 
       <div className="header-actions">

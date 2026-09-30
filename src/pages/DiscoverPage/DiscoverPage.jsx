@@ -1,3 +1,4 @@
+import SearchResults from './SearchResults'
 import { useEffect, useState } from 'react'
 import ProductCard from '../../components/ProductCard/ProductCard'
 import DiscoverShowcase from '../../components/DiscoverShowcase/DiscoverShowcase'
@@ -123,7 +124,7 @@ function readFilters() {
     tag, browse: params.get('view') === 'catalog' || Boolean(tag) || page > 1, free: params.get('free') === '1' }
 }
 
-export default function DiscoverPage({ onProductSelect }) {
+function DiscoverContent({ onProductSelect }) {
   const [filters, setFilters] = useState(readFilters)
   useEffect(() => {
     const sync = () => setFilters(readFilters())
@@ -196,4 +197,15 @@ export default function DiscoverPage({ onProductSelect }) {
       {!showCatalog && <button className="store-pagination__browse" onClick={() => navigate()}>All games</button>}
     </nav>}
   </div></div>
+}
+
+export default function DiscoverPage(props) {
+  const readQuery = () => (new URLSearchParams(window.location.hash.split('?')[1]).get('q') || '').trim().slice(0, 200)
+  const [query, setQuery] = useState(readQuery)
+  useEffect(() => {
+    const sync = () => setQuery(readQuery())
+    window.addEventListener('hashchange', sync)
+    return () => window.removeEventListener('hashchange', sync)
+  }, [])
+  return query ? <SearchResults query={query} onProductSelect={props.onProductSelect} /> : <DiscoverContent {...props} />
 }

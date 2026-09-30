@@ -78,3 +78,10 @@ export async function getDiscover(_key, signal) {
     mobile_banner: data.mobile_banner && typeof data.mobile_banner === 'object' ? data.mobile_banner : null,
   }
 }
+
+export async function searchGames(query, signal) {
+  if (!query.trim()) return []
+  const data = await request('/search/games?' + new URLSearchParams({ q: query.trim() }), signal)
+  if (!Array.isArray(data)) throw new Error('The server returned invalid search results.')
+  return games(data)
+}

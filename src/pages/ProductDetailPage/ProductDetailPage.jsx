@@ -11,7 +11,7 @@ import ProductReviews from './ProductReviews'
 import '../../components/Catalog/Catalog.css'
 import './ProductDetailPage.css'
 
-function ProductDetails({ game, onViewAllAchievements }) {
+function ProductDetails({ game, onViewAllAchievements, onSignIn }) {
   const presentation = productPresentation(game)
   return <div className="product-detail-page catalog-detail"><div className="product-detail-page__inner">
     <h1>{game.title}</h1>
@@ -47,11 +47,11 @@ function ProductDetails({ game, onViewAllAchievements }) {
       </aside>
     </div>
     <ProductAchievements id={game.id} onViewAll={onViewAllAchievements} />
-    <ProductReviews id={game.id} summary={presentation.reviewSummary} />
+    <ProductReviews onSignIn={onSignIn} id={game.id} summary={presentation.reviewSummary} />
   </div></div>
 }
 
-export default function ProductDetailPage({ id, showAchievements, onViewAllAchievements }) {
+export default function ProductDetailPage({ id, showAchievements, onViewAllAchievements, onSignIn }) {
   const resource = useCatalogResource('game', String(id))
   if (resource.loading || resource.error) return <div className="product-detail-page"><ResourceStatus resource={resource} label="game" />
     {resource.error && <a className="catalog-back" href="#/discover">Back to catalog</a>}</div>
@@ -59,5 +59,5 @@ export default function ProductDetailPage({ id, showAchievements, onViewAllAchie
   if (!game) return <div className="catalog-status"><h1>Game unavailable</h1><p>This game has no details yet.</p>
     <button type="button" onClick={resource.retry}>Retry game</button><a href="#/discover">Back to catalog</a></div>
   if (showAchievements) return <AchievementsPage key={game.id} product={game} />
-  return <ProductDetails key={game.id} game={game} onViewAllAchievements={onViewAllAchievements} />
+  return <ProductDetails onSignIn={onSignIn} key={game.id} game={game} onViewAllAchievements={onViewAllAchievements} />
 }

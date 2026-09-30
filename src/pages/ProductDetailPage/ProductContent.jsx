@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import Markdown, { defaultUrlTransform } from 'react-markdown'
 import { MediaImage } from '../../components/Catalog/Media'
 import { mediaUrl } from '../../api/catalog'
+import { parseRequirements } from './requirements'
 import chevron from '../../assets/product-chevron-down.svg'
 
 function MarkdownLink({ href, children }) {
@@ -43,12 +44,17 @@ export function ExpandableContent({ children, className = '', limit = 250 }) {
 }
 
 export function Requirements({ value }) {
-  // GameOut.requirements is Markdown; two headed sections become Figma's columns.
-  const markdown = typeof value === 'string' ? value.trim() : ''
-  const sections = markdown.split(/(?=^(?:#{1,6}\s+|\*\*)(?:minimum|recommended)\b)/im).filter(part => part.trim()) || []
+  const parsed = parseRequirements(value)
+  const markdown = parsed.markdown || ''
+  const parts = markdown.split(/(?=^(?:#{1,6}\s+|\*\*)(?:minimum|recommended)\b)/im).filter(part => part.trim())
   return <section className="detail-section product-requirements"><h2>System Requirements</h2>
-    {markdown ? <div className={sections.length > 1 ? 'requirements-grid' : ''}>
-      {sections.map((section, i) => <ProductMarkdown key={i}>{section}</ProductMarkdown>)}
+    {parsed.sections.length ? <div className="requirements-grid">{parsed.sections.map((section, index) => <div key={index}>
+      {section.title && <h3>{section.title}</h3>}
+      <dl className="requirements-values">{section.rows.map((row, i) => <div key={i}>
+        {row.label && <dt>{row.label}:</dt>}<dd>{row.text}</dd>
+      </div>)}</dl>
+    </div>)}</div> : markdown ? <div className={parts.length > 1 ? 'requirements-grid' : ''}>
+      {parts.map((part, i) => <ProductMarkdown key={i}>{part}</ProductMarkdown>)}
     </div> : <p className="product-empty">System requirements are not available yet.</p>}
   </section>
 }
