@@ -49,7 +49,7 @@ function ProductDetails({ game, onViewAllAchievements, onSignIn }) {
     </div>
     <ProductAchievements id={game.id} onViewAll={onViewAllAchievements} />
     <ProductNews id={game.id} />
-    <ProductReviews onSignIn={onSignIn} id={game.id} summary={presentation.reviewSummary} />
+    <ProductReviews onSignIn={onSignIn} id={game.id} />
   </div></div>
 }
 
