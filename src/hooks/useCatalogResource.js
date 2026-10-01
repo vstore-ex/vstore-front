@@ -1,7 +1,8 @@
+import { getNews, getNewsById } from '../api/news'
 import { useEffect, useState } from 'react'
 import { getDiscover, getGame, getGames, getTags, searchGames } from '../api/catalog'
 import { getAchievements, getReviews } from '../api/product'
-const loaders = { search: searchGames, discover: getDiscover, game: getGame, games: getGames, tags: getTags, achievements: getAchievements, reviews: getReviews }
+const loaders = { news: (key, signal) => getNews(JSON.parse(key), signal), newsDetail: getNewsById, search: searchGames, discover: getDiscover, game: getGame, games: getGames, tags: getTags, achievements: getAchievements, reviews: getReviews }
 export default function useCatalogResource(type, key = '', retainScope = null) {
   const [attempt, setAttempt] = useState(0)
   const [result, setResult] = useState(null)
