@@ -1,0 +1,26 @@
+.friends-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.friend-add-form { margin: 24px 0; display: grid; gap: 10px; max-width: 600px; }
+.friend-add-form > div { display: flex; gap: 12px; }
+.friend-add-form input { min-width: 0; flex: 1; border: 1px solid #eeeeee66; border-radius: 5px; padding: 10px 14px; background: #222831; color: #eee; font: inherit; }
+.friend-add-form button { display: inline-flex; align-items: center; gap: 10px; }
+.friend-add-form button img { width: 24px; height: 24px; }
+.friends-tabs { display: flex; flex-wrap: wrap; gap: 12px; margin: 24px 0; border-bottom: 1px solid #eeeeee33; padding-bottom: 16px; }
+.friends-tabs button, .friend-actions button, .friends-section [role="alert"] button { border: 1px solid #eeeeee55; border-radius: 5px; padding: 10px 14px; background: #393e46; color: #eee; font: inherit; cursor: pointer; }
+.friends-tabs [aria-selected="true"], .friend-actions .friend-accept { background: #7bc74d; color: #222831; border-color: #7bc74d; }
+.friends-count { display: inline-block; margin-left: 6px; font-size: 14px; font-weight: 700; }
+.friends-list { display: grid; gap: 14px; }
+.friend-card { display: flex; justify-content: space-between; gap: 20px; align-items: center; border-radius: 8px; padding: 18px; background: #393e46; }
+.friend-profile { display: flex; align-items: center; gap: 16px; min-width: 0; }
+.friend-profile img { width: 64px; height: 64px; border-radius: 7px; object-fit: cover; flex: 0 0 64px; }
+.friend-profile > div { min-width: 0; overflow-wrap: anywhere; }
+.friend-profile strong { font-size: 18px; }
+.friend-profile p { margin: 5px 0; }
+.friend-profile small, .friends-empty { color: #eeeeeeb3; }
+.friend-actions { display: flex; flex-wrap: wrap; gap: 10px; flex-shrink: 0; }
+.friend-actions [role="group"] button { margin-right: 8px; }
+.friend-actions p { margin: 0 0 10px; }
+.friends-error { color: #ffaaaa; }
+.friends-message { color: #7bc74d; }
+.friends-section :is(button,input):focus-visible { outline: 2px solid #7bc74d; outline-offset: 3px; }
+.friends-section button:disabled, .friends-section input:disabled { opacity: .5; cursor: default; }
+@media (max-width: 700px) { .friend-card { flex-direction: column; align-items: stretch; } .friend-add-form > div, .friends-heading { flex-wrap: wrap; } .friend-add-form input { flex-basis: 100%; } .friend-actions { flex-shrink: 1; } }
