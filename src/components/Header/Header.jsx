@@ -81,7 +81,7 @@ function Header({
               className={`primary-nav__link${
                 activeView === item.toLowerCase() ? ' primary-nav__link--active' : ''
               }`}
-              href={`#${item.toLowerCase()}`}
+              href={`#/${item.toLowerCase()}`}
               onClick={(event) => handleNavClick(event, item)}
               key={item}
             >

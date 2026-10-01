@@ -1,3 +1,4 @@
+import FriendsSection from './FriendsSection'
 import { useState } from 'react'
 import { mediaUrl } from '../../api/client'
 import useOrders from '../../hooks/useOrders'
@@ -99,6 +100,7 @@ export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut
         <div className="account-stat" key={label}><span>{label}</span><strong>{value}</strong></div>)}</div>
     </section>
     <Library />
+    <FriendsSection />
     <section className="account-section"><h2>Profile settings</h2>
       <form className="store-form" onSubmit={save}>
         {Object.entries({ full_name: 'Full name', email: 'Email', phone: 'Phone' }).map(([name, label]) =>
