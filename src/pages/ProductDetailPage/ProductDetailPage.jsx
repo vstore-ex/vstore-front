@@ -1,3 +1,4 @@
+import ProductNews from './ProductNews'
 import AchievementsPage from '../AchievementsPage/AchievementsPage'
 import WishlistButton from '../../components/Wishlist/WishlistButton'
 import AddToCartButton from '../../components/Cart/AddToCartButton'
@@ -47,7 +48,8 @@ function ProductDetails({ game, onViewAllAchievements, onSignIn }) {
       </aside>
     </div>
     <ProductAchievements id={game.id} onViewAll={onViewAllAchievements} />
-    <ProductReviews onSignIn={onSignIn} id={game.id} summary={presentation.reviewSummary} />
+    <ProductNews id={game.id} />
+    <ProductReviews onSignIn={onSignIn} id={game.id} />
   </div></div>
 }
 

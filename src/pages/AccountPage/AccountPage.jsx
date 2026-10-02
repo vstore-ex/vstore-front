@@ -1,3 +1,5 @@
+import UserLink from '../../components/User/UserLink'
+import FriendsSection from './FriendsSection'
 import { useState } from 'react'
 import { mediaUrl } from '../../api/client'
 import useOrders from '../../hooks/useOrders'
@@ -82,6 +84,7 @@ export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut
   })()
 
   return <div className="account-page account-page--current"><div className="account-page__inner">
+    <UserLink id={user.id}>View public profile</UserLink>
     <section className="account-hero" aria-label="Account profile">
       <img
         className="account-hero__avatar"
@@ -99,6 +102,7 @@ export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut
         <div className="account-stat" key={label}><span>{label}</span><strong>{value}</strong></div>)}</div>
     </section>
     <Library />
+    <FriendsSection />
     <section className="account-section"><h2>Profile settings</h2>
       <form className="store-form" onSubmit={save}>
         {Object.entries({ full_name: 'Full name', email: 'Email', phone: 'Phone' }).map(([name, label]) =>

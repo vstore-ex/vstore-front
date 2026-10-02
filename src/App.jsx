@@ -1,3 +1,6 @@
+import UserProfilePage from './pages/UserProfilePage/UserProfilePage'
+import NewsPage from './pages/NewsPage/NewsPage'
+import NewsDetailPage from './pages/NewsDetailPage/NewsDetailPage'
 import { useEffect, useRef, useState } from 'react'
 import Header from './components/Header/Header'
 import Footer from './components/Footer/Footer'
@@ -28,6 +31,10 @@ function parseRouteFromHash() {
   if (!parts.length || parts[0] === 'discover') {
     return defaultRoute
   }
+
+  if (parts[0] === 'users' && parts[1]) return { view: 'userProfile', userId: parts[1], productId: null }
+
+  if (parts[0] === 'news') return { view: parts[1] ? 'newsDetail' : 'news', newsId: parts[1], productId: null }
 
   if (parts[0] === 'products' && parts[1]) {
     return {
@@ -60,6 +67,8 @@ function App() {
   const { currentUser: user, isAuthenticated, status, error, isLoggingOut, logout, updateUser } = useAuth()
   const completedLogin = useRef(false)
   const [selectedProductId, setSelectedProductId] = useState(initialRoute.productId)
+  const [selectedUserId, setSelectedUserId] = useState(initialRoute.userId)
+  const [selectedNewsId, setSelectedNewsId] = useState(initialRoute.newsId)
   const [currentView, setCurrentView] = useState(initialRoute.view)
   const [pendingAction, setPendingAction] = useState(null)
   const cart = useCart()
@@ -70,6 +79,8 @@ function App() {
 
       setSelectedProductId(route.productId)
       setCurrentView(route.view)
+      setSelectedNewsId(route.newsId)
+      setSelectedUserId(route.userId)
       window.scrollTo({ top: 0 })
     }
 
@@ -89,7 +100,7 @@ function App() {
   }, [status, isLoggingOut, currentView, isAuthenticated])
 
   useEffect(() => {
-    const expired = () => { if (isAuthenticated) navigateTo('login?next=' + currentView) }
+    const expired = () => { if (isAuthenticated && !['news', 'newsDetail', 'userProfile'].includes(currentView)) navigateTo('login?next=' + currentView) }
     window.addEventListener('vstore:session-expired', expired)
     return () => window.removeEventListener('vstore:session-expired', expired)
   }, [currentView, isAuthenticated])
@@ -154,19 +165,21 @@ function App() {
     try { await logout(all) } catch { /* The auth context displays the server error. */ }
   }
   if (isOAuthCallback) return <OAuthCallbackPage />
-  if (status === 'loading') return <main className="store-page"><p className="store-status" role="status">Loading account...</p></main>
-  if (status === 'banned') return <main className="store-page"><section className="store-status" role="alert">
+  const publicNews = ['news', 'newsDetail'].includes(currentView)
+  const publicPage = publicNews || currentView === 'userProfile'
+  if (!publicPage && status === 'loading') return <main className="store-page"><p className="store-status" role="status">Loading account...</p></main>
+  if (!publicPage && status === 'banned') return <main className="store-page"><section className="store-status" role="alert">
     <h1>Account blocked</h1><p>Your account is blocked. Contact support for assistance.</p>
     <button type="button" disabled={isLoggingOut} onClick={() => signOut()}>Sign out</button>
   </section></main>
-  if (status === 'error') return <main className="store-page"><section className="store-status" role="alert">
+  if (!publicPage && status === 'error') return <main className="store-page"><section className="store-status" role="alert">
     <p>{error}</p><button type="button" onClick={() => window.location.reload()}>Retry loading account</button>
   </section></main>
 
   return (
     <main className="store-page">
       <Header
-        activeView={currentView}
+        activeView={publicNews ? 'news' : currentView}
         isAuthenticated={isAuthenticated}
         onSignIn={() => openAuth('login')}
         onDiscover={openDiscover}
@@ -179,10 +192,10 @@ function App() {
         cartCount={cart.count}
         wishlistCount={wishlist?.count ?? 0}
       />
-      {error && <div className="store-status" role="alert">{error}
+      {error && !publicPage && <div className="store-status" role="alert">{error}
         {error.startsWith('Could not complete sign out') && <button type="button" disabled={isLoggingOut} onClick={() => signOut()}>Retry sign out</button>}
       </div>}
-      {['account', 'orders', 'cart', 'wishlist'].includes(currentView) && !user ? (
+      {currentView === 'userProfile' ? <UserProfilePage key={selectedUserId} id={selectedUserId} onSignIn={() => openAuth('login')} /> : currentView === 'news' ? <NewsPage /> : currentView === 'newsDetail' ? <NewsDetailPage key={selectedNewsId} id={selectedNewsId} /> : ['account', 'orders', 'cart', 'wishlist'].includes(currentView) && !user ? (
         <p className="store-status" role="status">Please sign in to continue.</p>
       ) : ['product', 'achievements'].includes(currentView) ? (
         <ProductDetailPage

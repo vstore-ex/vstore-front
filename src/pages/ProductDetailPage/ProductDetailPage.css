@@ -176,3 +176,17 @@
 .review-card__reactions img { width: 24px; height: 24px; }
 .review-card__reactions button[aria-pressed="true"] { background: #7bc74d33; border-color: #7bc74d; color: #eee; }
 .review-card__reactions button:disabled { opacity: .55; cursor: wait; }
+
+.review-card__author-avatar { flex: 0 0 48px; }
+.review-card__author-avatar img { display: block; width: 48px; height: 48px; border-radius: 6px; object-fit: cover; }
+.review-card__summary .review-card__verdict { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.review-card__verdict img { width: 22px; height: 22px; object-fit: contain; }
+.review-card__head { padding: 12px; flex-wrap: wrap; }
+.review-card__summary { flex: 1; }
+.review-card__summary strong { padding-right: 0; }
+.review-card time { position: static; margin: 0; align-self: flex-start; }
+.review-editor fieldset { display: flex; flex-wrap: wrap; gap: 16px; border: 1px solid #eeeeee33; padding: 12px; }
+.review-editor fieldset label { display: inline-flex; align-items: center; gap: 8px; }
+.review-editor :is(input, textarea):focus-visible { outline: 2px solid #7bc74d; outline-offset: 3px; }
+.review-card__reactions button:disabled { cursor: default; }
+.review-card__reactions button span { font-variant-numeric: tabular-nums; }
