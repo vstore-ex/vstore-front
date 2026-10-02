@@ -23,7 +23,7 @@ export function normalizeReview(item, gameId) {
 }
 export async function getReviews(gameId, { skip = 0, limit = 7 } = {}, signal) {
   if (!Number.isSafeInteger(skip) || skip < 0 || !Number.isInteger(limit) || limit < 1 || limit > 100) throw new Error('Invalid review pagination.')
-  const data = await apiRequest('/games/' + idPath(gameId) + '/reviews?' + new URLSearchParams({ skip, limit }), { signal, auth: false })
+  const data = await apiRequest('/games/' + idPath(gameId) + '/reviews?' + new URLSearchParams({ skip, limit }), { signal })
   if (!Array.isArray(data)) throw new Error('Could not read reviews.')
   return data.map(item => normalizeReview(item, gameId))
 }
