@@ -34,15 +34,3 @@ export async function getAchievements(key, signal) {
       ? Math.max(0, Math.min(100, item.completion_percent)) : null,
   })) }
 }
-
-export async function getReviews(key, signal) {
-  const { id, page = 1, pageSize = 6 } = JSON.parse(key)
-  // Fetch one extra item to establish whether there really is another page.
-  const data = await apiRequest('/games/' + encodeURIComponent(id) + '/reviews?skip=' + ((page - 1) * pageSize) + '&limit=' + (pageSize + 1), { signal, auth: false })
-  if (!Array.isArray(data)) throw new Error('Could not read reviews.')
-  return { page, items: data.slice(0, pageSize), hasNext: data.length > pageSize }
-}
-
-export const voteReview = (id, reactionType) => apiRequest('/reviews/' + encodeURIComponent(id) + '/vote', {
-  method: 'POST', body: { reaction_type: reactionType },
-})
