@@ -8,7 +8,7 @@ const REACTION_CONFIGS = [
   { type: 'funny', label: 'Funny' }
 ]
 
-export default function ReviewReactions({ review, onSignIn, onChange, onRefresh, disabled }) {
+export default function ReviewReactions({ review, onSignIn, onChange, disabled }) {
   const { isAuthenticated, currentUser } = useAuth()
   const own = isAuthenticated && currentUser?.id != null && String(currentUser.id) === String(review.user_id)
   const [prevUserReaction, setPrevUserReaction] = useState(review.user_reaction)
@@ -38,34 +38,44 @@ export default function ReviewReactions({ review, onSignIn, onChange, onRefresh,
       const nextReaction = selected ? (result?.reaction || type) : null
       setActiveReaction(nextReaction)
 
+      const baseCounts = Object.fromEntries(REACTION_CONFIGS.map(({ type: t }) => [t, 0]))
+      if (review.reactions_count) {
+        Object.keys(review.reactions_count).forEach(k => { baseCounts[k] = 0 })
+      }
       if (result?.reactions_count && typeof result.reactions_count === 'object') {
-        const counts = { ...result.reactions_count }
-        onChange(review.id, {
-          reactions_count: counts,
-          user_reaction: nextReaction,
-          ...Object.fromEntries(Object.entries(counts).map(([k, v]) => [k + '_count', v]))
-        })
+        Object.assign(baseCounts, result.reactions_count)
       } else {
         const prevReaction = activeReaction
-        const updatedCounts = { ...(review.reactions_count || {}) }
+        REACTION_CONFIGS.forEach(({ type: t }) => {
+          baseCounts[t] = review.reactions_count?.[t] ?? review[t + '_count'] ?? 0
+        })
         if (selected) {
           if (prevReaction && prevReaction !== type) {
-            const prevCount = updatedCounts[prevReaction] ?? review[prevReaction + '_count'] ?? 0
-            updatedCounts[prevReaction] = Math.max(0, prevCount - 1)
+            baseCounts[prevReaction] = Math.max(0, (baseCounts[prevReaction] ?? 0) - 1)
           }
-          const currentCount = updatedCounts[type] ?? review[type + '_count'] ?? 0
-          updatedCounts[type] = currentCount + 1
+          baseCounts[type] = (baseCounts[type] ?? 0) + 1
         } else {
-          const currentCount = updatedCounts[type] ?? review[type + '_count'] ?? 0
-          updatedCounts[type] = Math.max(0, currentCount - 1)
+          baseCounts[type] = Math.max(0, (baseCounts[type] ?? 0) - 1)
         }
-        onChange(review.id, {
-          reactions_count: updatedCounts,
-          user_reaction: nextReaction,
-          ...Object.fromEntries(Object.entries(updatedCounts).map(([k, v]) => [k + '_count', v]))
-        })
-        if (onRefresh && Object.keys(updatedCounts).length === 0) await onRefresh()
       }
+
+      if (result) {
+        Object.keys(result).forEach(key => {
+          if (key.endsWith('_count') && key !== 'reactions_count' && Number.isSafeInteger(result[key]) && result[key] >= 0) {
+            baseCounts[key.slice(0, -6)] = result[key]
+          }
+        })
+      }
+
+      const flatCounts = Object.fromEntries(
+        Object.entries(baseCounts).map(([k, v]) => [k + '_count', v])
+      )
+
+      onChange(review.id, {
+        reactions_count: baseCounts,
+        user_reaction: nextReaction,
+        ...flatCounts
+      })
       if (!signal.aborted) {
         const item = REACTION_CONFIGS.find(c => c.type === type)
         const label = item?.label || type
@@ -77,7 +87,7 @@ export default function ReviewReactions({ review, onSignIn, onChange, onRefresh,
   return <>
     <div className="review-card__reactions" aria-label="Review reactions">
       {REACTION_CONFIGS.map(({ type, label, icon }) => {
-        const count = review.reactions_count?.[type] ?? review[type + '_count']
+        const count = review.reactions_count?.[type] ?? review[type + '_count'] ?? 0
         return (
           <button type="button" key={type} disabled={own || busy || disabled}
             title={own ? 'You cannot react to your own review.' : undefined} aria-label={'Mark review as ' + label}
