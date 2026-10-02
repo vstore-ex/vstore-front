@@ -22,7 +22,7 @@ RUN npm run build
 # -----------------------------------------------------------------------------
 # Stage 2: Serve production assets via unprivileged (non-root) Nginx
 # -----------------------------------------------------------------------------
-FROM nginxinc/nginx-unprivileged:1.27-alpine
+FROM nginxinc/nginx-unprivileged:1.27-alpine AS runtime
 
 # Patch alpine base packages at build time: the base tag carries a frozen
 # apk snapshot (alpine 3.21.3) with fixable HIGH/CRITICAL CVEs; without this

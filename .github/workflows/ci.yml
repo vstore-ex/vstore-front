@@ -45,6 +45,8 @@ jobs:
     name: Build & Push Docker Image
     needs: [build]
     uses: vstore-ex/vstore-infra/.github/workflows/build-and-push.yml@main
+    with:
+      no-cache-filters: runtime
     permissions:
       contents: read
       packages: write
