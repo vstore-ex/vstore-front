@@ -1,3 +1,4 @@
+import UserLink from '../../components/User/UserLink'
 import FriendsSection from './FriendsSection'
 import { useState } from 'react'
 import { mediaUrl } from '../../api/client'
@@ -83,6 +84,7 @@ export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut
   })()
 
   return <div className="account-page account-page--current"><div className="account-page__inner">
+    <UserLink id={user.id}>View public profile</UserLink>
     <section className="account-hero" aria-label="Account profile">
       <img
         className="account-hero__avatar"
