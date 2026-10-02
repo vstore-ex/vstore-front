@@ -10,29 +10,32 @@ export function mapGame(game) {
   const banners = array(game.banners).filter(Boolean)
   const getBanner = (type) => banners.find((b) => b.banner_type === type)?.image_url
 
-  // Vertical poster (3:4): library_poster -> small_capsule -> main_hero -> first banner
-  const poster = getBanner('library_poster') || getBanner('small_capsule') || getBanner('main_hero') || banners[0]?.image_url
+  // Vertical poster (3:4 / 2:3): library_capsule (600x900) -> library_poster -> small_capsule -> main_capsule -> main_hero -> first banner
+  const poster = getBanner('library_capsule') || getBanner('library_poster') || getBanner('small_capsule') || getBanner('main_capsule') || getBanner('main_hero') || banners[0]?.image_url
 
-  // Horizontal hero: main_hero -> game_page_header -> library_hero -> small_capsule -> first banner
-  const hero = getBanner('main_hero') || getBanner('game_page_header') || getBanner('library_hero') || getBanner('small_capsule') || banners[0]?.image_url
+  // Horizontal hero: main_capsule (616x353) -> library_hero (1920x620) -> main_hero -> header_capsule -> game_page_header -> small_capsule -> first banner
+  const hero = getBanner('main_capsule') || getBanner('library_hero') || getBanner('main_hero') || getBanner('header_capsule') || getBanner('game_page_header') || getBanner('small_capsule') || banners[0]?.image_url
 
-  // Game page header (16:9): game_page_header -> main_hero -> small_capsule -> first banner
-  const header = getBanner('game_page_header') || getBanner('main_hero') || getBanner('small_capsule') || banners[0]?.image_url
+  // Game page header (16:9): library_hero (1920x620) -> header_capsule (460x215) -> game_page_header -> main_capsule -> main_hero -> small_capsule -> first banner
+  const header = getBanner('library_hero') || getBanner('header_capsule') || getBanner('game_page_header') || getBanner('main_capsule') || getBanner('main_hero') || getBanner('small_capsule') || banners[0]?.image_url
 
-  // Library hero (16:9): library_hero -> game_page_header -> main_hero -> poster
-  const libHero = getBanner('library_hero') || getBanner('game_page_header') || getBanner('main_hero') || poster
+  // Library hero (16:9): library_hero (1920x620) -> header_capsule -> game_page_header -> main_hero -> poster
+  const libHero = getBanner('library_hero') || getBanner('header_capsule') || getBanner('game_page_header') || getBanner('main_hero') || poster
 
-  // Square icon: library_icon -> poster
-  const icon = getBanner('library_icon') || poster
+  // Square icon: library_icon -> library_capsule -> poster
+  const icon = getBanner('library_icon') || getBanner('library_capsule') || poster
 
-  // Small capsule: small_capsule -> game_page_header -> main_hero -> first banner
-  const capsule = getBanner('small_capsule') || getBanner('game_page_header') || getBanner('main_hero') || banners[0]?.image_url
+  // Small / header capsule: header_capsule (460x215) -> main_capsule -> small_capsule -> game_page_header -> main_hero -> first banner
+  const capsule = getBanner('header_capsule') || getBanner('main_capsule') || getBanner('small_capsule') || getBanner('game_page_header') || getBanner('main_hero') || banners[0]?.image_url
+
+  // Main capsule (616x353): main_capsule -> header_capsule -> small_capsule -> hero
+  const mainCapsule = getBanner('main_capsule') || getBanner('header_capsule') || getBanner('small_capsule') || hero
 
   const original = Number(game.original_price), price = game.is_free ? 0 : Number(game.price)
   return { ...game, id: String(game.id), type: 'Base Game', image: mediaUrl(poster),
     posterImage: mediaUrl(poster), heroImage: mediaUrl(hero), headerImage: mediaUrl(header),
     libraryHero: mediaUrl(libHero), libraryPoster: mediaUrl(poster), iconImage: mediaUrl(icon),
-    capsuleImage: mediaUrl(capsule), amount: price, price: game.is_free ? 'Free' : priceLabel(price),
+    capsuleImage: mediaUrl(capsule), mainCapsule: mediaUrl(mainCapsule), amount: price, price: game.is_free ? 'Free' : priceLabel(price),
     originalPrice: original > price ? priceLabel(original) : '',
     discount: original > price ? `-${Math.round((1 - price / original) * 100)}%` : '',
     tags: array(game.tags).filter(tag => tag?.id != null), banners,
