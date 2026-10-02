@@ -8,11 +8,17 @@ const idPath = value => {
 export function normalizeReview(item, gameId) {
   if (!item || item.id == null || typeof item.is_positive !== 'boolean' || typeof item.content_md !== 'string') throw new Error('Could not read a review.')
   const user = item.user || {}
+  const rawReactions = typeof item.reactions_count === 'object' && item.reactions_count !== null ? item.reactions_count : {}
+  const reactions_count = Object.fromEntries(
+    Object.entries(rawReactions).filter(([, v]) => Number.isSafeInteger(v) && v >= 0)
+  )
   return { id: item.id, game_id: item.game_id ?? gameId, user_id: user.id ?? item.user_id,
     username: typeof user.username === 'string' ? user.username : typeof item.username === 'string' ? item.username : '',
     avatar: mediaUrl(user.avatar ?? item.avatar), is_positive: item.is_positive, content_md: item.content_md,
     created_at: typeof item.created_at === 'string' ? item.created_at : '',
-    helpful_count: count(item.helpful_count), funny_count: count(item.funny_count) }
+    reactions_count,
+    helpful_count: count(item.helpful_count) ?? reactions_count.helpful ?? null,
+    funny_count: count(item.funny_count) ?? reactions_count.funny ?? null }
 }
 export async function getReviews(gameId, { skip = 0, limit = 7 } = {}, signal) {
   if (!Number.isSafeInteger(skip) || skip < 0 || !Number.isInteger(limit) || limit < 1 || limit > 100) throw new Error('Invalid review pagination.')
@@ -32,8 +38,8 @@ export async function updateReview(reviewId, value, signal) {
   return normalizeReview(await apiRequest('/reviews/' + idPath(reviewId), { method: 'PATCH', body: payload(value), signal }))
 }
 export function reactToReview(reviewId, reactionType, signal) {
-  if (!['helpful', 'funny'].includes(reactionType)) throw new Error('Invalid reaction type.')
-  return apiRequest('/reviews/' + idPath(reviewId) + '/reaction', { method: 'POST', body: { reaction_type: reactionType }, signal })
+  if (typeof reactionType !== 'string' || !reactionType.trim()) throw new Error('Invalid reaction type.')
+  return apiRequest('/reviews/' + idPath(reviewId) + '/reaction', { method: 'POST', body: { reaction_type: reactionType.trim() }, signal })
 }
 // The list contract has no aggregate fields. Count all pages independently of the visible feed.
 // Replace this traversal with a server aggregate when the backend exposes one.
