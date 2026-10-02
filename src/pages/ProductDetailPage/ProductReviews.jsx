@@ -42,11 +42,18 @@ function ReviewSummary({ id, revision }) {
 function ReviewFeed({ id, onSignIn }) {
   const { isAuthenticated, currentUser } = useAuth()
   const orders = useOrders()
-  const feed = useReviews(id)
+  const feed = useReviews(id, currentUser?.id ?? null)
   const [writing, setWriting] = useState(false)
   const [notice, setNotice] = useState('')
   const [reviewedBy, setReviewedBy] = useState(null)
   const [revision, setRevision] = useState(0)
+  const [prevUser, setPrevUser] = useState(currentUser?.id)
+  if (currentUser?.id !== prevUser) {
+    setPrevUser(currentUser?.id)
+    setWriting(false)
+    setNotice('')
+    setReviewedBy(null)
+  }
   const owns = isAuthenticated && !orders?.loading && !orders?.error && orders?.ownedIds.includes(String(id))
   const alreadyReviewed = isAuthenticated && (String(reviewedBy) === String(currentUser?.id) || feed.items.some(item => String(item.user_id) === String(currentUser?.id)))
   function saved(review, created) {
@@ -73,4 +80,7 @@ function ReviewFeed({ id, onSignIn }) {
     {feed.hasMore && <div className="product-pagination"><button type="button" disabled={feed.loading} onClick={feed.loadMore}>{feed.loading ? 'Loading...' : 'Show more reviews'}</button></div>}
   </section>
 }
-export default function ProductReviews(props) { return <ReviewFeed key={props.id} {...props} /> }
+export default function ProductReviews(props) {
+  const { currentUser } = useAuth()
+  return <ReviewFeed key={props.id + ':' + (currentUser?.id ?? 'guest')} {...props} />
+}

@@ -5,15 +5,24 @@ const unique = items => {
   const seen = new Set()
   return items.filter(item => { const id = String(item.id); if (seen.has(id)) return false; seen.add(id); return true })
 }
-export default function useReviews(gameId) {
+export default function useReviews(gameId, userId) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [hasMore, setHasMore] = useState(false)
+  const [session, setSession] = useState({ gameId, userId })
   const lifetime = useRef(null)
   const cursor = useRef(0)
   const lock = useRef(false)
   const pinned = useRef([])
+
+  if (session.gameId !== gameId || session.userId !== userId) {
+    setSession({ gameId, userId })
+    setItems([])
+    setLoading(true)
+    setError('')
+  }
+
   useEffect(() => {
     const controller = new AbortController()
     lifetime.current = controller; lock.current = true; cursor.current = 0; pinned.current = []
@@ -23,7 +32,7 @@ export default function useReviews(gameId) {
     }).catch(reason => { if (!controller.signal.aborted) setError(reason.message) })
       .finally(() => { if (!controller.signal.aborted) { lock.current = false; setLoading(false) } })
     return () => controller.abort()
-  }, [gameId])
+  }, [gameId, userId])
   async function loadMore() {
     if (lock.current) return
     const signal = lifetime.current.signal
