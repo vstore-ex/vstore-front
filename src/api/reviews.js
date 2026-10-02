@@ -17,6 +17,7 @@ export function normalizeReview(item, gameId) {
     avatar: mediaUrl(user.avatar ?? item.avatar), is_positive: item.is_positive, content_md: item.content_md,
     created_at: typeof item.created_at === 'string' ? item.created_at : '',
     reactions_count,
+    user_reaction: typeof item.user_reaction === 'string' ? item.user_reaction : null,
     helpful_count: count(item.helpful_count) ?? reactions_count.helpful ?? null,
     funny_count: count(item.funny_count) ?? reactions_count.funny ?? null }
 }

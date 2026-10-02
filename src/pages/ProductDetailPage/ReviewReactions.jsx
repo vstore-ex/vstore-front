@@ -11,13 +11,21 @@ const REACTION_CONFIGS = [
 export default function ReviewReactions({ review, onSignIn, onChange, onRefresh, disabled }) {
   const { isAuthenticated, currentUser } = useAuth()
   const own = isAuthenticated && currentUser?.id != null && String(currentUser.id) === String(review.user_id)
-  const [votes, setVotes] = useState({})
+  const [prevUserReaction, setPrevUserReaction] = useState(review.user_reaction)
+  const [activeReaction, setActiveReaction] = useState(review.user_reaction || null)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const submitting = useRef(false)
   const lifetime = useRef(null)
+
+  if (review.user_reaction !== prevUserReaction) {
+    setPrevUserReaction(review.user_reaction)
+    setActiveReaction(review.user_reaction || null)
+  }
+
   useEffect(() => { const controller = new AbortController(); lifetime.current = controller; return () => controller.abort() }, [])
+
   async function vote(type) {
     if (own || submitting.current || disabled) return
     if (!isAuthenticated) { onSignIn?.(); return }
@@ -27,23 +35,36 @@ export default function ReviewReactions({ review, onSignIn, onChange, onRefresh,
       const result = await reactToReview(review.id, type, signal)
       if (signal.aborted) return
       const selected = ['vote added', 'reaction added'].includes(result?.message) ? true : ['vote removed', 'reaction removed'].includes(result?.message) ? false : undefined
-      if (selected !== undefined) {
-        setVotes(previous => ({
-          ...(selected ? {} : previous),
-          [type]: selected
-        }))
-      }
+      const nextReaction = selected ? (result?.reaction || type) : null
+      setActiveReaction(nextReaction)
+
       if (result?.reactions_count && typeof result.reactions_count === 'object') {
         const counts = { ...result.reactions_count }
         onChange(review.id, {
           reactions_count: counts,
+          user_reaction: nextReaction,
           ...Object.fromEntries(Object.entries(counts).map(([k, v]) => [k + '_count', v]))
         })
       } else {
-        const counts = Object.fromEntries(['helpful_count', 'funny_count'].filter(key => Number.isSafeInteger(result?.[key]) && result[key] >= 0).map(key => [key, result[key]]))
-        if (Object.hasOwn(counts, type + '_count')) onChange(review.id, counts)
-        else if (selected !== undefined && review[type + '_count'] != null) onChange(review.id, { [type + '_count']: Math.max(0, review[type + '_count'] + (selected ? 1 : -1)) })
-        else await onRefresh()
+        const prevReaction = activeReaction
+        const updatedCounts = { ...(review.reactions_count || {}) }
+        if (selected) {
+          if (prevReaction && prevReaction !== type) {
+            const prevCount = updatedCounts[prevReaction] ?? review[prevReaction + '_count'] ?? 0
+            updatedCounts[prevReaction] = Math.max(0, prevCount - 1)
+          }
+          const currentCount = updatedCounts[type] ?? review[type + '_count'] ?? 0
+          updatedCounts[type] = currentCount + 1
+        } else {
+          const currentCount = updatedCounts[type] ?? review[type + '_count'] ?? 0
+          updatedCounts[type] = Math.max(0, currentCount - 1)
+        }
+        onChange(review.id, {
+          reactions_count: updatedCounts,
+          user_reaction: nextReaction,
+          ...Object.fromEntries(Object.entries(updatedCounts).map(([k, v]) => [k + '_count', v]))
+        })
+        if (onRefresh && Object.keys(updatedCounts).length === 0) await onRefresh()
       }
       if (!signal.aborted) {
         const item = REACTION_CONFIGS.find(c => c.type === type)
@@ -60,7 +81,7 @@ export default function ReviewReactions({ review, onSignIn, onChange, onRefresh,
         return (
           <button type="button" key={type} disabled={own || busy || disabled}
             title={own ? 'You cannot react to your own review.' : undefined} aria-label={'Mark review as ' + label}
-            aria-pressed={own ? undefined : votes[type]} onClick={() => vote(type)}>
+            aria-pressed={own ? undefined : activeReaction === type} onClick={() => vote(type)}>
             {icon && <img src={icon} alt="" />}{label}
             <span>{count == null ? '\u2014' : count.toLocaleString('en')}</span>
           </button>
