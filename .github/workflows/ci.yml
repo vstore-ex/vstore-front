@@ -44,7 +44,9 @@ jobs:
   build-docker:
     name: Build & Push Docker Image
     needs: [build]
-    uses: vstore-ex/vstore-infra/.github/workflows/build-and-push.yml@main
+    uses: vstore-ex/vstore-infra/.github/workflows/build-and-push.yml@18b1eac1f91ec22f15a27527d819b66e52ff527f # runtime refresh (infra PR #33)
+    with:
+      no-cache-filters: runtime
     permissions:
       contents: read
       packages: write
