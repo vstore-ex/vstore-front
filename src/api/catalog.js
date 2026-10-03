@@ -17,8 +17,8 @@ export function mapGame(game) {
   // Horizontal hero (616x353): main_capsule -> library_hero
   const hero = getBanner('main_capsule') || getBanner('library_hero') || banners[0]?.image_url
 
-  // Game page header (1920x620): library_hero -> header_capsule -> main_capsule
-  const header = getBanner('library_hero') || getBanner('header_capsule') || getBanner('main_capsule') || banners[0]?.image_url
+  // Game page sidebar cover (616x353): main_capsule -> header_capsule -> library_hero
+  const header = getBanner('main_capsule') || getBanner('header_capsule') || getBanner('library_hero') || banners[0]?.image_url
 
   // Library hero (1920x620): library_hero -> header_capsule -> poster
   const libHero = getBanner('library_hero') || getBanner('header_capsule') || poster

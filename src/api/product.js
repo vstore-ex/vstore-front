@@ -12,7 +12,7 @@ export function productPresentation(game) {
   } catch { /* Legacy plain-text metadata. */ }
   const text = value => typeof value === 'string' ? value : ''
   return {
-    header: game.headerImage || game.heroImage || game.image,
+    header: game.mainCapsule || game.headerImage || game.capsuleImage || game.heroImage || game.image,
     summary: text(meta.short_description) || text(game.description_md).split(/\n\s*\n/).find(p => p.trim() && !/^\s*[#!]/.test(p)) || '',
     releaseDate: text(meta.release_date),
     ratingImage: mediaUrl(meta.rating_image_url),
