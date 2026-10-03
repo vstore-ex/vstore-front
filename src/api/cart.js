@@ -11,7 +11,7 @@ export const createOrder = (method, termsAccepted) => apiRequest('/me/orders/', 
   method: 'POST', body: { payment_method: method, terms_accepted: termsAccepted },
 })
 export const getOrders = signal => apiRequest('/me/orders/', { signal })
-export function formatMoney(value, currency = 'UAH') {
+export function formatMoney(value, currency = 'USD') {
   return new Intl.NumberFormat('en', { style: 'currency', currency }).format(Number(value))
 }
 export function cartError(error) {

@@ -5,7 +5,7 @@ const API_BASE = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/,
 export const PAGE_SIZE = 24
 export const offerUrl = value => mediaUrl(value, window.location.origin)
 const array = value => Array.isArray(value) ? value : []
-export const priceLabel = value => new Intl.NumberFormat('en', { style: 'currency', currency: 'UAH' }).format(Number(value) || 0)
+export const priceLabel = value => new Intl.NumberFormat('en', { style: 'currency', currency: 'USD' }).format(Number(value) || 0)
 export function mapGame(game) {
   const banners = array(game.banners).filter(Boolean)
   const getBanner = (type) => banners.find((b) => b.banner_type === type)?.image_url

@@ -16,7 +16,8 @@ import './DiscoverPage.css'
 // Keep API amounts and currency; the home design omits trailing zero cents.
 function homeGame(game) {
   const product = game
-  const price = value => (game.currency || 'UAH') + ' ' + Number(value).toLocaleString('en', { useGrouping: false, maximumFractionDigits: 2 })
+  const symbol = (game.currency && game.currency !== 'USD') ? `${game.currency} ` : '$'
+  const price = value => symbol + Number(value).toLocaleString('en', { useGrouping: false, maximumFractionDigits: 2 })
   return { ...product, price: game.release_label || (game.is_free ? 'Free' : price(game.amount)),
     originalPrice: product.originalPrice ? price(game.original_price) : '' }
 }

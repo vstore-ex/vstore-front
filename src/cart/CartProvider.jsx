@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../auth/context'
 import { CartContext } from './context'
 import * as api from '../api/cart'
-const emptyCart = { items: [], subtotal: '0.00', tax: '0.00', total: '0.00', currency: 'UAH' }
+const emptyCart = { items: [], subtotal: '0.00', tax: '0.00', total: '0.00', currency: 'USD' }
 function CartSession({ owner, children }) {
   const [cart, setCart] = useState(emptyCart)
   const [loading, setLoading] = useState(owner != null)
