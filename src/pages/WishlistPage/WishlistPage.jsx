@@ -23,7 +23,7 @@ export default function WishlistPage() {
     if (moving.current || orders.loading || orders.error || orders.ownedIds.includes(String(id))) return
     moving.current = true; setAddingId(id); setError('')
     try {
-      const inCart = cart.items.some(item => String(item.product_id) === String(id))
+      const inCart = cart.items.some(item => String(item.game_id) === String(id))
       const added = inCart || await cart.addToCart(id)
       if (added) window.location.hash = '#/cart'
     } catch (reason) { setError(cartError(reason)) }
@@ -39,7 +39,7 @@ export default function WishlistPage() {
     {!wishlist.loading && !wishlist.error && !wishlist.count && <section className="wishlist-empty"><h2>Your wishlist is empty</h2><a href="#/discover">Browse the catalog</a></section>}
     <section className="wishlist-list" aria-label="Wishlist items">{wishlist.items.map(item => <article className="wishlist-item" key={item.id}>
       <div className="wishlist-item__main"><MediaImage className="wishlist-item__cover" src={item.image} alt={item.title} />
-        <div className="wishlist-item__info"><span className="wishlist-item__type">{item.type}</span><h2><a href={`#/products/${item.id}`}>{item.title}</a></h2>
+        <div className="wishlist-item__info"><span className="wishlist-item__type">{item.type}</span><h2><a href={`#/games/${item.id}`}>{item.title}</a></h2>
           <div className="wishlist-tags">{item.tags.map(tag => <a key={tag.id} href={`#/discover?tag_id=${tag.id}`}>{tag.name}</a>)}</div>
         </div></div>
       <div className="wishlist-item__side"><strong>{item.price}</strong><div className="wishlist-item__actions">

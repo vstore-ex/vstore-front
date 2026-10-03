@@ -1,11 +1,11 @@
 import { apiRequest } from './client'
-const productPath = id => {
+const gamePath = id => {
   if (!id || (typeof id !== 'string' && typeof id !== 'number')) throw new Error('This game is not available in the server catalog.')
   return '/me/cart/' + encodeURIComponent(String(id).trim())
 }
 export const getCart = signal => apiRequest('/me/cart', { signal })
-export const addToCart = id => apiRequest(productPath(id), { method: 'POST' })
-export const removeFromCart = id => apiRequest(productPath(id), { method: 'DELETE' })
+export const addToCart = id => apiRequest(gamePath(id), { method: 'POST' })
+export const removeFromCart = id => apiRequest(gamePath(id), { method: 'DELETE' })
 export const clearCart = () => apiRequest('/me/cart', { method: 'DELETE' })
 export const createOrder = (method, termsAccepted) => apiRequest('/me/orders/', {
   method: 'POST', body: { payment_method: method, terms_accepted: termsAccepted },

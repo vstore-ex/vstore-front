@@ -24,7 +24,7 @@ function ShowcaseItem({ item, onSelect }) {
 
   return (
     <article className="showcase-item">
-      <a className="showcase-item__button" href={`#/products/${item.id}`} onClick={handleClick}>
+      <a className="showcase-item__button" href={`#/games/${item.id}`} onClick={handleClick}>
         <MediaImage className="showcase-item__image" src={item.image} alt={item.title} />
         <span className="showcase-item__body">
           <span className="showcase-item__title">{item.title}</span>

@@ -20,7 +20,7 @@ function Checkout({ cart, onClose, onSuccess }) {
   }
   return <dialog className="server-checkout" ref={dialog} aria-labelledby="checkout-title" onCancel={event => { event.preventDefault(); if (!cart.busy) onClose() }}>
     <form onSubmit={placeOrder}><h2 id="checkout-title">Checkout</h2>
-      <ul>{cart.items.map(item => <li key={item.product_id}>{item.title} - {formatMoney(item.price, cart.currency)}</li>)}</ul>
+      <ul>{cart.items.map(item => <li key={item.game_id}>{item.title} - {formatMoney(item.price, cart.currency)}</li>)}</ul>
       <Totals cart={cart} /><p>Payment method: Card</p>
       <label className="server-checkout-terms"><input type="checkbox" checked={accepted} disabled={cart.busy} onChange={e => setAccepted(e.target.checked)} />I accept the purchase terms.</label>
       {error && <p role="alert">{error}</p>}
@@ -55,10 +55,10 @@ export default function CartPage() {
     {cart.error && <div role="alert"><p>{cart.error}</p><button className="button button--secondary" disabled={cart.busy || cart.loading} onClick={cart.refresh}>Retry cart</button></div>}
     {!cart.loading && !cart.error && !cart.count && <section className="cart-empty"><h2>Your cart is empty</h2><a href="#/discover">Browse the catalog</a></section>}
     {!!cart.count && <div className="cart-layout"><section className="cart-items" aria-label="Cart items">
-      {cart.items.map(item => <article className="cart-item server-cart-item" key={item.product_id}>
-        <div className="cart-item__info"><h2><a href={`#/products/${item.product_id}`}>{item.title}</a></h2></div>
+      {cart.items.map(item => <article className="cart-item server-cart-item" key={item.game_id}>
+        <div className="cart-item__info"><h2><a href={`#/games/${item.game_id}`}>{item.title}</a></h2></div>
         <div className="cart-item__side"><strong>{formatMoney(item.price, cart.currency)}</strong>
-          <button type="button" disabled={cart.busy || cart.loading} onClick={() => run(() => cart.removeFromCart(item.product_id))}>Remove</button></div>
+          <button type="button" disabled={cart.busy || cart.loading} onClick={() => run(() => cart.removeFromCart(item.game_id))}>Remove</button></div>
       </article>)}
       <button className="button button--secondary" disabled={cart.busy || cart.loading} onClick={() => run(cart.clearCart)}>Clear cart</button>
     </section><aside className="cart-summary" aria-label="Cart summary"><Totals cart={cart} />

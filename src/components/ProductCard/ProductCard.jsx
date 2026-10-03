@@ -52,7 +52,7 @@ function ProductCard({ product, onSelect }) {
 
   return (
     <article ref={card} className="product-card" onPointerEnter={startPreview} onPointerLeave={stopPreview}>
-      <a className="product-card__button" href={`#/products/${product.id}`} onClick={handleClick}>
+      <a className="product-card__button" href={`#/games/${product.id}`} onClick={handleClick}>
         <span className="product-card__media">
           <MediaImage className="product-card__image" src={product.image} alt={product.title} />
         {preview && preview.id === product.id && <HoverVideo key={preview.url} src={preview.url} />}

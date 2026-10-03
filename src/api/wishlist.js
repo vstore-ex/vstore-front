@@ -6,8 +6,8 @@ const path = id => {
 }
 export async function getWishlist(signal) {
   const data = await apiRequest('/wishlists/', { signal })
-  if (!Array.isArray(data?.items) || data.items.some(item => item?.product?.id == null)) throw new Error('The server returned an invalid wishlist.')
-  return data.items.map(item => ({ ...mapGame(item.product), addedAt: item.added_at }))
+  if (!Array.isArray(data?.items) || data.items.some(item => item?.game?.id == null)) throw new Error('The server returned an invalid wishlist.')
+  return data.items.map(item => ({ ...mapGame(item.game), addedAt: item.added_at }))
 }
 export const addToWishlist = id => apiRequest(path(id), { method: 'POST' })
 export const removeFromWishlist = id => apiRequest(path(id), { method: 'DELETE' })

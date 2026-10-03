@@ -3,20 +3,20 @@ import { useAuth } from '../../auth/context'
 import { useCart } from '../../cart/context'
 import useOrders from '../../hooks/useOrders'
 import { cartError } from '../../api/cart'
-export default function AddToCartButton({ productId, className = 'button button--secondary' }) {
+export default function AddToCartButton({ gameId, className = 'button button--secondary' }) {
   const { isAuthenticated } = useAuth()
   const { addToCart, busy } = useCart()
   const [error, setError] = useState('')
   const orders = useOrders()
-  const owned = orders.ownedIds.includes(String(productId))
+  const owned = orders.ownedIds.includes(String(gameId))
   async function add() {
     if (!isAuthenticated) {
-      window.location.hash = '#/login?next=' + encodeURIComponent('cart?add=' + productId)
+      window.location.hash = '#/login?next=' + encodeURIComponent('cart?add=' + gameId)
       return
     }
     if (owned || orders.loading || orders.error) return
     setError('')
-    try { const added = await addToCart(productId); if (added) window.location.hash = '#/cart' }
+    try { const added = await addToCart(gameId); if (added) window.location.hash = '#/cart' }
     catch (reason) { setError(cartError(reason)) }
   }
   if (owned) return <div className="add-to-cart-control"><span>In your library</span> <a href="#/account">View library</a></div>

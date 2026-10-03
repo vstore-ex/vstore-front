@@ -33,7 +33,7 @@ export default function OrdersProvider({ children }) {
   // Prefer authoritative order status, including refunds, once the server returns it.
   const orders = owner != null && lastOrder && !data.some(order => order.id === lastOrder.id) ? [lastOrder, ...data] : data
   const ownedIds = [...new Set(orders.filter(order => order.status === 'paid')
-    .flatMap(order => order.items).filter(item => item?.product_id != null).map(item => String(item.product_id)))]
+    .flatMap(order => order.items).filter(item => item?.game_id != null).map(item => String(item.game_id)))]
   return <OrdersContext.Provider value={{ data: orders, ownedIds,
     loading: owner != null && !current, error: current ? result.error : '',
     retry: () => setAttempt(value => value + 1) }}>{children}</OrdersContext.Provider>

@@ -19,6 +19,6 @@ export async function getUserAchievements(id, signal) {
   return items.map(item => {
     if (!item || item.id == null || typeof item.title !== 'string') throw new Error('Could not read an achievement.')
     return { id: item.id, title: item.title, description: text(item.description), icon: mediaUrl(item.icon),
-      product_id: item.product_id, unlocked_at: text(item.unlocked_at) }
+      game_id: item.game_id, unlocked_at: text(item.unlocked_at) }
   })
 }

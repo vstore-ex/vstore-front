@@ -20,7 +20,7 @@ function Achievements({ id }) {
       <MediaImage src={item.icon} alt="" className="profile-achievement__icon" />
       <div><h3>{item.title}</h3>{item.description && <p>{item.description}</p>}
         <ProfileDate value={item.unlocked_at} prefix="Unlocked" />
-        {item.product_id != null && <a href={'#/products/' + encodeURIComponent(item.product_id)}>View game</a>}</div>
+        {item.game_id != null && <a href={'#/games/' + encodeURIComponent(item.game_id)}>View game</a>}</div>
     </article>)}</div>
   </section>
 }
