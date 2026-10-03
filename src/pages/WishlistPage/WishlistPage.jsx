@@ -15,9 +15,9 @@ export default function WishlistPage() {
     if (consumed.current) return
     consumed.current = true
     const id = new URLSearchParams(window.location.hash.split('?')[1]).get('add')
-    if (!/^\d+$/.test(id || '')) return
+    if (!id || !id.trim()) return
     window.history.replaceState(null, '', window.location.pathname + window.location.search + '#/wishlist')
-    wishlist.add(id).catch(() => { /* Context displays the error. */ })
+    wishlist.add(id.trim()).catch(() => { /* Context displays the error. */ })
   }, [wishlist])
   async function addToCart(id) {
     if (moving.current || orders.loading || orders.error || orders.ownedIds.includes(String(id))) return

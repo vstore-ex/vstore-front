@@ -62,8 +62,8 @@ export async function getGames(query, signal) {
   return games(data)
 }
 export async function getGame(id, signal) {
-  if (!/^\d+$/.test(id)) { const error = new Error('Game not found.'); error.status = 404; throw error }
-  const data = await request('/games/' + encodeURIComponent(id), signal)
+  if (!id || (typeof id !== 'string' && typeof id !== 'number')) { const error = new Error('Game not found.'); error.status = 404; throw error }
+  const data = await request('/games/' + encodeURIComponent(String(id).trim()), signal)
   if (!data || data.id == null) return null
   return mapGame(data)
 }

@@ -39,9 +39,9 @@ export default function CartPage() {
     consumed.current = true
     const params = new URLSearchParams(window.location.hash.split('?')[1])
     const id = params.get('add')
-    if (!/^\d+$/.test(id || '')) return
+    if (!id || !id.trim()) return
     window.history.replaceState(null, '', window.location.pathname + window.location.search + '#/cart')
-    cart.addToCart(id).catch(() => { /* The cart context displays the error. */ })
+    cart.addToCart(id.trim()).catch(() => { /* The cart context displays the error. */ })
   }, [cart])
   function run(action) { action().catch(() => { /* The cart context displays the error. */ }) }
   if (order) return <div className="cart-page"><section className="cart-page__inner" role="status">

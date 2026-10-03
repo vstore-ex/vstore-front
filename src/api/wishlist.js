@@ -1,8 +1,8 @@
 import { apiRequest } from './client'
 import { mapGame } from './catalog'
 const path = id => {
-  if (!/^\d+$/.test(String(id))) throw new Error('This game is unavailable.')
-  return '/wishlists/' + encodeURIComponent(id)
+  if (!id || (typeof id !== 'string' && typeof id !== 'number')) throw new Error('This game is unavailable.')
+  return '/wishlists/' + encodeURIComponent(String(id).trim())
 }
 export async function getWishlist(signal) {
   const data = await apiRequest('/wishlists/', { signal })

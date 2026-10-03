@@ -120,7 +120,7 @@ function App() {
   async function handleAuthenticated() {
     completedLogin.current = true
     const route = parseRouteFromHash()
-    if (route.view === 'login') navigateTo(/^(?:account|orders|(?:wishlist|cart)(?:\?add=\d+)?)$/.test(route.next) ? route.next : 'discover')
+    if (route.view === 'login') navigateTo(/^(?:account|orders|(?:wishlist|cart)(?:\?add=[^#&]+)?)$/.test(route.next) ? route.next : 'discover')
 
     if (pendingAction?.type === 'open-cart') {
       openCartPage()

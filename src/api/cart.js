@@ -1,7 +1,7 @@
 import { apiRequest } from './client'
 const productPath = id => {
-  if (!/^\d+$/.test(String(id))) throw new Error('This game is not available in the server catalog.')
-  return '/me/cart/' + encodeURIComponent(id)
+  if (!id || (typeof id !== 'string' && typeof id !== 'number')) throw new Error('This game is not available in the server catalog.')
+  return '/me/cart/' + encodeURIComponent(String(id).trim())
 }
 export const getCart = signal => apiRequest('/me/cart', { signal })
 export const addToCart = id => apiRequest(productPath(id), { method: 'POST' })
