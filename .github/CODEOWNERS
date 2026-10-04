@@ -1,14 +1,18 @@
-# ==============================================================================
-# Code Owners for vstore-front
-# ==============================================================================
-# Infrastructure, containerization, and CI/CD files are strictly managed
-# by DevOps. Pull requests modifying these paths require review and approval.
+# Code ownership for vstore-front.
+#
+# These rules identify the people who should review a PR. GitHub will enforce
+# them only when the main branch ruleset enables "Require review from Code
+# Owners" and direct pushes to main are disabled.
 
-# CI/CD Workflows & Code Owners
-/.github/workflows/         @dumpe2fs
-/.github/CODEOWNERS         @dumpe2fs
+# Product ownership: storefront source, assets and documentation.
+*                           @alex-vitup @leskovivan
+/src/                       @alex-vitup @leskovivan
+/public/                    @alex-vitup @leskovivan
+/docs/                      @alex-vitup @leskovivan
 
-# Containerization, Web Server & Compose Orchestration
+# DevOps-owned release and edge-proxy mechanics. These rules are deliberately
+# later because the last matching rule wins in CODEOWNERS.
+/.github/                   @dumpe2fs
 /nginx/                     @dumpe2fs
 /Dockerfile*                @dumpe2fs
 /.dockerignore              @dumpe2fs
