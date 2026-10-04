@@ -1,5 +1,7 @@
 # React + Vite
 
+[Владельцы компонентов и порядок выбора reviewer](https://github.com/vstore-ex/Docs/blob/main/CONTRIBUTING.md).
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
