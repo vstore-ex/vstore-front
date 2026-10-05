@@ -33,5 +33,16 @@ same format for the PR title so the default squash commit is valid. Standard
 merge and revert messages are ignored when checking commit history; PR titles
 are always checked. Existing history on `main` is not checked retroactively.
 
-To enforce this check before merge, add `Commitlint` as a required status
+To enforce this check before merge, add `Commitlint / Commitlint` as a required status
 check in the GitHub branch protection rule or ruleset for `main`.
+
+## Shared CI implementation
+
+`.github/workflows/commitlint.yml` calls the reusable workflow in
+`vstore-infra/.github/workflows/commitlint.yml` using a pinned infra commit
+SHA. Only PR triggers, read permissions and concurrency are configured here;
+installation and lint steps are maintained in infra. No inputs or secrets
+are required. When adopting a new infra workflow version, update its SHA in
+the caller. Local Husky hooks and commitlint configuration remain in this repo.
+
+The required status check is named `Commitlint / Commitlint`.
