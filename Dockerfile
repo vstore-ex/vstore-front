@@ -28,7 +28,9 @@ FROM nginxinc/nginx-unprivileged:1.27-alpine AS runtime
 # apk snapshot (alpine 3.21.3) with fixable HIGH/CRITICAL CVEs; without this
 # the Trivy CI gate (exit-code 1) blocks every release.
 USER root
-RUN apk --no-cache upgrade && rm -rf /var/cache/apk/*
+RUN apk --no-cache upgrade \
+    && apk del --purge nginx-module-image-filter tiff \
+    && rm -rf /var/cache/apk/*
 USER 101
 
 # Copy custom Nginx configuration and compiled static assets
