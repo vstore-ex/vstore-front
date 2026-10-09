@@ -10,7 +10,7 @@ export default function AchievementsPage({ product }) {
   const [page, setPage] = useState(1)
   const resource = useCatalogResource('achievements', JSON.stringify({ id: product.id, page, pageSize: PAGE_SIZE }))
   return <div className="achievements-page"><div className="achievements-page__inner">
-    <a className="catalog-back" href={'#/products/' + encodeURIComponent(product.id)}>Back to {product.title}</a>
+    <a className="catalog-back" href={'#/games/' + encodeURIComponent(product.id)}>Back to {product.title}</a>
     <h1>Achievements</h1>
     <ResourceStatus resource={resource} label="achievements" />
     {resource.data && <>

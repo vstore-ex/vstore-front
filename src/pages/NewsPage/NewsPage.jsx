@@ -7,7 +7,7 @@ function readFilters() {
   const query = new URLSearchParams(window.location.hash.split('?')[1])
   const requestedPage = Number(query.get('page'))
   return { page: Number.isSafeInteger(requestedPage) && requestedPage > 0 && requestedPage < 1000000 ? requestedPage : 1,
-    gameId: /^\d+$/.test(query.get('game_id') || '') ? query.get('game_id') : '' }
+    gameId: (query.get('game_id') || '').trim() }
 }
 export default function NewsPage() {
   const [filters, setFilters] = useState(readFilters)

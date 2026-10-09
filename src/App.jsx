@@ -20,31 +20,31 @@ import './auth/Auth.css'
 import './App.css'
 
 
-const defaultRoute = { view: 'discover', productId: null }
+const defaultRoute = { view: 'discover', gameId: null }
 
 function parseRouteFromHash() {
   const route = window.location.hash ? window.location.hash.replace(/^#\/?/, '') : window.location.pathname.replace(/^\//, '') + window.location.search
   const [path, query] = route.split('?')
   const parts = path.split('/').filter(Boolean)
-  if (parts[0] === 'login') return { view: 'login', productId: null, next: new URLSearchParams(query).get('next') || 'discover' }
+  if (parts[0] === 'login') return { view: 'login', gameId: null, next: new URLSearchParams(query).get('next') || 'discover' }
 
   if (!parts.length || parts[0] === 'discover') {
     return defaultRoute
   }
 
-  if (parts[0] === 'users' && parts[1]) return { view: 'userProfile', userId: parts[1], productId: null }
+  if (parts[0] === 'users' && parts[1]) return { view: 'userProfile', userId: parts[1], gameId: null }
 
-  if (parts[0] === 'news') return { view: parts[1] ? 'newsDetail' : 'news', newsId: parts[1], productId: null }
+  if (parts[0] === 'news') return { view: parts[1] ? 'newsDetail' : 'news', newsId: parts[1], gameId: null }
 
-  if (parts[0] === 'products' && parts[1]) {
+  if (parts[0] === 'games' && parts[1]) {
     return {
       view: parts[2] === 'achievements' ? 'achievements' : 'product',
-      productId: parts[1],
+      gameId: parts[1],
     }
   }
 
   if (['account', 'orders', 'cart', 'wishlist', 'support'].includes(parts[0])) {
-    return { view: parts[0], productId: null }
+    return { view: parts[0], gameId: null }
   }
 
   return defaultRoute
@@ -66,7 +66,7 @@ function App() {
   const [authMode, setAuthMode] = useState(null)
   const { currentUser: user, isAuthenticated, status, error, isLoggingOut, logout, updateUser } = useAuth()
   const completedLogin = useRef(false)
-  const [selectedProductId, setSelectedProductId] = useState(initialRoute.productId)
+  const [selectedGameId, setSelectedGameId] = useState(initialRoute.gameId)
   const [selectedUserId, setSelectedUserId] = useState(initialRoute.userId)
   const [selectedNewsId, setSelectedNewsId] = useState(initialRoute.newsId)
   const [currentView, setCurrentView] = useState(initialRoute.view)
@@ -77,7 +77,7 @@ function App() {
     function syncRoute() {
       const route = parseRouteFromHash()
 
-      setSelectedProductId(route.productId)
+      setSelectedGameId(route.gameId)
       setCurrentView(route.view)
       setSelectedNewsId(route.newsId)
       setSelectedUserId(route.userId)
@@ -120,7 +120,7 @@ function App() {
   async function handleAuthenticated() {
     completedLogin.current = true
     const route = parseRouteFromHash()
-    if (route.view === 'login') navigateTo(/^(?:account|orders|(?:wishlist|cart)(?:\?add=\d+)?)$/.test(route.next) ? route.next : 'discover')
+    if (route.view === 'login') navigateTo(/^(?:account|orders|(?:wishlist|cart)(?:\?add=[^#&]+)?)$/.test(route.next) ? route.next : 'discover')
 
     if (pendingAction?.type === 'open-cart') {
       openCartPage()
@@ -133,8 +133,8 @@ function App() {
     setPendingAction(null)
   }
 
-  function openProduct(productId) {
-    navigateTo(`products/${productId}`)
+  function openGame(gameId) {
+    navigateTo(`games/${gameId}`)
   }
 
   function openDiscover() {
@@ -199,11 +199,11 @@ function App() {
         <p className="store-status" role="status">Please sign in to continue.</p>
       ) : ['product', 'achievements'].includes(currentView) ? (
         <ProductDetailPage
-          key={selectedProductId}
-          id={selectedProductId}
+          key={selectedGameId}
+          id={selectedGameId}
           onSignIn={() => openAuth('login')}
           showAchievements={currentView === 'achievements'}
-          onViewAllAchievements={() => navigateTo(`products/${selectedProductId}/achievements`)}
+          onViewAllAchievements={() => navigateTo(`games/${selectedGameId}/achievements`)}
         />
       ) : ['account', 'orders'].includes(currentView) ? (
         <AccountPage user={user} onUpdated={updateUser} onLogoutAll={() => signOut(true)} isLoggingOut={isLoggingOut} />
@@ -214,7 +214,7 @@ function App() {
       ) : currentView === 'support' ? (
         <SupportPage />
       ) : (
-        <DiscoverPage onProductSelect={openProduct} />
+        <DiscoverPage onProductSelect={openGame} />
       )}
       <Footer />
       {(authMode || currentView === 'login') && !isLoggingOut && (

@@ -10,7 +10,7 @@ export default function SearchResults({ query, onProductSelect }) {
       <ResourceStatus resource={resource} label="search results" />
       {resource.data && <p role="status">{resource.data.length ? resource.data.length + ' matching games' : 'No games found. Try another title, developer or publisher.'}</p>}
       <div className="search-results">{resource.data?.map(game => <a className="search-result" key={game.id}
-        href={'#/products/' + encodeURIComponent(game.id)} onClick={event => {
+        href={'#/games/' + encodeURIComponent(game.id)} onClick={event => {
           if (!event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey && onProductSelect) { event.preventDefault(); onProductSelect(game.id) }
         }}>
         <MediaImage src={game.headerImage || game.image} alt="" />

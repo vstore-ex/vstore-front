@@ -4,19 +4,19 @@ import { useWishlist } from '../../wishlist/context'
 import useOrders from '../../hooks/useOrders'
 import { wishlistError } from '../../api/wishlist'
 
-export default function WishlistButton({ productId, className = 'button button--secondary' }) {
+export default function WishlistButton({ gameId, className = 'button button--secondary' }) {
   const { isAuthenticated } = useAuth()
   const wishlist = useWishlist()
   const orders = useOrders()
   const [error, setError] = useState('')
-  const owned = orders.ownedIds.includes(String(productId))
-  const saved = wishlist.items.some(item => item.id === String(productId))
+  const owned = orders.ownedIds.includes(String(gameId))
+  const saved = wishlist.items.some(item => item.id === String(gameId))
 
   async function add() {
-    if (!isAuthenticated) { window.location.hash = '#/login?next=' + encodeURIComponent('wishlist?add=' + productId); return }
+    if (!isAuthenticated) { window.location.hash = '#/login?next=' + encodeURIComponent('wishlist?add=' + gameId); return }
     if (owned || orders.loading || orders.error) return
     setError('')
-    try { if (await wishlist.add(productId)) window.location.hash = '#/wishlist' }
+    try { if (await wishlist.add(gameId)) window.location.hash = '#/wishlist' }
     catch (reason) { setError(wishlistError(reason)) }
   }
 

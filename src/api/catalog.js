@@ -5,34 +5,38 @@ const API_BASE = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/,
 export const PAGE_SIZE = 24
 export const offerUrl = value => mediaUrl(value, window.location.origin)
 const array = value => Array.isArray(value) ? value : []
-export const priceLabel = value => new Intl.NumberFormat('en', { style: 'currency', currency: 'UAH' }).format(Number(value) || 0)
+export const priceLabel = value => new Intl.NumberFormat('en', { style: 'currency', currency: 'USD' }).format(Number(value) || 0)
 export function mapGame(game) {
   const banners = array(game.banners).filter(Boolean)
   const getBanner = (type) => banners.find((b) => b.banner_type === type)?.image_url
 
-  // Vertical poster (3:4): library_poster -> small_capsule -> main_hero -> first banner
-  const poster = getBanner('library_poster') || getBanner('small_capsule') || getBanner('main_hero') || banners[0]?.image_url
+  // Standardized banners (4 formats):
+  // Vertical poster (600x900): library_capsule
+  const poster = getBanner('library_capsule') || banners[0]?.image_url
 
-  // Horizontal hero: main_hero -> game_page_header -> library_hero -> small_capsule -> first banner
-  const hero = getBanner('main_hero') || getBanner('game_page_header') || getBanner('library_hero') || getBanner('small_capsule') || banners[0]?.image_url
+  // Horizontal hero (616x353): main_capsule -> library_hero
+  const hero = getBanner('main_capsule') || getBanner('library_hero') || banners[0]?.image_url
 
-  // Game page header (16:9): game_page_header -> main_hero -> small_capsule -> first banner
-  const header = getBanner('game_page_header') || getBanner('main_hero') || getBanner('small_capsule') || banners[0]?.image_url
+  // Game page sidebar cover (616x353): main_capsule -> header_capsule -> library_hero
+  const header = getBanner('main_capsule') || getBanner('header_capsule') || getBanner('library_hero') || banners[0]?.image_url
 
-  // Library hero (16:9): library_hero -> game_page_header -> main_hero -> poster
-  const libHero = getBanner('library_hero') || getBanner('game_page_header') || getBanner('main_hero') || poster
+  // Library hero (1920x620): library_hero -> header_capsule -> poster
+  const libHero = getBanner('library_hero') || getBanner('header_capsule') || poster
 
-  // Square icon: library_icon -> poster
-  const icon = getBanner('library_icon') || poster
+  // Square icon: fallback to poster
+  const icon = poster
 
-  // Small capsule: small_capsule -> game_page_header -> main_hero -> first banner
-  const capsule = getBanner('small_capsule') || getBanner('game_page_header') || getBanner('main_hero') || banners[0]?.image_url
+  // Header capsule (460x215): header_capsule -> main_capsule
+  const capsule = getBanner('header_capsule') || getBanner('main_capsule') || banners[0]?.image_url
+
+  // Main capsule (616x353): main_capsule -> header_capsule
+  const mainCapsule = getBanner('main_capsule') || getBanner('header_capsule') || hero
 
   const original = Number(game.original_price), price = game.is_free ? 0 : Number(game.price)
   return { ...game, id: String(game.id), type: 'Base Game', image: mediaUrl(poster),
     posterImage: mediaUrl(poster), heroImage: mediaUrl(hero), headerImage: mediaUrl(header),
     libraryHero: mediaUrl(libHero), libraryPoster: mediaUrl(poster), iconImage: mediaUrl(icon),
-    capsuleImage: mediaUrl(capsule), amount: price, price: game.is_free ? 'Free' : priceLabel(price),
+    capsuleImage: mediaUrl(capsule), mainCapsule: mediaUrl(mainCapsule), amount: price, price: game.is_free ? 'Free' : priceLabel(price),
     originalPrice: original > price ? priceLabel(original) : '',
     discount: original > price ? `-${Math.round((1 - price / original) * 100)}%` : '',
     tags: array(game.tags).filter(tag => tag?.id != null), banners,
@@ -58,8 +62,8 @@ export async function getGames(query, signal) {
   return games(data)
 }
 export async function getGame(id, signal) {
-  if (!/^\d+$/.test(id)) { const error = new Error('Game not found.'); error.status = 404; throw error }
-  const data = await request('/games/' + encodeURIComponent(id), signal)
+  if (!id || (typeof id !== 'string' && typeof id !== 'number')) { const error = new Error('Game not found.'); error.status = 404; throw error }
+  const data = await request('/games/' + encodeURIComponent(String(id).trim()), signal)
   if (!data || data.id == null) return null
   return mapGame(data)
 }

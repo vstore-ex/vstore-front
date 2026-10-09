@@ -14,7 +14,7 @@ export default function NewsDetailPage({ id }) {
       <h1>{item.title}</h1><NewsDate value={item.published_at} />
       <MediaImage className="news-detail__banner" src={item.banner_url} alt="" eager />
       <div className="news-body"><ProductMarkdown>{item.content_md}</ProductMarkdown></div>
-      {item.game_id != null && <a className="news-game-link" href={'#/products/' + encodeURIComponent(item.game_id)}>
+      {item.game_id != null && <a className="news-game-link" href={'#/games/' + encodeURIComponent(item.game_id)}>
         {item.game_title ? 'View game: ' + item.game_title : 'View game'}
       </a>}
     </article>}

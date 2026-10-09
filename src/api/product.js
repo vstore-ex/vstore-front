@@ -12,7 +12,7 @@ export function productPresentation(game) {
   } catch { /* Legacy plain-text metadata. */ }
   const text = value => typeof value === 'string' ? value : ''
   return {
-    header: game.headerImage || game.heroImage || game.image,
+    header: game.mainCapsule || game.headerImage || game.capsuleImage || game.heroImage || game.image,
     summary: text(meta.short_description) || text(game.description_md).split(/\n\s*\n/).find(p => p.trim() && !/^\s*[#!]/.test(p)) || '',
     releaseDate: text(meta.release_date),
     ratingImage: mediaUrl(meta.rating_image_url),
@@ -25,8 +25,8 @@ export function productPresentation(game) {
 
 export async function getAchievements(key, signal) {
   const { id, page = 1, pageSize = 6 } = JSON.parse(key)
-  // Backend app/api/achievements.py:45 defines this separate route with page/page_size.
-  const data = await apiRequest('/products/' + encodeURIComponent(id) + '/achievements?page=' + page + '&page_size=' + pageSize, { signal, auth: false })
+  // Backend app/api/achievements.py defines this route with page/page_size.
+  const data = await apiRequest('/games/' + encodeURIComponent(id) + '/achievements?page=' + page + '&page_size=' + pageSize, { signal, auth: false })
   if (!Array.isArray(data?.items) || !Number.isInteger(data.total)) throw new Error('Could not read achievements.')
   return { ...data, items: data.items.filter(item => item?.id != null).map(item => ({
     ...item, icon: mediaUrl(item.icon),

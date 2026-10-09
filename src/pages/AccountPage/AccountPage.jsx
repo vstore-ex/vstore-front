@@ -130,8 +130,8 @@ export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut
       {!orders.loading && !orders.error && orders.data?.length === 0 && <p>No orders yet.</p>}
       <div className="order-list">{orders.data?.map(order => <article key={order.id}>
         <h3>Order #{order.id}</h3><p>{new Date(order.created_at).toLocaleDateString()} / {formatMoney(order.total, order.currency || currency)}</p>
-        <ul>{order.items.map(item => <li key={item.product_id}>
-          <a href={`#/products/${item.product_id}`}>Game #{item.product_id}</a> / {formatMoney(item.price_at_purchase, order.currency || currency)}
+        <ul>{order.items.map(item => <li key={item.game_id}>
+          <a href={`#/games/${item.game_id}`}>Game #{item.game_id}</a> / {formatMoney(item.price_at_purchase, order.currency || currency)}
         </li>)}</ul>
       </article>)}</div>
     </section>

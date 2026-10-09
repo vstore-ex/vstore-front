@@ -1,13 +1,13 @@
 import { apiRequest } from './client'
 import { mapGame } from './catalog'
 const path = id => {
-  if (!/^\d+$/.test(String(id))) throw new Error('This game is unavailable.')
-  return '/wishlists/' + encodeURIComponent(id)
+  if (!id || (typeof id !== 'string' && typeof id !== 'number')) throw new Error('This game is unavailable.')
+  return '/wishlists/' + encodeURIComponent(String(id).trim())
 }
 export async function getWishlist(signal) {
   const data = await apiRequest('/wishlists/', { signal })
-  if (!Array.isArray(data?.items) || data.items.some(item => item?.product?.id == null)) throw new Error('The server returned an invalid wishlist.')
-  return data.items.map(item => ({ ...mapGame(item.product), addedAt: item.added_at }))
+  if (!Array.isArray(data?.items) || data.items.some(item => item?.game?.id == null)) throw new Error('The server returned an invalid wishlist.')
+  return data.items.map(item => ({ ...mapGame(item.game), addedAt: item.added_at }))
 }
 export const addToWishlist = id => apiRequest(path(id), { method: 'POST' })
 export const removeFromWishlist = id => apiRequest(path(id), { method: 'DELETE' })

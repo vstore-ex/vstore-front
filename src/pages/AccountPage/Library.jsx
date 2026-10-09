@@ -39,7 +39,7 @@ export default function Library() {
     {current && <>
       {result.games.some(item => item.error) && <p role="alert">Some games could not be loaded. <button onClick={() => setAttempt(value => value + 1)}>Retry game details</button></p>}
       <div className="library-grid">{result.games.map(({ id, game, unavailable, error }) => <article className="library-card" key={id}>
-        <a href={`#/products/${id}`} aria-label={game?.title || `Game #${id}`}>
+        <a href={`#/games/${id}`} aria-label={game?.title || `Game #${id}`}>
           {game?.libraryHero || game?.headerImage || game?.image ? <img src={game.libraryHero || game.headerImage || game.image} alt="" loading="lazy" onError={event => { event.currentTarget.hidden = true }} /> : <div className="library-cover-placeholder" aria-hidden="true" />}
           <h3>{game?.title || `Game #${id}`}</h3>
         </a>

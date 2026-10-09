@@ -39,7 +39,7 @@ function ReviewSummary({ id, revision }) {
   if (resource.error) return <div className="reviews-score" role="alert"><span>Review summary is temporarily unavailable. </span><button className="product-text-button" type="button" onClick={resource.retry}>Retry summary</button></div>
   return <p className="reviews-score">{resource.data.total > 0 && <><strong>{resource.data.percentage}% positive</strong> &middot; </>}{resource.data.total.toLocaleString('en')} {resource.data.total === 1 ? 'review' : 'reviews'}</p>
 }
-function ReviewFeed({ id, onSignIn }) {
+function ReviewFeed({ id, isFree = false, onSignIn }) {
   const { isAuthenticated, currentUser } = useAuth()
   const orders = useOrders()
   const feed = useReviews(id, currentUser?.id ?? null)
@@ -55,6 +55,7 @@ function ReviewFeed({ id, onSignIn }) {
     setReviewedBy(null)
   }
   const owns = isAuthenticated && !orders?.loading && !orders?.error && orders?.ownedIds.includes(String(id))
+  const canReview = isAuthenticated && (isFree || owns)
   const alreadyReviewed = isAuthenticated && (String(reviewedBy) === String(currentUser?.id) || feed.items.some(item => String(item.user_id) === String(currentUser?.id)))
   function saved(review, created) {
     feed.saved(created ? { ...review, user_id: review.user_id ?? currentUser.id, username: review.username || currentUser.username, avatar: review.avatar || currentUser.avatar, game_id: id } : review, created)
@@ -65,8 +66,16 @@ function ReviewFeed({ id, onSignIn }) {
     <div className="reviews-header"><h2 id="reviews-title">Customer reviews</h2><ReviewSummary id={id} revision={revision} /></div>
     <div className="review-compose">
       {!isAuthenticated && <p>Sign in to leave a review. <button className="product-text-button" type="button" onClick={onSignIn}>Sign in</button></p>}
-      {alreadyReviewed ? <p role="status">You already left a review for this game.</p> : owns && <button className="product-text-button" type="button" disabled={feed.loading} onClick={() => { setWriting(value => !value); setNotice('') }}>Write a review</button>}
-      {writing && owns && !alreadyReviewed && <ReviewEditor key={id + ':' + currentUser.id} gameId={id} onCancel={() => setWriting(false)}
+      {alreadyReviewed ? (
+        <p role="status">You already left a review for this game.</p>
+      ) : canReview ? (
+        <button className="product-text-button" type="button" disabled={feed.loading} onClick={() => { setWriting(value => !value); setNotice('') }}>
+          Write a review
+        </button>
+      ) : isAuthenticated && !orders?.loading ? (
+        <p role="status" style={{ opacity: 0.8, fontSize: 14 }}>You must own this game in your library to write a review.</p>
+      ) : null}
+      {writing && canReview && !alreadyReviewed && <ReviewEditor key={id + ':' + currentUser.id} gameId={id} onCancel={() => setWriting(false)}
         onDuplicate={() => { setReviewedBy(currentUser.id); setWriting(false) }} onSaved={review => saved(review, true)} />}
       {notice && <p role="status">{notice}</p>}
     </div>

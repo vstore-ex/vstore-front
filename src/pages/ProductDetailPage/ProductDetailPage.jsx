@@ -37,8 +37,8 @@ function ProductDetails({ game, onViewAllAchievements, onSignIn }) {
         <div className="detail-price">{game.discount && <span className="detail-price__discount">{game.discount}</span>}
           <span>{game.originalPrice && <del>{game.originalPrice}</del>}<strong>{game.price}</strong></span></div>
         <div className="product-actions">
-          <AddToCartButton productId={game.id} className="product-action product-action--accent" />
-          <WishlistButton productId={game.id} className="product-action product-action--secondary" />
+          <AddToCartButton gameId={game.id} className="product-action product-action--accent" />
+          <WishlistButton gameId={game.id} className="product-action product-action--secondary" />
         </div>
         {game.rating && <div className="product-rating">
           {presentation.ratingImage ? <MediaImage src={presentation.ratingImage} alt={game.rating} /> : <strong className="product-rating__badge">{game.rating}</strong>}
@@ -49,7 +49,7 @@ function ProductDetails({ game, onViewAllAchievements, onSignIn }) {
     </div>
     <ProductAchievements id={game.id} onViewAll={onViewAllAchievements} />
     <ProductNews id={game.id} />
-    <ProductReviews onSignIn={onSignIn} id={game.id} />
+    <ProductReviews onSignIn={onSignIn} id={game.id} isFree={game.is_free} />
   </div></div>
 }
 

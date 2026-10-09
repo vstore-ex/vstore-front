@@ -16,7 +16,8 @@ import './DiscoverPage.css'
 // Keep API amounts and currency; the home design omits trailing zero cents.
 function homeGame(game) {
   const product = game
-  const price = value => (game.currency || 'UAH') + ' ' + Number(value).toLocaleString('en', { useGrouping: false, maximumFractionDigits: 2 })
+  const symbol = (game.currency && game.currency !== 'USD') ? `${game.currency} ` : '$'
+  const price = value => symbol + Number(value).toLocaleString('en', { useGrouping: false, maximumFractionDigits: 2 })
   return { ...product, price: game.release_label || (game.is_free ? 'Free' : price(game.amount)),
     originalPrice: product.originalPrice ? price(game.original_price) : '' }
 }
@@ -39,7 +40,7 @@ function FeaturedGame({ game, onSelect }) {
   const panel = game.banners?.find(banner => banner.banner_type === 'featured_panel')?.image_url
   const screens = product.media.filter(item => item.media_type === 'image' && item.url !== hero).slice(0, 2)
   return <section className={'featured-game' + (game.featured_crop ? ' featured-game--cropped' : '')} aria-label={product.title}>
-    <a className="featured-game__hero" href={'#/products/' + product.id} onClick={event => { event.preventDefault(); onSelect(product.id) }}>
+    <a className="featured-game__hero" href={'#/games/' + product.id} onClick={event => { event.preventDefault(); onSelect(product.id) }}>
       <MediaImage src={hero} alt={product.title} eager />
     </a>
     <div className="featured-game__panel">
@@ -75,7 +76,7 @@ function DealStrip({ games, onSelect }) {
   return <section className="deal-strip" aria-label="Deals of the Week">{games.map(game => {
     const product = homeGame(game)
     return <article className="deal-card" key={game.id}>
-      <a href={'#/products/' + product.id} onClick={event => { event.preventDefault(); onSelect(product.id) }}>
+      <a href={'#/games/' + product.id} onClick={event => { event.preventDefault(); onSelect(product.id) }}>
         <div className="deal-card__media"><MediaImage src={product.heroImage} alt={product.title} /><span className="deal-card__ribbon">Deals of the Week</span></div>
         <div className="deal-card__body"><h2>{product.title}</h2>
           <div className="deal-card__price">{product.discount && <><span>{product.discount}</span><del>{product.originalPrice}</del></>}
@@ -94,7 +95,7 @@ function FreeGames({ games, onSelect, onViewMore }) {
     <div className="free-games__grid">{games.map(game => {
       const product = homeGame(game)
       return <article className="free-game-card" key={game.id}>
-        <a href={'#/products/' + product.id} onClick={event => { event.preventDefault(); onSelect(product.id) }}>
+        <a href={'#/games/' + product.id} onClick={event => { event.preventDefault(); onSelect(product.id) }}>
           <div className="free-game-card__media"><MediaImage src={product.heroImage} alt={product.title} />
             <span className={'free-game-card__ribbon' + (game.free_soon ? ' free-game-card__soon' : '')}>{game.free_soon ? 'FREE SOON' : 'FREE NOW'}</span></div>
           <h3>{product.title}</h3>{game.availability && <p>{game.availability}</p>}

@@ -1,17 +1,17 @@
 import { apiRequest } from './client'
-const productPath = id => {
-  if (!/^\d+$/.test(String(id))) throw new Error('This game is not available in the server catalog.')
-  return '/me/cart/' + encodeURIComponent(id)
+const gamePath = id => {
+  if (!id || (typeof id !== 'string' && typeof id !== 'number')) throw new Error('This game is not available in the server catalog.')
+  return '/me/cart/' + encodeURIComponent(String(id).trim())
 }
 export const getCart = signal => apiRequest('/me/cart', { signal })
-export const addToCart = id => apiRequest(productPath(id), { method: 'POST' })
-export const removeFromCart = id => apiRequest(productPath(id), { method: 'DELETE' })
+export const addToCart = id => apiRequest(gamePath(id), { method: 'POST' })
+export const removeFromCart = id => apiRequest(gamePath(id), { method: 'DELETE' })
 export const clearCart = () => apiRequest('/me/cart', { method: 'DELETE' })
 export const createOrder = (method, termsAccepted) => apiRequest('/me/orders/', {
   method: 'POST', body: { payment_method: method, terms_accepted: termsAccepted },
 })
 export const getOrders = signal => apiRequest('/me/orders/', { signal })
-export function formatMoney(value, currency = 'UAH') {
+export function formatMoney(value, currency = 'USD') {
   return new Intl.NumberFormat('en', { style: 'currency', currency }).format(Number(value))
 }
 export function cartError(error) {

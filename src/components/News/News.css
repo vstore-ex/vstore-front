@@ -18,7 +18,7 @@
 .news-pagination button, .news-game-link { border: 1px solid #eeeeee66; border-radius: 5px; background: #393e46; color: #eee; padding: 10px 16px; font: inherit; cursor: pointer; }
 .news-pagination button:disabled { opacity: .45; cursor: default; }
 .news-back { display: inline-block; margin-bottom: 20px; color: #7bc74d !important; }
-.news-detail__banner { display: block; width: 100%; aspect-ratio: 16 / 6; object-fit: cover; border-radius: 10px; margin: 24px 0 32px; }
+.news-detail__banner { display: block; width: 100%; max-height: 520px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 10px; margin: 24px 0 32px; }
 .news-detail > .catalog-placeholder { display: grid; }
 .news-body { max-width: 900px; margin: 0 auto; font-size: 18px; line-height: 1.7; overflow-wrap: anywhere; }
 .news-body .product-markdown p { line-height: 1.7; margin-bottom: 20px; }
