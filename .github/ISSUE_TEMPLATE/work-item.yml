@@ -1,0 +1,37 @@
+name: Frontend work item
+description: Propose or refine work for the vstore-frontend Kanban
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before opening, search open and closed issues for the same outcome. Assign an owner before moving the issue to Ready. Follow the [Frontend Kanban workflow](https://github.com/vstore-ex/vstore-front/blob/main/docs/kanban-workflow.md).
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem and intended outcome
+      description: What problem should this work solve, and what outcome is expected?
+      placeholder: Describe the user or operational problem and the desired result.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Component and scope
+      description: Identify the affected frontend component and what is in scope. Refine this before moving the issue to Ready.
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance criteria
+      description: List observable, verifiable conditions for completion. Complete these before moving the issue to Ready.
+      placeholder: |
+        - [ ] ...
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies and blockers
+      description: Link blocking or dependent GitHub issues using GitHub's native relationship. Write “None” if there are no known dependencies; resolve before moving to Ready.
+  - type: textarea
+    id: checks
+    attributes:
+      label: Required tests or checks
+      description: State applicable tests/checks, or explain why none apply, before moving the issue to Ready.
