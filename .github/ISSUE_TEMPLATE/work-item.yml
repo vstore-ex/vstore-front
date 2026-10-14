@@ -4,7 +4,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Before opening, search open and closed issues for the same outcome. Follow the [Frontend Kanban workflow](https://github.com/vstore-ex/vstore-front/blob/main/docs/kanban-workflow.md).
+        Before opening, search open and closed issues for the same outcome. Assign an owner before moving the issue to Ready. Follow the [Frontend Kanban workflow](https://github.com/vstore-ex/vstore-front/blob/main/docs/kanban-workflow.md).
   - type: textarea
     id: problem
     attributes:
