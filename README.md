@@ -1,5 +1,7 @@
 # React + Vite
 
+Frontend work is tracked in the [vstore-frontend GitHub Project](https://github.com/orgs/vstore-ex/projects/2). Follow the [Kanban workflow](docs/kanban-workflow.md) when creating or updating issues.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
