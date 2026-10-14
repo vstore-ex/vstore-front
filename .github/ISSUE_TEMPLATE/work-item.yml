@@ -17,29 +17,21 @@ body:
     id: scope
     attributes:
       label: Component and scope
-      description: Identify the affected frontend component and what is in scope. Note important exclusions if needed.
-    validations:
-      required: true
+      description: Identify the affected frontend component and what is in scope. Refine this before moving the issue to Ready.
   - type: textarea
     id: acceptance-criteria
     attributes:
       label: Acceptance criteria
-      description: List observable, verifiable conditions for completion.
+      description: List observable, verifiable conditions for completion. Complete these before moving the issue to Ready.
       placeholder: |
         - [ ] ...
-    validations:
-      required: true
   - type: textarea
     id: dependencies
     attributes:
       label: Dependencies and blockers
-      description: Link blocking or dependent GitHub issues using GitHub's native relationship. Write “None” if there are no known dependencies.
-    validations:
-      required: true
+      description: Link blocking or dependent GitHub issues using GitHub's native relationship. Write “None” if there are no known dependencies; resolve before moving to Ready.
   - type: textarea
     id: checks
     attributes:
       label: Required tests or checks
-      description: State applicable tests/checks, or explain why none apply.
-    validations:
-      required: true
+      description: State applicable tests/checks, or explain why none apply, before moving the issue to Ready.
