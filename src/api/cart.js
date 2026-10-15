@@ -3,7 +3,16 @@ const gamePath = id => {
   if (!id || (typeof id !== 'string' && typeof id !== 'number')) throw new Error('This game is not available in the server catalog.')
   return '/me/cart/' + encodeURIComponent(String(id).trim())
 }
-export const getCart = signal => apiRequest('/me/cart', { signal })
+const validAmount = value => (typeof value === 'string' || typeof value === 'number') && String(value).trim() !== '' && Number.isFinite(Number(value)) && Number(value) >= 0
+export async function getCart(signal) {
+  const data = await apiRequest('/me/cart', { signal })
+  if (!data || !Array.isArray(data.items) || typeof data.currency !== 'string' || !/^[A-Z]{3}$/.test(data.currency)
+    || ['subtotal', 'tax', 'total'].some(key => !validAmount(data[key]))
+    || data.items.some(item => !item || item.game_id == null || !String(item.game_id).trim() || typeof item.title !== 'string' || !validAmount(item.price))) {
+    throw new Error('The server returned an invalid cart.')
+  }
+  return data
+}
 export const addToCart = id => apiRequest(gamePath(id), { method: 'POST' })
 export const removeFromCart = id => apiRequest(gamePath(id), { method: 'DELETE' })
 export const clearCart = () => apiRequest('/me/cart', { method: 'DELETE' })
