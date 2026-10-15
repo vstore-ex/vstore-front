@@ -1,4 +1,3 @@
-import { apiRequest } from './client'
 import { mediaUrl } from './catalog'
 
 // Optional presentation metadata lives in GameOut.meta_info (a JSON string).
@@ -21,16 +20,4 @@ export function productPresentation(game) {
     reviewSummary: typeof meta.review_summary?.label === 'string' && Number.isInteger(meta.review_summary?.count) && meta.review_summary.count > 0
       ? { label: meta.review_summary.label, count: meta.review_summary.count } : null,
   }
-}
-
-export async function getAchievements(key, signal) {
-  const { id, page = 1, pageSize = 6 } = JSON.parse(key)
-  // Backend app/api/achievements.py defines this route with page/page_size.
-  const data = await apiRequest('/games/' + encodeURIComponent(id) + '/achievements?page=' + page + '&page_size=' + pageSize, { signal, auth: false })
-  if (!Array.isArray(data?.items) || !Number.isInteger(data.total)) throw new Error('Could not read achievements.')
-  return { ...data, items: data.items.filter(item => item?.id != null).map(item => ({
-    ...item, icon: mediaUrl(item.icon),
-    completion: typeof item.completion_percent === 'number' && Number.isFinite(item.completion_percent)
-      ? Math.max(0, Math.min(100, item.completion_percent)) : null,
-  })) }
 }

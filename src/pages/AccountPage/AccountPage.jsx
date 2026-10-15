@@ -1,3 +1,5 @@
+import AccountAchievements from './AccountAchievements'
+import useCatalogResource from '../../hooks/useCatalogResource'
 import UserLink from '../../components/User/UserLink'
 import FriendsSection from './FriendsSection'
 import { useState } from 'react'
@@ -19,10 +21,12 @@ export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut
   const [avatarFile, setAvatarFile] = useState(null)
   const [avatarPreview, setAvatarPreview] = useState(null)
   const [avatarTimestamp, setAvatarTimestamp] = useState(() => Date.now())
+  const achievements = useCatalogResource('userAchievements', String(user.id))
   const orders = useOrders()
   const wishlist = useWishlist()
   const { currency } = useCart()
-  const stats = Object.fromEntries(Object.entries(user.stats || {}).filter(([label]) => !['games', 'wishlist'].includes(label.toLowerCase())))
+  const stats = Object.fromEntries(Object.entries(user.stats || {}).filter(([label]) => !['games', 'wishlist', 'achievements'].includes(label.toLowerCase())))
+  stats.Achievements = achievements.loading ? '...' : achievements.error ? 'Unavailable' : achievements.data.length
   stats.Games = orders.loading ? '...' : orders.error ? 'Unavailable' : orders.ownedIds.length
   stats.Wishlist = wishlist?.loading ? '...' : (wishlist?.count ?? 0)
 
@@ -101,6 +105,7 @@ export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut
       <div className="account-hero__stats">{Object.entries(stats).map(([label, value]) =>
         <div className="account-stat" key={label}><span>{label}</span><strong>{value}</strong></div>)}</div>
     </section>
+    <AccountAchievements resource={achievements} userId={user.id} />
     <Library />
     <FriendsSection />
     <section className="account-section"><h2>Profile settings</h2>
