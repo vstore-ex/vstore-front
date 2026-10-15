@@ -17,7 +17,6 @@ function CartSession({ owner, children }) {
     if (owner == null) return
     const version = ++requestVersion.current
     return api.getCart().then(data => {
-      if (!data || !Array.isArray(data.items) || !data.currency || ['subtotal', 'tax', 'total'].some(key => !Number.isFinite(Number(data[key])))) throw new Error('The server returned an invalid cart.')
       if (active.current && version === requestVersion.current) { setCart(data); setError('') }
     }).catch(reason => {
       if (active.current && version === requestVersion.current) setError(api.cartError(reason))

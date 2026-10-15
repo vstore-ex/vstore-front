@@ -1,12 +1,14 @@
-import { mediaUrl } from './client'
+import { apiRequest, mediaUrl } from './client'
 export { mediaUrl } from './client'
 
-const API_BASE = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '')
 export const PAGE_SIZE = 24
 export const offerUrl = value => mediaUrl(value, window.location.origin)
 const array = value => Array.isArray(value) ? value : []
-export const priceLabel = value => new Intl.NumberFormat('en', { style: 'currency', currency: 'USD' }).format(Number(value) || 0)
+export const priceLabel = (value, currency = 'USD') => new Intl.NumberFormat('en', { style: 'currency', currency }).format(value)
 export function mapGame(game) {
+  if (!game || game.id == null || typeof game.title !== 'string') throw new Error('The server returned an invalid game.')
+  const currency = game.currency ?? 'USD'
+  if (typeof currency !== 'string' || !/^[A-Z]{3}$/.test(currency)) throw new Error('The server returned an invalid currency.')
   const banners = array(game.banners).filter(Boolean)
   const getBanner = (type) => banners.find((b) => b.banner_type === type)?.image_url
 
@@ -33,11 +35,12 @@ export function mapGame(game) {
   const mainCapsule = getBanner('main_capsule') || getBanner('header_capsule') || hero
 
   const original = Number(game.original_price), price = game.is_free ? 0 : Number(game.price)
-  return { ...game, id: String(game.id), type: 'Base Game', image: mediaUrl(poster),
+  if (!game.is_free && (game.price == null || String(game.price).trim() === '' || !Number.isFinite(price) || price < 0)) throw new Error('The server returned an invalid game price.')
+  return { ...game, currency, id: String(game.id), type: 'Base Game', image: mediaUrl(poster),
     posterImage: mediaUrl(poster), heroImage: mediaUrl(hero), headerImage: mediaUrl(header),
     libraryHero: mediaUrl(libHero), libraryPoster: mediaUrl(poster), iconImage: mediaUrl(icon),
-    capsuleImage: mediaUrl(capsule), mainCapsule: mediaUrl(mainCapsule), amount: price, price: game.is_free ? 'Free' : priceLabel(price),
-    originalPrice: original > price ? priceLabel(original) : '',
+    capsuleImage: mediaUrl(capsule), mainCapsule: mediaUrl(mainCapsule), amount: price, price: game.is_free ? 'Free' : priceLabel(price, currency),
+    originalPrice: original > price ? priceLabel(original, currency) : '',
     discount: original > price ? `-${Math.round((1 - price / original) * 100)}%` : '',
     tags: array(game.tags).filter(tag => tag?.id != null), banners,
     media: array(game.media).filter(item => item && ['image', 'video'].includes(item.media_type))
@@ -46,15 +49,7 @@ export function mapGame(game) {
   }
 }
 function games(value) { return array(value).filter(game => game?.id != null).map(mapGame) }
-async function request(path, signal) {
-  const response = await fetch(API_BASE + path, { credentials: 'omit',
-    signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(20000)]) : AbortSignal.timeout(20000) })
-  if (!response.ok) {
-    const error = new Error(response.status === 404 ? 'Game not found.' : `Could not load store data (${response.status}). Please try again.`)
-    error.status = response.status; throw error
-  }
-  return response.json()
-}
+const request = (path, signal) => apiRequest(path, { signal, auth: false, credentials: 'omit' })
 export async function getGames(query, signal) {
   const params = new URLSearchParams(query)
   const data = await request('/games/?' + params, signal)
