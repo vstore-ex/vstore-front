@@ -15,6 +15,6 @@ export default function ProductAchievements({ id, onViewAll }) {
         {item.completion !== null && <p>Completed by {item.completion}%</p>}
       </article>)}</div>
       <button className="product-text-button product-achievements__more" type="button" onClick={onViewAll}>Show more <img src={arrow} alt="" /></button>
-    </> : <p className="product-empty">No achievements available yet.</p>)}
+    </> : <p className="product-empty">This game has no achievements.</p>)}
   </section>
 }

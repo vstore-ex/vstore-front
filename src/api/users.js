@@ -12,13 +12,3 @@ export async function getUserById(id, signal) {
     role_name: text(data.role_name), created_at: text(data.created_at),
     stats: Object.fromEntries(['games', 'achievements', 'wishlist'].map(key => [key, count(data.stats?.[key])])) }
 }
-export async function getUserAchievements(id, signal) {
-  const data = await apiRequest(userPath(id) + '/achievements', { signal, auth: false })
-  const items = Array.isArray(data) ? data : data?.items
-  if (!Array.isArray(items)) throw new Error('Could not read unlocked achievements.')
-  return items.map(item => {
-    if (!item || item.id == null || typeof item.title !== 'string') throw new Error('Could not read an achievement.')
-    return { id: item.id, title: item.title, description: text(item.description), icon: mediaUrl(item.icon),
-      game_id: item.game_id, unlocked_at: text(item.unlocked_at) }
-  })
-}

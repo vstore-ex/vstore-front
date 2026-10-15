@@ -448,3 +448,13 @@
 .library-card p { margin: 8px 16px 16px; font-size: 14px; color: #b6ce9c; }
 .library-card a:focus-visible { outline: 2px solid #8cd044; outline-offset: -3px; }
 .user-library > p, .user-library > div[role="alert"] { margin-bottom: 20px; }
+
+.account-unlocked__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 20px; }
+.account-unlocked__card { display: flex; align-items: flex-start; gap: 16px; padding: 18px; background: #393e46; border-radius: 8px; min-width: 0; }
+.account-unlocked__icon { width: 72px; height: 72px; flex-shrink: 0; object-fit: contain; border-radius: 6px; }
+.account-unlocked__card > div { min-width: 0; overflow-wrap: anywhere; }
+.account-unlocked__card h3 { margin: 0; font-size: 20px; }
+.account-unlocked__card p { margin: 8px 0; color: #ccd0d5; line-height: 1.5; }
+.account-unlocked a { color: #a5d985; }
+.account-unlocked a:focus-visible { outline: 2px solid #7bc74d; outline-offset: 3px; }
+@media (max-width: 760px) { .account-unlocked__grid { grid-template-columns: 1fr; } .account-unlocked .account-section__header { flex-wrap: wrap; gap: 12px; } }

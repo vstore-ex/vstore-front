@@ -36,7 +36,7 @@ function parseRouteFromHash() {
 
   if (parts[0] === 'news') return { view: parts[1] ? 'newsDetail' : 'news', newsId: parts[1], gameId: null }
 
-  if (parts[0] === 'games' && parts[1]) {
+  if ((parts[0] === 'games' || (parts[0] === 'products' && parts[2] === 'achievements')) && parts[1]) {
     return {
       view: parts[2] === 'achievements' ? 'achievements' : 'product',
       gameId: parts[1],
