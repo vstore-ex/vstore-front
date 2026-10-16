@@ -228,3 +228,11 @@
 
 .search-field__submit { display: grid; place-items: center; padding: 0; border: 0; background: transparent; cursor: pointer; }
 .search-field:focus-within { outline: 2px solid #7bc74d; outline-offset: 2px; }
+.header-wallet { display: grid; gap: 3px; min-width: 90px; padding: 8px 12px; border-radius: 6px; background: #222831; color: #eee; text-decoration: none; font-size: 12px; }
+.header-wallet strong { color: #9dde75; font-size: 14px; font-variant-numeric: tabular-nums; }
+.header-wallet small { color: #ffd393; }
+.header-wallet:focus-visible { outline: 2px solid #7bc74d; outline-offset: 2px; }
+@media (min-width: 981px) and (max-width: 1200px) {
+  .store-header { flex-wrap: wrap; gap: 14px; padding: 16px 24px; }
+  .header-left { order: 3; width: 100%; margin-left: 0; justify-content: space-between; }
+}

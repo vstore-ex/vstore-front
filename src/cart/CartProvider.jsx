@@ -2,8 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../auth/context'
 import { CartContext } from './context'
 import * as api from '../api/cart'
+import { useWallet } from '../wallet/context'
 const emptyCart = { items: [], subtotal: '0.00', tax: '0.00', total: '0.00', currency: 'USD' }
 function CartSession({ owner, children }) {
+  const wallet = useWallet()
   const [cart, setCart] = useState(emptyCart)
   const [loading, setLoading] = useState(owner != null)
   const [error, setError] = useState('')
@@ -56,7 +58,9 @@ function CartSession({ owner, children }) {
     removeFromCart: id => mutate(() => api.removeFromCart(id)), clearCart: () => mutate(api.clearCart),
     checkout: (method, termsAccepted = false) => {
       if (!termsAccepted) return Promise.reject(new Error('Please accept the purchase terms.'))
-      return mutate(() => api.createOrder(method, termsAccepted), true)
+      return mutate(() => api.createOrder(method, termsAccepted), true).finally(() => {
+        if (method === 'wallet') return wallet.refresh()
+      })
     } }}>{children}</CartContext.Provider>
 }
 export default function CartProvider({ children }) {

@@ -43,7 +43,7 @@ function parseRouteFromHash() {
     }
   }
 
-  if (['account', 'orders', 'cart', 'wishlist', 'support'].includes(parts[0])) {
+  if (['account', 'wallet', 'orders', 'cart', 'wishlist', 'support'].includes(parts[0])) {
     return { view: parts[0], gameId: null }
   }
 
@@ -94,7 +94,7 @@ function App() {
 
   useEffect(() => {
     if (status === 'loading' || status === 'banned' || status === 'error' || isLoggingOut) return
-    if (['account', 'orders', 'cart', 'wishlist'].includes(currentView) && !isAuthenticated) {
+    if (['account', 'wallet', 'orders', 'cart', 'wishlist'].includes(currentView) && !isAuthenticated) {
       navigateTo('login?next=' + currentView)
     }
   }, [status, isLoggingOut, currentView, isAuthenticated])
@@ -120,7 +120,7 @@ function App() {
   async function handleAuthenticated() {
     completedLogin.current = true
     const route = parseRouteFromHash()
-    if (route.view === 'login') navigateTo(/^(?:account|orders|(?:wishlist|cart)(?:\?add=[^#&]+)?)$/.test(route.next) ? route.next : 'discover')
+    if (route.view === 'login') navigateTo(/^(?:account|wallet|orders|(?:wishlist|cart)(?:\?add=[^#&]+)?)$/.test(route.next) ? route.next : 'discover')
 
     if (pendingAction?.type === 'open-cart') {
       openCartPage()
@@ -195,7 +195,7 @@ function App() {
       {error && !publicPage && <div className="store-status" role="alert">{error}
         {error.startsWith('Could not complete sign out') && <button type="button" disabled={isLoggingOut} onClick={() => signOut()}>Retry sign out</button>}
       </div>}
-      {currentView === 'userProfile' ? <UserProfilePage key={selectedUserId} id={selectedUserId} onSignIn={() => openAuth('login')} /> : currentView === 'news' ? <NewsPage /> : currentView === 'newsDetail' ? <NewsDetailPage key={selectedNewsId} id={selectedNewsId} /> : ['account', 'orders', 'cart', 'wishlist'].includes(currentView) && !user ? (
+      {currentView === 'userProfile' ? <UserProfilePage key={selectedUserId} id={selectedUserId} onSignIn={() => openAuth('login')} /> : currentView === 'news' ? <NewsPage /> : currentView === 'newsDetail' ? <NewsDetailPage key={selectedNewsId} id={selectedNewsId} /> : ['account', 'wallet', 'orders', 'cart', 'wishlist'].includes(currentView) && !user ? (
         <p className="store-status" role="status">Please sign in to continue.</p>
       ) : ['product', 'achievements'].includes(currentView) ? (
         <ProductDetailPage
@@ -205,8 +205,8 @@ function App() {
           showAchievements={currentView === 'achievements'}
           onViewAllAchievements={() => navigateTo(`games/${selectedGameId}/achievements`)}
         />
-      ) : ['account', 'orders'].includes(currentView) ? (
-        <AccountPage user={user} onUpdated={updateUser} onLogoutAll={() => signOut(true)} isLoggingOut={isLoggingOut} />
+      ) : ['account', 'wallet', 'orders'].includes(currentView) ? (
+        <AccountPage user={user} onUpdated={updateUser} onLogoutAll={() => signOut(true)} isLoggingOut={isLoggingOut} focusWallet={currentView === 'wallet'} />
       ) : currentView === 'cart' ? (
         <CartPage />
       ) : currentView === 'wishlist' ? (
