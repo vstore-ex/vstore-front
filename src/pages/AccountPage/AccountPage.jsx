@@ -1,5 +1,6 @@
 import AccountAchievements from './AccountAchievements'
 import WalletSection from '../../wallet/WalletSection'
+import CurrencySelector from '../../currency/CurrencySelector'
 import useCatalogResource from '../../hooks/useCatalogResource'
 import UserLink from '../../components/User/UserLink'
 import FriendsSection from './FriendsSection'
@@ -7,7 +8,6 @@ import { useState } from 'react'
 import { mediaUrl } from '../../api/client'
 import useOrders from '../../hooks/useOrders'
 import { formatMoney } from '../../api/cart'
-import { useCart } from '../../cart/context'
 import { useWishlist } from '../../wishlist/context'
 import { updateUser, updateAvatar } from '../../api/auth'
 import fallbackAvatar from '../../assets/avatar.webp'
@@ -25,7 +25,6 @@ export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut
   const achievements = useCatalogResource('userAchievements', String(user.id))
   const orders = useOrders()
   const wishlist = useWishlist()
-  const { currency } = useCart()
   const stats = Object.fromEntries(Object.entries(user.stats || {}).filter(([label]) => !['games', 'wishlist', 'achievements'].includes(label.toLowerCase())))
   stats.Achievements = achievements.loading ? '...' : achievements.error ? 'Unavailable' : achievements.data.length
   stats.Games = orders.loading ? '...' : orders.error ? 'Unavailable' : orders.ownedIds.length
@@ -107,6 +106,7 @@ export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut
         <div className="account-stat" key={label}><span>{label}</span><strong>{value}</strong></div>)}</div>
     </section>
     <WalletSection focusWallet={focusWallet} />
+    <CurrencySelector profile />
     <AccountAchievements resource={achievements} userId={user.id} />
     <Library />
     <FriendsSection />
@@ -136,9 +136,9 @@ export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut
       {orders.loading && <p role="status">Loading orders...</p>}{orders.error && <div role="alert">{orders.error}<button type="button" onClick={orders.retry}>Retry orders</button></div>}
       {!orders.loading && !orders.error && orders.data?.length === 0 && <p>No orders yet.</p>}
       <div className="order-list">{orders.data?.map(order => <article key={order.id}>
-        <h3>Order #{order.id}</h3><p>{new Date(order.created_at).toLocaleDateString()} / {formatMoney(order.total, order.currency || currency)}</p>
+        <h3>Order #{order.id}</h3><p>{new Date(order.created_at).toLocaleDateString()} / {formatMoney(order.total, order.currency)}</p>
         <ul>{order.items.map(item => <li key={item.game_id}>
-          <a href={`#/games/${item.game_id}`}>Game #{item.game_id}</a> / {formatMoney(item.price_at_purchase, order.currency || currency)}
+          <a href={`#/games/${item.game_id}`}>Game #{item.game_id}</a> / {formatMoney(item.price_at_purchase, item.currency || order.currency)}
         </li>)}</ul>
       </article>)}</div>
     </section>

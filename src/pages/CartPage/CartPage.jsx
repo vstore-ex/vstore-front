@@ -7,7 +7,7 @@ import TopUpDialog from '../../wallet/TopUpDialog'
 import './CartPage.css'
 function Totals({ cart }) {
   return <dl className="server-cart-totals">{[['Subtotal', cart.subtotal], ['Tax', cart.tax], ['Total', cart.total]].map(([label, value]) =>
-    <div key={label}><dt>{label}</dt><dd>{formatMoney(value, cart.currency)}</dd></div>)}</dl>
+    <div key={label}><dt>{label}</dt><dd>{cart.pricesReady ? formatMoney(value, cart.currency) : cart.error ? 'Unavailable' : 'Updating...'}</dd></div>)}</dl>
 }
 function Checkout({ cart, onClose, onSuccess }) {
   const wallet = useWallet()
@@ -33,7 +33,7 @@ function Checkout({ cart, onClose, onSuccess }) {
   }
   return <><dialog className="server-checkout" ref={dialog} aria-labelledby="checkout-title" onCancel={event => { event.preventDefault(); if (!cart.busy) onClose() }}>
     <form onSubmit={placeOrder}><h2 id="checkout-title">Checkout</h2>
-      <ul>{cart.items.map(item => <li key={item.game_id}>{item.title} - {formatMoney(item.price, cart.currency)}</li>)}</ul>
+      <ul>{cart.items.map(item => <li key={item.game_id}>{item.title} - {cart.pricesReady ? formatMoney(item.price, cart.currency) : 'Updating...'}</li>)}</ul>
       <Totals cart={cart} />
       <fieldset className="checkout-payment" disabled={cart.busy}><legend>Payment method</legend>
         <label><input type="radio" name="payment_method" value="card" checked={method === 'card'} onChange={() => { setMethod('card'); setError('') }} />Bank card</label>
@@ -72,7 +72,7 @@ export default function CartPage() {
   }, [cart])
   function run(action) { action().catch(() => { /* The cart context displays the error. */ }) }
   if (order) return <div className="cart-page"><section className="cart-page__inner" role="status">
-    <h1>Order #{order.id}</h1><p>Your order has been created.</p><p>{formatMoney(order.total, cart.currency)}</p>
+    <h1>Order #{order.id}</h1><p>Your order has been created.</p><p>{formatMoney(order.total, order.currency)}</p>
     <a className="button button--accent" href="#/account">View order history</a>
     <a className="button button--secondary" href="#/discover">Continue shopping</a>
   </section></div>
@@ -84,7 +84,7 @@ export default function CartPage() {
     {!!cart.count && <div className="cart-layout"><section className="cart-items" aria-label="Cart items">
       {cart.items.map(item => <article className="cart-item server-cart-item" key={item.game_id}>
         <div className="cart-item__info"><h2><a href={`#/games/${item.game_id}`}>{item.title}</a></h2></div>
-        <div className="cart-item__side"><strong>{formatMoney(item.price, cart.currency)}</strong>
+        <div className="cart-item__side"><strong>{cart.pricesReady ? formatMoney(item.price, cart.currency) : cart.error ? 'Price unavailable' : 'Updating...'}</strong>
           <button type="button" disabled={cart.busy || cart.loading} onClick={() => run(() => cart.removeFromCart(item.game_id))}>Remove</button></div>
       </article>)}
       <button className="button button--secondary" disabled={cart.busy || cart.loading} onClick={() => run(cart.clearCart)}>Clear cart</button>

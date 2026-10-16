@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import userIcon from '../../assets/discover/figma/2451d.svg'
 import heartIcon from '../../assets/discover/figma/0ac49.svg'
 import cartIcon from '../../assets/discover/figma/066ed.svg'
-import globeIcon from '../../assets/discover/figma/977c7.svg'
+import CurrencySelector from '../../currency/CurrencySelector'
 import searchIcon from '../../assets/icon-search.svg'
 import logoMark from '../../assets/discover/figma/ededd.svg'
 import './Header.css'
@@ -14,7 +14,6 @@ const actionIcons = [
   { label: 'Account', icon: userIcon },
   { label: 'Wishlist', icon: heartIcon },
   { label: 'Cart', icon: cartIcon },
-  { label: 'Language', icon: globeIcon },
 ]
 
 function Header({
@@ -125,6 +124,7 @@ function Header({
               {label === 'Wishlist' && wishlistCount > 0 && <span id="wishlist-count" className="cart-count wishlist-count" aria-live="polite" aria-label={`${wishlistCount} items in wishlist`}>{wishlistCount}</span>}
             </button>
           ))}
+          <CurrencySelector />
         </div>
 
         {(isAuthenticated || isLoggingOut) && (
