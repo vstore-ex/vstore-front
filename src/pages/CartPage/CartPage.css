@@ -817,4 +817,8 @@
 .add-to-cart-control { margin-top: 12px; }
 .add-to-cart-control button { max-width: 100%; }
 .cart-action-error { color: #ffb4ab; font-size: 14px; }
+.checkout-payment { display: grid; gap: 14px; border: 1px solid #66717c; padding: 16px; margin: 20px 0; }
+.checkout-payment label { display: flex; gap: 10px; align-items: center; }
+.checkout-wallet { padding: 16px; border-radius: 6px; background: #222831; }
+.server-checkout button:disabled { opacity: .55; cursor: not-allowed; }
 @media (max-width: 760px) { .server-cart .server-cart-item { grid-template-columns: minmax(0, 1fr); } }

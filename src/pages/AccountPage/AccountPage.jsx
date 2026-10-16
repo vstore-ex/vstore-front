@@ -1,4 +1,5 @@
 import AccountAchievements from './AccountAchievements'
+import WalletSection from '../../wallet/WalletSection'
 import useCatalogResource from '../../hooks/useCatalogResource'
 import UserLink from '../../components/User/UserLink'
 import FriendsSection from './FriendsSection'
@@ -13,7 +14,7 @@ import fallbackAvatar from '../../assets/avatar.webp'
 import Library from './Library'
 import './AccountPage.css'
 
-export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut }) {
+export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut, focusWallet }) {
   const [values, setValues] = useState({ full_name: user.fullName, email: user.email, phone: user.phone || '' })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -105,6 +106,7 @@ export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut
       <div className="account-hero__stats">{Object.entries(stats).map(([label, value]) =>
         <div className="account-stat" key={label}><span>{label}</span><strong>{value}</strong></div>)}</div>
     </section>
+    <WalletSection focusWallet={focusWallet} />
     <AccountAchievements resource={achievements} userId={user.id} />
     <Library />
     <FriendsSection />

@@ -1,33 +1,60 @@
 import { useEffect, useRef, useState } from 'react'
 import { useCart } from '../../cart/context'
 import { cartError, formatMoney } from '../../api/cart'
+import { moneyCents } from '../../api/wallet'
+import { useWallet } from '../../wallet/context'
+import TopUpDialog from '../../wallet/TopUpDialog'
 import './CartPage.css'
 function Totals({ cart }) {
   return <dl className="server-cart-totals">{[['Subtotal', cart.subtotal], ['Tax', cart.tax], ['Total', cart.total]].map(([label, value]) =>
     <div key={label}><dt>{label}</dt><dd>{formatMoney(value, cart.currency)}</dd></div>)}</dl>
 }
 function Checkout({ cart, onClose, onSuccess }) {
+  const wallet = useWallet()
+  const [method, setMethod] = useState('card')
+  const [topUpOpen, setTopUpOpen] = useState(false)
   const [accepted, setAccepted] = useState(false)
   const [error, setError] = useState('')
   const dialog = useRef(null)
   useEffect(() => { dialog.current.showModal() }, [])
+  const { refresh } = wallet
+  useEffect(() => { refresh() }, [refresh])
+  const balance = moneyCents(wallet.data?.balance)
+  const total = moneyCents(cart.total)
+  const insufficient = balance != null && total != null && balance < total
+  const differentCurrency = wallet.data && wallet.data.currency !== cart.currency
+  const walletBlocked = wallet.loading || wallet.busy || !!wallet.error || !wallet.data || wallet.data.is_frozen || differentCurrency || insufficient || total == null
   async function placeOrder(event) {
     event.preventDefault()
-    if (cart.busy || !accepted) return
+    if (cart.busy || cart.loading || cart.error || !accepted || (method === 'wallet' && walletBlocked)) return
     setError('')
-    try { const order = await cart.checkout('card', accepted); if (order) onSuccess(order) }
+    try { const order = await cart.checkout(method, accepted); if (order) onSuccess(order) }
     catch (reason) { setError(cartError(reason)) }
   }
-  return <dialog className="server-checkout" ref={dialog} aria-labelledby="checkout-title" onCancel={event => { event.preventDefault(); if (!cart.busy) onClose() }}>
+  return <><dialog className="server-checkout" ref={dialog} aria-labelledby="checkout-title" onCancel={event => { event.preventDefault(); if (!cart.busy) onClose() }}>
     <form onSubmit={placeOrder}><h2 id="checkout-title">Checkout</h2>
       <ul>{cart.items.map(item => <li key={item.game_id}>{item.title} - {formatMoney(item.price, cart.currency)}</li>)}</ul>
-      <Totals cart={cart} /><p>Payment method: Card</p>
+      <Totals cart={cart} />
+      <fieldset className="checkout-payment" disabled={cart.busy}><legend>Payment method</legend>
+        <label><input type="radio" name="payment_method" value="card" checked={method === 'card'} onChange={() => { setMethod('card'); setError('') }} />Bank card</label>
+        <label><input type="radio" name="payment_method" value="wallet" checked={method === 'wallet'} onChange={() => { setMethod('wallet'); setError('') }} />Wallet balance</label>
+      </fieldset>
+      {method === 'wallet' && <div className="checkout-wallet">
+        {wallet.loading && <p role="status">Updating balance...</p>}
+        {wallet.data && <p>Available balance: {formatMoney(wallet.data.balance, wallet.data.currency)}</p>}
+        {wallet.error && <div role="alert"><p>{wallet.error}</p><button type="button" disabled={wallet.loading || wallet.busy || cart.busy} onClick={wallet.refresh}>Refresh balance</button></div>}
+        {wallet.data?.is_frozen && <p role="alert">Your wallet is frozen. Choose a bank card or contact support.</p>}
+        {differentCurrency && <div role="alert"><p>Your cart currency has changed. Refresh the cart before paying.</p><button type="button" disabled={cart.loading || cart.busy} onClick={cart.refresh}>Refresh cart</button></div>}
+        {!differentCurrency && insufficient && <p role="alert">Insufficient wallet funds. You need {formatMoney((total - balance) / 100, cart.currency)} more.</p>}
+        <button type="button" className="button button--secondary" disabled={cart.busy || wallet.loading || wallet.busy || !!wallet.error || !wallet.data || wallet.data.is_frozen} onClick={() => setTopUpOpen(true)}>Top up wallet</button>
+      </div>}
       <label className="server-checkout-terms"><input type="checkbox" checked={accepted} disabled={cart.busy} onChange={e => setAccepted(e.target.checked)} />I accept the purchase terms.</label>
       {error && <p role="alert">{error}</p>}
+      {cart.error && <div role="alert">{!error && <p>{cart.error}</p>}<button type="button" className="button button--secondary" disabled={cart.busy || cart.loading} onClick={cart.refresh}>Refresh cart to retry</button></div>}
       <div className="server-cart-actions"><button className="button button--secondary" type="button" disabled={cart.busy} onClick={onClose}>Cancel</button>
-        <button className="button button--accent" type="submit" disabled={!accepted || cart.busy || cart.loading || !cart.count}>{cart.busy ? 'Placing order...' : 'Place Order'}</button></div>
+        <button className="button button--accent" type="submit" disabled={!accepted || cart.busy || cart.loading || !!cart.error || !cart.count || (method === 'wallet' && walletBlocked)}>{cart.busy ? 'Placing order...' : 'Place Order'}</button></div>
     </form>
-  </dialog>
+  </dialog>{topUpOpen && <TopUpDialog onClose={() => setTopUpOpen(false)} />}</>
 }
 export default function CartPage() {
   const cart = useCart()

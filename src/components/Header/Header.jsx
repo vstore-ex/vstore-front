@@ -6,6 +6,8 @@ import globeIcon from '../../assets/discover/figma/977c7.svg'
 import searchIcon from '../../assets/icon-search.svg'
 import logoMark from '../../assets/discover/figma/ededd.svg'
 import './Header.css'
+import { useWallet } from '../../wallet/context'
+import { formatMoney } from '../../api/cart'
 
 const navItems = ['Discover', 'Support', 'News']
 const actionIcons = [
@@ -29,6 +31,7 @@ function Header({
   cartCount = 0,
   wishlistCount = 0,
 }) {
+  const wallet = useWallet()
   const readQuery = () => new URLSearchParams(window.location.hash.split('?')[1]).get('q') || ''
   const [query, setQuery] = useState(readQuery)
   useEffect(() => {
@@ -97,6 +100,10 @@ function Header({
       </div>
 
       <div className="header-actions">
+        {isAuthenticated && <a className="header-wallet" href="#/wallet" aria-label="Open wallet">
+          <span>Wallet</span><strong>{wallet.error ? 'Unavailable' : wallet.loading ? 'Updating...' : wallet.data ? formatMoney(wallet.data.balance, wallet.data.currency) : 'Loading...'}</strong>
+          {wallet.data?.is_frozen && <small>Frozen</small>}
+        </a>}
         <div className="icon-actions" aria-label="Quick actions">
           {actionIcons.map(({ label, icon }) => (
             <button

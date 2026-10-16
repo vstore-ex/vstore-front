@@ -1,4 +1,5 @@
 import { apiRequest } from './client'
+import { walletError } from './wallet'
 const gamePath = id => {
   if (!id || (typeof id !== 'string' && typeof id !== 'number')) throw new Error('This game is not available in the server catalog.')
   return '/me/cart/' + encodeURIComponent(String(id).trim())
@@ -24,6 +25,7 @@ export function formatMoney(value, currency = 'USD') {
   return new Intl.NumberFormat('en', { style: 'currency', currency }).format(Number(value))
 }
 export function cartError(error) {
+  if (/insufficient wallet|wallet.*frozen/i.test(error.message)) return walletError(error)
   if (error.status === 400 && /already own/i.test(error.message)) return 'You already own this game in your library.'
   if (error.status === 400 && /already in cart/i.test(error.message)) return 'This game is already in your cart.'
   if (error.status === 400 && /cart is empty/i.test(error.message)) return 'Your cart is empty. Add a game before placing an order.'
