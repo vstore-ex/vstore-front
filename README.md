@@ -1,5 +1,9 @@
 # React + Vite
 
+## Contributing
+
+Follow the [frontend Kanban workflow](docs/kanban-workflow.md) when creating, refining, starting, reviewing or completing issues.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
