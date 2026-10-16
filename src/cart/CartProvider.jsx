@@ -3,9 +3,11 @@ import { useAuth } from '../auth/context'
 import { CartContext } from './context'
 import * as api from '../api/cart'
 import { useWallet } from '../wallet/context'
-const emptyCart = { items: [], subtotal: '0.00', tax: '0.00', total: '0.00', currency: 'USD' }
+import { useCurrency } from '../currency/context'
+const emptyCart = { items: [], subtotal: '0.00', tax: '0.00', total: '0.00', currency: null }
 function CartSession({ owner, children }) {
   const wallet = useWallet()
+  const { code, switching, unavailable } = useCurrency()
   const [cart, setCart] = useState(emptyCart)
   const [loading, setLoading] = useState(owner != null)
   const [error, setError] = useState('')
@@ -16,14 +18,15 @@ function CartSession({ owner, children }) {
   const lock = useRef(false)
   const requestVersion = useRef(0)
   const refresh = useCallback(() => {
-    if (owner == null) return
+    if (owner == null || !code) return
     const version = ++requestVersion.current
     return api.getCart().then(data => {
+      if (data.currency !== code) throw new Error('Cart prices do not match your wallet currency. Refresh your wallet and cart.')
       if (active.current && version === requestVersion.current) { setCart(data); setError('') }
     }).catch(reason => {
       if (active.current && version === requestVersion.current) setError(api.cartError(reason))
     }).finally(() => { if (active.current && version === requestVersion.current) setLoading(false) })
-  }, [owner])
+  }, [owner, code])
   useEffect(() => {
     active.current = true
     refresh()
@@ -40,8 +43,8 @@ function CartSession({ owner, children }) {
       if (!active.current) return null
       if (checkout) {
         if (result?.id == null) throw new Error('The server did not return an order number. Check your order history before trying again.')
-        setCart({ ...emptyCart, currency: cart.currency }); setLoading(false)
-        setLastOrder({ ...result, currency: cart.currency }); setOrderVersion(v => v + 1)
+        setCart({ ...emptyCart, currency: result.currency }); setLoading(false)
+        setLastOrder(result); setOrderVersion(v => v + 1)
       } else await refresh()
       return result ?? true
     } catch (reason) {
@@ -53,11 +56,14 @@ function CartSession({ owner, children }) {
       throw reason
     } finally { lock.current = false; if (active.current) { setBusy(false); setLoading(false) } }
   }
-  return <CartContext.Provider value={{ ...cart, count: cart.items.length, loading, error, busy, refresh: () => { setLoading(true); return refresh() },
+  const pricesReady = !!code && cart.currency === code && !switching && !error && !unavailable
+  const isLoading = !unavailable && (loading || switching || (owner != null && !pricesReady && !error))
+  return <CartContext.Provider value={{ ...cart, count: cart.items.length, pricesReady, loading: isLoading, error: unavailable || error, busy, refresh: () => { setLoading(true); wallet.refresh(); return refresh() },
     lastOrder, orderVersion, addToCart: id => mutate(() => api.addToCart(id)),
     removeFromCart: id => mutate(() => api.removeFromCart(id)), clearCart: () => mutate(api.clearCart),
     checkout: (method, termsAccepted = false) => {
       if (!termsAccepted) return Promise.reject(new Error('Please accept the purchase terms.'))
+      if (!pricesReady || isLoading || wallet.busy) return Promise.reject(new Error('Wait for current prices before placing your order.'))
       return mutate(() => api.createOrder(method, termsAccepted), true).finally(() => {
         if (method === 'wallet') return wallet.refresh()
       })

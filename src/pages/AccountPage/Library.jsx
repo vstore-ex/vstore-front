@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react'
 import { getGame } from '../../api/catalog'
 import useOrders from '../../hooks/useOrders'
+import { useCurrency } from '../../currency/context'
 
 export default function Library() {
   const orders = useOrders()
+  const { code } = useCurrency()
   const key = JSON.stringify([...orders.ownedIds].sort())
   const [attempt, setAttempt] = useState(0)
   const [result, setResult] = useState(null)
   useEffect(() => {
+    if (!code) return
     const controller = new AbortController()
     const ids = JSON.parse(key)
     const games = new Array(ids.length)
@@ -16,7 +19,7 @@ export default function Library() {
       while (next < ids.length && !controller.signal.aborted) {
         const index = next++, id = ids[index]
         try {
-          const game = await getGame(id, controller.signal)
+          const game = await getGame(id, controller.signal, code)
           games[index] = { id, game, unavailable: !game }
         } catch (error) {
           games[index] = { id, unavailable: error.status === 404, error: error.status !== 404 }
@@ -25,11 +28,11 @@ export default function Library() {
     }
     // Limit concurrent detail requests for large libraries.
     Promise.all(Array.from({ length: Math.min(4, ids.length) }, worker)).then(() => {
-      if (!controller.signal.aborted) setResult({ key, attempt, games })
+      if (!controller.signal.aborted) setResult({ key, attempt, code, games })
     })
     return () => controller.abort()
-  }, [key, attempt])
-  const current = result?.key === key && result?.attempt === attempt
+  }, [key, attempt, code])
+  const current = result?.key === key && result?.attempt === attempt && result?.code === code
   return <section className="account-section user-library" aria-labelledby="library-title">
     <h2 id="library-title">Your library</h2>
     {orders.loading && <p role="status">Loading library...</p>}

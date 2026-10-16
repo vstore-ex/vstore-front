@@ -3,21 +3,25 @@ import { useAuth } from '../auth/context'
 import { useCart } from '../cart/context'
 import { WishlistContext } from './context'
 import * as api from '../api/wishlist'
+import { useCurrency } from '../currency/context'
 function WishlistSession({ owner, orderVersion, children }) {
+  const { code, switching, unavailable, refreshWallet } = useCurrency()
+  const [loadedCurrency, setLoadedCurrency] = useState(null)
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(owner != null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const active = useRef(false), lock = useRef(false), version = useRef(0)
   const refresh = useCallback(() => {
-    if (owner == null) return
+    if (owner == null || !code) return
     const request = ++version.current
     return api.getWishlist().then(data => {
-      if (active.current && request === version.current) { setItems(data); setError('') }
+      if (data.some(item => item.currency !== code)) throw new Error('Wishlist prices do not match your wallet currency. Refresh your wallet and wishlist.')
+      if (active.current && request === version.current) { setItems(data); setLoadedCurrency(code); setError('') }
     }).catch(reason => {
       if (active.current && request === version.current) setError(api.wishlistError(reason))
     }).finally(() => { if (active.current && request === version.current) setLoading(false) })
-  }, [owner])
+  }, [owner, code])
   useEffect(() => {
     active.current = true
     refresh()
@@ -46,8 +50,10 @@ function WishlistSession({ owner, orderVersion, children }) {
       throw reason
     } finally { lock.current = false; if (active.current) { setBusy(false); setLoading(false) } }
   }
-  return <WishlistContext.Provider value={{ items, count: items.length, loading, error, busy,
-    refresh: () => { setLoading(true); return refresh() },
+  const current = loadedCurrency === code && !switching
+  return <WishlistContext.Provider value={{ items: current ? items : [], count: items.length,
+    loading: !unavailable && (loading || (owner != null && !current && !error)), error: unavailable || error, busy,
+    refresh: () => { setLoading(true); refreshWallet(); return refresh() },
     add: id => mutate(() => api.addToWishlist(id)), remove: id => mutate(() => api.removeFromWishlist(id)),
   }}>{children}</WishlistContext.Provider>
 }

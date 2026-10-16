@@ -14,7 +14,7 @@ export function topUpAmount(value) {
   return `${Math.floor(cents / 100)}.${String(cents % 100).padStart(2, '0')}`
 }
 
-function validateWallet(data) {
+export function validateWallet(data) {
   const balance = moneyCents(data?.balance)
   if (balance == null || balance < 0 || !/^[A-Z]{3}$/.test(data?.currency) || typeof data?.is_frozen !== 'boolean') {
     throw new Error('The server returned an invalid wallet. Please refresh your balance.')

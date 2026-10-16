@@ -1,0 +1,80 @@
+import { useEffect, useRef, useState } from 'react'
+import { useAuth } from '../auth/context'
+import { useWallet } from '../wallet/context'
+import { getCurrencies } from '../api/currency'
+import { walletError } from '../api/wallet'
+import { formatMoney, isCurrencyCode } from '../utils/money'
+import { CurrencyContext } from './context'
+import './Currency.css'
+
+const storageKey = 'vstore:currency'
+function readGuestCurrency() {
+  try { const value = localStorage.getItem(storageKey); return isCurrencyCode(value) ? value : 'USD' } catch { return 'USD' }
+}
+
+function Confirmation({ target, wallet, onClose }) {
+  const [error, setError] = useState('')
+  const dialog = useRef(null)
+  useEffect(() => { dialog.current.showModal() }, [])
+  async function confirm(event) {
+    event.preventDefault()
+    if (wallet.busy || wallet.loading || !wallet.data || wallet.error) return
+    setError('')
+    try { if (await wallet.changeCurrency(target.code)) onClose() }
+    catch (reason) { setError(walletError(reason)) }
+  }
+  return <dialog className="currency-confirm" ref={dialog} aria-labelledby="currency-confirm-title" onCancel={event => { event.preventDefault(); if (!wallet.busy) onClose() }}>
+    <form onSubmit={confirm}><h2 id="currency-confirm-title">Change wallet currency?</h2>
+      <p>Switch to {target.code} — {target.name}.</p>
+      {wallet.data && <p>Current balance: {formatMoney(wallet.data.balance, wallet.data.currency)}.</p>}
+      <p>Your balance will be converted at the current server exchange rate. Store, cart and wishlist prices will update after confirmation.</p>
+      <p>Previous orders and transactions keep their original purchase currencies.</p>
+      {(error || wallet.error) && <p role="alert">{error || wallet.error}</p>}
+      {wallet.error && <button type="button" disabled={wallet.loading || wallet.busy} onClick={wallet.refresh}>Refresh wallet</button>}
+      <div className="currency-actions"><button type="button" className="button button--secondary" disabled={wallet.busy} onClick={onClose}>Cancel</button>
+        <button type="submit" className="button button--accent" disabled={wallet.busy || wallet.loading || !!wallet.error || !wallet.data}>{wallet.busy ? 'Converting...' : 'Confirm currency change'}</button></div>
+    </form>
+  </dialog>
+}
+
+export default function CurrencyProvider({ children }) {
+  const { currentUser, status } = useAuth()
+  const wallet = useWallet()
+  const [guestCode, setGuestCode] = useState(readGuestCurrency)
+  const [attempt, setAttempt] = useState(0)
+  const [result, setResult] = useState(null)
+  const [pending, setPending] = useState(null)
+  useEffect(() => {
+    const controller = new AbortController()
+    getCurrencies(controller.signal).then(data => {
+      if (!controller.signal.aborted) setResult({ attempt, data })
+    }).catch(error => { if (!controller.signal.aborted) setResult({ attempt, error }) })
+    return () => controller.abort()
+  }, [attempt])
+  useEffect(() => {
+    const sync = event => { if (event.key === storageKey || event.key === null) setGuestCode(readGuestCurrency()) }
+    window.addEventListener('storage', sync)
+    return () => window.removeEventListener('storage', sync)
+  }, [])
+  const currencies = result?.data || []
+  const guestSupported = !currencies.length || currencies.some(item => item.code === guestCode)
+  const code = status === 'loading' ? null : currentUser ? wallet.data?.currency || null : guestSupported ? guestCode : currencies.find(item => item.code === 'USD')?.code || currencies[0].code
+  function choose(code) {
+    const target = currencies.find(item => item.code === code)
+    if (!target || wallet.busy || (currentUser && (wallet.loading || !wallet.data || wallet.error))) return
+    if (currentUser) { if (code !== wallet.data.currency) setPending(target) }
+    else {
+      setGuestCode(code)
+      try { localStorage.setItem(storageKey, code) } catch { /* Selection still works when storage is unavailable. */ }
+    }
+  }
+  return <CurrencyContext.Provider value={{ code, currencies, choose,
+    switching: wallet.operation === 'currency',
+    unavailable: !!currentUser && !wallet.data ? wallet.error : '',
+    walletError: currentUser ? wallet.error : '',
+    refreshWallet: wallet.refresh,
+    disabled: status === 'loading' || wallet.busy || (!!currentUser && (wallet.loading || !wallet.data || !!wallet.error)),
+    loading: result?.attempt !== attempt, error: result?.attempt === attempt ? result.error?.message : '',
+    retry: () => setAttempt(value => value + 1),
+  }}>{children}{pending && <Confirmation key={pending.code} target={pending} wallet={wallet} onClose={() => setPending(null)} />}</CurrencyContext.Provider>
+}
