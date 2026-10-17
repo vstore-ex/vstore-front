@@ -2,7 +2,7 @@
 .store-status button { margin-left: 16px; }
 .store-form { display: grid; gap: 16px; max-width: 600px; margin: 24px 0; text-align: left; }
 .store-form label { display: grid; gap: 8px; min-width: 0; }
-.store-form input { width: 100%; min-width: 0; padding: 12px; border: 1px solid #70777e; border-radius: 4px; background: var(--color-surface-raised); color: var(--color-text); font: inherit; }
+.store-form input { width: 100%; min-width: 0; }
 .store-form button { justify-self: start; }
 .store-page button:disabled { opacity: .55; cursor: wait; }
 .order-list article { padding: 16px 0; border-bottom: 1px solid #545b63; }

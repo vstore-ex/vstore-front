@@ -4,6 +4,7 @@ import { cartError, formatMoney } from '../../api/cart'
 import { moneyCents } from '../../api/wallet'
 import { useWallet } from '../../wallet/context'
 import TopUpDialog from '../../wallet/TopUpDialog'
+import Dialog from '../../components/Dialog/Dialog'
 import './CartPage.css'
 function Totals({ cart }) {
   return <dl className="server-cart-totals">{[['Subtotal', cart.subtotal], ['Tax', cart.tax], ['Total', cart.total]].map(([label, value]) =>
@@ -15,8 +16,6 @@ function Checkout({ cart, onClose, onSuccess }) {
   const [topUpOpen, setTopUpOpen] = useState(false)
   const [accepted, setAccepted] = useState(false)
   const [error, setError] = useState('')
-  const dialog = useRef(null)
-  useEffect(() => { dialog.current.showModal() }, [])
   const { refresh } = wallet
   useEffect(() => { refresh() }, [refresh])
   const balance = moneyCents(wallet.data?.balance)
@@ -31,7 +30,7 @@ function Checkout({ cart, onClose, onSuccess }) {
     try { const order = await cart.checkout(method, accepted); if (order) onSuccess(order) }
     catch (reason) { setError(cartError(reason)) }
   }
-  return <><dialog className="server-checkout" ref={dialog} aria-labelledby="checkout-title" onCancel={event => { event.preventDefault(); if (!cart.busy) onClose() }}>
+  return <><Dialog className="server-checkout" labelledBy="checkout-title" busy={cart.busy} onClose={onClose}>
     <form onSubmit={placeOrder}><h2 id="checkout-title">Checkout</h2>
       <ul>{cart.items.map(item => <li key={item.game_id}>{item.title} - {cart.pricesReady ? formatMoney(item.price, cart.currency) : 'Updating...'}</li>)}</ul>
       <Totals cart={cart} />
@@ -54,7 +53,7 @@ function Checkout({ cart, onClose, onSuccess }) {
       <div className="server-cart-actions"><button className="button button--secondary" type="button" disabled={cart.busy} onClick={onClose}>Cancel</button>
         <button className="button button--accent" type="submit" disabled={!accepted || cart.busy || cart.loading || !!cart.error || !cart.count || (method === 'wallet' && walletBlocked)}>{cart.busy ? 'Placing order...' : 'Place Order'}</button></div>
     </form>
-  </dialog>{topUpOpen && <TopUpDialog onClose={() => setTopUpOpen(false)} />}</>
+  </Dialog>{topUpOpen && <TopUpDialog onClose={() => setTopUpOpen(false)} />}</>
 }
 export default function CartPage() {
   const cart = useCart()

@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
+import Dialog from '../components/Dialog/Dialog'
 import { useAuth } from '../auth/context'
 import { useWallet } from '../wallet/context'
 import { getCurrencies } from '../api/currency'
@@ -14,8 +15,6 @@ function readGuestCurrency() {
 
 function Confirmation({ target, wallet, onClose }) {
   const [error, setError] = useState('')
-  const dialog = useRef(null)
-  useEffect(() => { dialog.current.showModal() }, [])
   async function confirm(event) {
     event.preventDefault()
     if (wallet.busy || wallet.loading || !wallet.data || wallet.error) return
@@ -23,7 +22,7 @@ function Confirmation({ target, wallet, onClose }) {
     try { if (await wallet.changeCurrency(target.code)) onClose() }
     catch (reason) { setError(walletError(reason)) }
   }
-  return <dialog className="currency-confirm" ref={dialog} aria-labelledby="currency-confirm-title" onCancel={event => { event.preventDefault(); if (!wallet.busy) onClose() }}>
+  return <Dialog className="currency-confirm" labelledBy="currency-confirm-title" busy={wallet.busy} onClose={onClose}>
     <form onSubmit={confirm}><h2 id="currency-confirm-title">Change wallet currency?</h2>
       <p>Switch to {target.code} — {target.name}.</p>
       {wallet.data && <p>Current balance: {formatMoney(wallet.data.balance, wallet.data.currency)}.</p>}
@@ -34,7 +33,7 @@ function Confirmation({ target, wallet, onClose }) {
       <div className="currency-actions"><button type="button" className="button button--secondary" disabled={wallet.busy} onClick={onClose}>Cancel</button>
         <button type="submit" className="button button--accent" disabled={wallet.busy || wallet.loading || !!wallet.error || !wallet.data}>{wallet.busy ? 'Converting...' : 'Confirm currency change'}</button></div>
     </form>
-  </dialog>
+  </Dialog>
 }
 
 export default function CurrencyProvider({ children }) {

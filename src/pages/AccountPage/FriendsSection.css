@@ -1,7 +1,7 @@
 .friends-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .friend-add-form { margin: 24px 0; display: grid; gap: 10px; max-width: 600px; }
 .friend-add-form > div { display: flex; gap: 12px; }
-.friend-add-form input { min-width: 0; flex: 1; border: 1px solid #eeeeee66; border-radius: 5px; padding: 10px 14px; background: var(--color-surface); color: var(--color-text); font: inherit; }
+.friend-add-form input { min-width: 0; flex: 1; }
 .friend-add-form button { display: inline-flex; align-items: center; gap: 10px; }
 .friend-add-form button img { width: 24px; height: 24px; }
 .friends-tabs { display: flex; flex-wrap: wrap; gap: 12px; margin: 24px 0; border-bottom: 1px solid #eeeeee33; padding-bottom: 16px; }
@@ -23,4 +23,4 @@
 .friends-message { color: var(--color-accent); }
 .friends-section :is(button,input):focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
 .friends-section button:disabled, .friends-section input:disabled { opacity: .5; cursor: default; }
-@media (max-width: 700px) { .friend-card { flex-direction: column; align-items: stretch; } .friend-add-form > div, .friends-heading { flex-wrap: wrap; } .friend-add-form input { flex-basis: 100%; } .friend-actions { flex-shrink: 1; } }
+@media (max-width: 700px) { .friend-card { flex-direction: column; align-items: stretch; } .friend-add-form > div, .friends-heading { flex-wrap: wrap; } .friend-add-form input { min-width: 0; flex: 1; } .friend-actions { flex-shrink: 1; } }

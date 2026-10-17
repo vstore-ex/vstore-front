@@ -8,6 +8,7 @@ import WishlistProvider from './wishlist/WishlistProvider'
 import OrdersProvider from './orders/OrdersProvider'
 import WalletProvider from './wallet/WalletProvider'
 import CurrencyProvider from './currency/CurrencyProvider'
+import './styles/controls.css'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

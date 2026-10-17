@@ -134,36 +134,7 @@
     brightness(90%) contrast(91%);
 }
 
-.button {
-  min-height: 39px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 0;
-  border-radius: 4.1px;
-  padding: 10px;
-  font-family: Inter, Roboto, Arial, sans-serif;
-  font-size: 16px;
-  font-weight: 500;
-  line-height: 1.2;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.button--secondary {
-  color: var(--color-text);
-  background: var(--color-control);
-}
-
-.button--accent {
-  color: var(--color-surface);
-  background: var(--color-accent);
-}
-
-.button:hover,
-.button:focus-visible,
-.icon-button:hover,
-.icon-button:focus-visible {
+.icon-button:not(:disabled):hover {
   filter: brightness(1.08);
 }
 

@@ -458,3 +458,6 @@
 .account-unlocked a { color: #a5d985; }
 .account-unlocked a:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
 @media (max-width: 760px) { .account-unlocked__grid { grid-template-columns: 1fr; } .account-unlocked .account-section__header { flex-wrap: wrap; gap: 12px; } }
+
+.account-avatar-upload { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; margin-top: calc(-1 * var(--space-1)); }
+.account-avatar-upload__filename { min-width: 0; overflow-wrap: anywhere; font-size: 13px; color: var(--color-text-muted); }

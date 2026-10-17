@@ -117,16 +117,16 @@ export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut
             value={values[name]} required={name === 'email'} onChange={e => setValues(v => ({ ...v, [name]: e.target.value }))} /></label>)}
         <label>Avatar<input type="file" accept="image/*" disabled={busy} onChange={handleAvatarChange} /></label>
         {avatarFile && (
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: '-4px' }}>
+          <div className="account-avatar-upload">
             <button type="button" className="button button--secondary" disabled={busy} onClick={uploadAvatarDirect}>
               {busy ? 'Uploading...' : 'Upload avatar now'}
             </button>
-            <span style={{ fontSize: '13px', opacity: 0.8 }}>({avatarFile.name})</span>
+            <span className="account-avatar-upload__filename">({avatarFile.name})</span>
           </div>
         )}
         <button className="button button--accent" disabled={busy}>{busy ? 'Saving...' : 'Save profile'}</button>
-        {error && <p className="store-form__error" role="alert" style={{ color: '#ff6b6b', margin: '4px 0 0' }}>{error}</p>}
-        {message && <p className="store-form__status" role="status" style={{ color: '#7bc74d', margin: '4px 0 0' }}>{message}</p>}
+        {error && <p className="store-form__error" role="alert">{error}</p>}
+        {message && <p className="store-form__status" role="status">{message}</p>}
       </form>
     </section>
     <section className="account-section"><h2>Session settings</h2>
