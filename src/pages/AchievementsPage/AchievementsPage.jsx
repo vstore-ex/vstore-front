@@ -19,7 +19,7 @@ export default function AchievementsPage({ product }) {
       <div className="achievements-list">{resource.data.items.map(achievement => <article className="achievement-row" key={achievement.id}>
         <MediaImage className="achievement-row__icon" src={achievement.icon} alt={achievement.title} />
         <div className="achievement-row__content">
-          {achievement.completion !== null && <div className="achievement-row__fill" style={{ width: achievement.completion + '%' }} aria-hidden="true" />}
+          {achievement.completion !== null && <progress className="achievement-row__fill" value={achievement.completion} max={100} aria-hidden="true" />}
           <div className="achievement-row__text"><h2>{achievement.title}</h2>{achievement.description && <p>{achievement.description}</p>}</div>
           {achievement.completion !== null && <span className="achievement-row__percent">{achievement.completion}%</span>}
         </div>

@@ -20,7 +20,7 @@ function ProductDetails({ game, onViewAllAchievements, onSignIn }) {
       <div className="product-main">
         <MediaGallery game={game} />
         <section className="detail-section about-section"><h2>About this game</h2>
-          {game.description_md ? <ExpandableContent className="product-about-content" limit={655}><ProductMarkdown>{game.description_md}</ProductMarkdown></ExpandableContent>
+          {game.description_md ? <ExpandableContent className="product-about-content" variant="about"><ProductMarkdown>{game.description_md}</ProductMarkdown></ExpandableContent>
             : <p className="product-empty">No description available yet.</p>}
         </section>
         <Requirements value={game.requirements} />

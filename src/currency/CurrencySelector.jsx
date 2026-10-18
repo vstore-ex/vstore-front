@@ -26,7 +26,7 @@ export default function CurrencySelector({ profile = false }) {
     </label>}
   </>
   if (profile) return <section className="account-section currency-settings" aria-label="Wallet and store currency"><h2>Wallet and store currency</h2>{choices}</section>
-  return <div className="currency-menu" ref={container} onKeyDown={event => { if (event.key === 'Escape') { setOpen(false); trigger.current?.focus() } }}>
+  return <div className="currency-menu" ref={container} onKeyDown={event => { if (event.key === 'Escape' && open) { event.preventDefault(); event.stopPropagation(); setOpen(false); trigger.current?.focus() } }}>
     <button type="button" className="currency-trigger" ref={trigger} aria-label="Choose currency" aria-expanded={open} aria-controls={menuId} onClick={() => setOpen(value => !value)}>
       <img src={globeIcon} alt="" /><span>{currency.code || '...'}</span>
     </button>

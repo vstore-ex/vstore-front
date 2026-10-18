@@ -5,6 +5,7 @@
 .product-detail-page {
   min-height: 100svh;
   color: var(--color-text);
+  overflow-wrap: anywhere;
   background: linear-gradient(94deg, #0000 7.43%, #7bc74d1a 92.57%), var(--color-surface);
 }
 .product-detail-page__inner { width: min(1140px, calc(100% - 48px)); margin: auto; padding: 35px 0 62px; }
@@ -62,7 +63,11 @@
 .product-markdown ul, .product-markdown ol { padding-left: 22px; }
 .about-section .product-markdown { color: #eeeeeecc; font-size: 16px; }
 .about-section .product-markdown :is(h1,h2,h3,h4) { color: #eeeeeee6; }
-.product-content-collapsed { max-height: var(--content-limit, 250px); overflow: hidden; mask-image: linear-gradient(#000 80%, transparent); }
+.product-content { --content-limit: 250px; min-width: 0; }
+.product-content--about { --content-limit: 655px; }
+.product-content-collapsed { max-height: var(--content-limit); overflow: hidden; mask-image: linear-gradient(#000 80%, transparent); }
+.product-expand[aria-expanded="true"] img { transform: rotate(180deg); }
+.review-ownership-hint { color: var(--color-text-muted); font-size: 14px; }
 
 .product-text-button { display: inline-flex; align-items: center; gap: 4px; padding: 0; border: 0; background: transparent; color: #eeeeeeb3; font-size: 16px; font-weight: 500; line-height: 24px; cursor: pointer; }
 .product-text-button img { display: block; width: 24px; height: 24px; }

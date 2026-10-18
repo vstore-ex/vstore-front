@@ -23,22 +23,26 @@ export function ProductMarkdown({ children }) {
     urlTransform={(url, key) => key === 'src' ? mediaUrl(url) : defaultUrlTransform(url)}>{typeof children === 'string' ? children : ''}</Markdown></div>
 }
 
-export function ExpandableContent({ children, className = '', limit = 250 }) {
+export function ExpandableContent({ children, className = '', variant = 'review' }) {
   const [expanded, setExpanded] = useState(false)
   const [overflows, setOverflows] = useState(false)
   const content = useRef(null)
+  const viewport = useRef(null)
   const contentId = useId()
   useEffect(() => {
-    const observer = new ResizeObserver(([entry]) => setOverflows(entry.contentRect.height > limit))
+    const observer = new ResizeObserver(([entry]) => {
+      const limit = Number.parseFloat(getComputedStyle(viewport.current).getPropertyValue('--content-limit'))
+      setOverflows(entry.contentRect.height > limit)
+    })
     observer.observe(content.current)
     return () => observer.disconnect()
-  }, [limit])
+  }, [variant])
   return <div className={className}>
-    <div id={contentId} className={overflows && !expanded ? 'product-content-collapsed' : ''} style={{ '--content-limit': limit + 'px' }}>
+    <div ref={viewport} id={contentId} className={`product-content product-content--${variant}${overflows && !expanded ? ' product-content-collapsed' : ''}`}>
       <div ref={content}>{children}</div>
     </div>
     {overflows && <button type="button" className="product-text-button product-expand" aria-controls={contentId} aria-expanded={expanded} onClick={() => setExpanded(value => !value)}>
-      {expanded ? 'Show less' : 'Show more'} <img src={chevron} alt="" style={{ transform: expanded ? 'rotate(180deg)' : undefined }} />
+      {expanded ? 'Show less' : 'Show more'} <img src={chevron} alt="" />
     </button>}
   </div>
 }
