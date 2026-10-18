@@ -10,7 +10,12 @@ export default function Dialog({ children, className = '', labelledBy, busy = fa
     initialFocusRef?.current?.focus()
     return () => {
       element.close()
-      if (opener instanceof HTMLElement && opener.isConnected) opener.focus()
+      if (opener instanceof HTMLElement && opener.isConnected) {
+        opener.focus()
+        // A background refresh can disable the opener while the dialog is open.
+        // Keep focus in its context instead of dropping keyboard users on the body.
+        if (document.activeElement !== opener) opener.closest('dialog[open], [tabindex="-1"]')?.focus()
+      }
     }
   }, [initialFocusRef])
 
