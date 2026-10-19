@@ -44,7 +44,6 @@ export const supportTopics = [
   {
     id: 'frequent-questions',
     title: 'Frequent questions',
-    description:
-      'Browse common support answers before contacting the support team directly.',
+    description: 'Browse common support answers before contacting the support team directly.',
   },
 ]

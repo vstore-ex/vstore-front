@@ -20,31 +20,60 @@ function CartSession({ owner, children }) {
   const refresh = useCallback(() => {
     if (owner == null || !code) return
     const version = ++requestVersion.current
-    return api.getCart().then(data => {
-      if (data.currency !== code) throw new Error('Cart prices do not match your wallet currency. Refresh your wallet and cart.')
-      if (active.current && version === requestVersion.current) { setCart(data); setError('') }
-    }).catch(reason => {
-      if (active.current && version === requestVersion.current) setError(api.cartError(reason))
-    }).finally(() => { if (active.current && version === requestVersion.current) setLoading(false) })
+    return api
+      .getCart()
+      .then((data) => {
+        if (data.currency !== code)
+          throw new Error(
+            'Cart prices do not match your wallet currency. Refresh your wallet and cart.',
+          )
+        if (active.current && version === requestVersion.current) {
+          setCart(data)
+          setError('')
+        }
+      })
+      .catch((reason) => {
+        if (active.current && version === requestVersion.current) setError(api.cartError(reason))
+      })
+      .finally(() => {
+        if (active.current && version === requestVersion.current) setLoading(false)
+      })
   }, [owner, code])
   useEffect(() => {
     active.current = true
     refresh()
-    const sync = () => { if (owner != null && !lock.current) { setLoading(true); refresh() } }
+    const sync = () => {
+      if (owner != null && !lock.current) {
+        setLoading(true)
+        refresh()
+      }
+    }
     window.addEventListener('focus', sync)
-    return () => { active.current = false; requestVersion.current += 1; window.removeEventListener('focus', sync) }
+    return () => {
+      active.current = false
+      requestVersion.current += 1
+      window.removeEventListener('focus', sync)
+    }
   }, [refresh, owner])
   async function mutate(action, checkout = false) {
     if (owner == null) throw new Error('Please sign in to use your cart.')
     if (lock.current) throw new Error('Please wait for the current cart action to finish.')
-    lock.current = true; requestVersion.current += 1; setBusy(true); setError('')
+    lock.current = true
+    requestVersion.current += 1
+    setBusy(true)
+    setError('')
     try {
       const result = await action()
       if (!active.current) return null
       if (checkout) {
-        if (result?.id == null) throw new Error('The server did not return an order number. Check your order history before trying again.')
-        setCart({ ...emptyCart, currency: result.currency }); setLoading(false)
-        setLastOrder(result); setOrderVersion(v => v + 1)
+        if (result?.id == null)
+          throw new Error(
+            'The server did not return an order number. Check your order history before trying again.',
+          )
+        setCart({ ...emptyCart, currency: result.currency })
+        setLoading(false)
+        setLastOrder(result)
+        setOrderVersion((v) => v + 1)
       } else await refresh()
       return result ?? true
     } catch (reason) {
@@ -54,22 +83,55 @@ function CartSession({ owner, children }) {
         if (active.current) setError(api.cartError(reason))
       }
       throw reason
-    } finally { lock.current = false; if (active.current) { setBusy(false); setLoading(false) } }
+    } finally {
+      lock.current = false
+      if (active.current) {
+        setBusy(false)
+        setLoading(false)
+      }
+    }
   }
   const pricesReady = !!code && cart.currency === code && !switching && !error && !unavailable
-  const isLoading = !unavailable && (loading || switching || (owner != null && !pricesReady && !error))
-  return <CartContext.Provider value={{ ...cart, count: cart.items.length, pricesReady, loading: isLoading, error: unavailable || error, busy, refresh: () => { setLoading(true); wallet.refresh(); return refresh() },
-    lastOrder, orderVersion, addToCart: id => mutate(() => api.addToCart(id)),
-    removeFromCart: id => mutate(() => api.removeFromCart(id)), clearCart: () => mutate(api.clearCart),
-    checkout: (method, termsAccepted = false) => {
-      if (!termsAccepted) return Promise.reject(new Error('Please accept the purchase terms.'))
-      if (!pricesReady || isLoading || wallet.busy) return Promise.reject(new Error('Wait for current prices before placing your order.'))
-      return mutate(() => api.createOrder(method, termsAccepted), true).finally(() => {
-        if (method === 'wallet') return wallet.refresh()
-      })
-    } }}>{children}</CartContext.Provider>
+  const isLoading =
+    !unavailable && (loading || switching || (owner != null && !pricesReady && !error))
+  return (
+    <CartContext.Provider
+      value={{
+        ...cart,
+        count: cart.items.length,
+        pricesReady,
+        loading: isLoading,
+        error: unavailable || error,
+        busy,
+        refresh: () => {
+          setLoading(true)
+          wallet.refresh()
+          return refresh()
+        },
+        lastOrder,
+        orderVersion,
+        addToCart: (id) => mutate(() => api.addToCart(id)),
+        removeFromCart: (id) => mutate(() => api.removeFromCart(id)),
+        clearCart: () => mutate(api.clearCart),
+        checkout: (method, termsAccepted = false) => {
+          if (!termsAccepted) return Promise.reject(new Error('Please accept the purchase terms.'))
+          if (!pricesReady || isLoading || wallet.busy)
+            return Promise.reject(new Error('Wait for current prices before placing your order.'))
+          return mutate(() => api.createOrder(method, termsAccepted), true).finally(() => {
+            if (method === 'wallet') return wallet.refresh()
+          })
+        },
+      }}
+    >
+      {children}
+    </CartContext.Provider>
+  )
 }
 export default function CartProvider({ children }) {
   const { currentUser } = useAuth()
-  return <CartSession key={currentUser?.id ?? 'guest'} owner={currentUser?.id}>{children}</CartSession>
+  return (
+    <CartSession key={currentUser?.id ?? 'guest'} owner={currentUser?.id}>
+      {children}
+    </CartSession>
+  )
 }
