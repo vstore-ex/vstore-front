@@ -1,0 +1,25 @@
+# Dependencies, generated output, and caches
+node_modules/
+dist/
+build/
+coverage/
+.vite/
+.vite-temp/
+.cache/
+playwright-report/
+test-results/
+qa-artifacts/
+package-lock.json
+
+# Local worktrees and scratch files
+.worktrees/
+tmp/
+temp/
+
+# CI, deployment configuration, and imported assets are outside the source migration.
+.github/
+Dockerfile
+docker-compose*.yml
+nginx/
+public/
+src/assets/

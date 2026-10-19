@@ -1,0 +1,7 @@
+# Keep formatter-managed source consistent on Windows and Unix checkouts.
+src/**/*.js text eol=lf
+src/**/*.jsx text eol=lf
+src/**/*.css text eol=lf
+src/**/*.json text eol=lf
+.prettierrc.json text eol=lf
+.prettierignore text eol=lf
