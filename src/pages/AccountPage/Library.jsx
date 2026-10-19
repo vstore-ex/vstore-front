@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react'
 import { getGame } from '../../api/catalog'
 import useOrders from '../../hooks/useOrders'
 import { useCurrency } from '../../currency/context'
+import { useWallet } from '../../wallet/context'
 import { MediaImage } from '../../components/Catalog/Media'
 
 export default function Library() {
   const orders = useOrders()
-  const { code } = useCurrency()
+  const { code, unavailable, refreshWallet } = useCurrency()
+  const { loading: walletLoading, busy: walletBusy } = useWallet()
   const key = JSON.stringify([...orders.ownedIds].sort())
   const [attempt, setAttempt] = useState(0)
   const [result, setResult] = useState(null)
@@ -43,7 +45,9 @@ export default function Library() {
     {orders.loading && <p role="status">Loading library...</p>}
     {orders.error && <div role="alert"><p>Could not load your purchases. {orders.error}</p><button onClick={orders.retry}>Retry library</button></div>}
     {!orders.loading && !orders.error && !orders.ownedIds.length && <p>Your library is empty. <a href="#/discover">Explore the catalog</a></p>}
-    {!!orders.ownedIds.length && !current && <p role="status">Loading game details...</p>}
+    {!!orders.ownedIds.length && !current && (unavailable
+      ? <div role="alert"><p>Could not load your wallet currency. {unavailable}</p><button type="button" disabled={walletLoading || walletBusy} onClick={refreshWallet}>Retry wallet</button></div>
+      : <p role="status">Loading game details...</p>)}
     {current && <>
       {result.games.some(item => item.error) && <p role="alert">Some games could not be loaded. <button onClick={() => setAttempt(value => value + 1)}>Retry game details</button></p>}
       {!!result.games.length && <>
