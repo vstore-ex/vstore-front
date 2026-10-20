@@ -1,17 +1,20 @@
+import AccountAchievements from './AccountAchievements'
+import WalletSection from '../../wallet/WalletSection'
+import CurrencySelector from '../../currency/CurrencySelector'
+import useCatalogResource from '../../hooks/useCatalogResource'
 import UserLink from '../../components/User/UserLink'
 import FriendsSection from './FriendsSection'
 import { useState } from 'react'
 import { mediaUrl } from '../../api/client'
 import useOrders from '../../hooks/useOrders'
 import { formatMoney } from '../../api/cart'
-import { useCart } from '../../cart/context'
 import { useWishlist } from '../../wishlist/context'
 import { updateUser, updateAvatar } from '../../api/auth'
 import fallbackAvatar from '../../assets/avatar.webp'
 import Library from './Library'
 import './AccountPage.css'
 
-export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut }) {
+export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut, focusWallet }) {
   const [values, setValues] = useState({ full_name: user.fullName, email: user.email, phone: user.phone || '' })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -19,10 +22,11 @@ export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut
   const [avatarFile, setAvatarFile] = useState(null)
   const [avatarPreview, setAvatarPreview] = useState(null)
   const [avatarTimestamp, setAvatarTimestamp] = useState(() => Date.now())
+  const achievements = useCatalogResource('userAchievements', String(user.id))
   const orders = useOrders()
   const wishlist = useWishlist()
-  const { currency } = useCart()
-  const stats = Object.fromEntries(Object.entries(user.stats || {}).filter(([label]) => !['games', 'wishlist'].includes(label.toLowerCase())))
+  const stats = Object.fromEntries(Object.entries(user.stats || {}).filter(([label]) => !['games', 'wishlist', 'achievements'].includes(label.toLowerCase())))
+  stats.Achievements = achievements.loading ? '...' : achievements.error ? 'Unavailable' : achievements.data.length
   stats.Games = orders.loading ? '...' : orders.error ? 'Unavailable' : orders.ownedIds.length
   stats.Wishlist = wishlist?.loading ? '...' : (wishlist?.count ?? 0)
 
@@ -101,6 +105,9 @@ export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut
       <div className="account-hero__stats">{Object.entries(stats).map(([label, value]) =>
         <div className="account-stat" key={label}><span>{label}</span><strong>{value}</strong></div>)}</div>
     </section>
+    <WalletSection focusWallet={focusWallet} />
+    <CurrencySelector profile />
+    <AccountAchievements resource={achievements} userId={user.id} />
     <Library />
     <FriendsSection />
     <section className="account-section"><h2>Profile settings</h2>
@@ -110,16 +117,16 @@ export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut
             value={values[name]} required={name === 'email'} onChange={e => setValues(v => ({ ...v, [name]: e.target.value }))} /></label>)}
         <label>Avatar<input type="file" accept="image/*" disabled={busy} onChange={handleAvatarChange} /></label>
         {avatarFile && (
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: '-4px' }}>
+          <div className="account-avatar-upload">
             <button type="button" className="button button--secondary" disabled={busy} onClick={uploadAvatarDirect}>
               {busy ? 'Uploading...' : 'Upload avatar now'}
             </button>
-            <span style={{ fontSize: '13px', opacity: 0.8 }}>({avatarFile.name})</span>
+            <span className="account-avatar-upload__filename">({avatarFile.name})</span>
           </div>
         )}
         <button className="button button--accent" disabled={busy}>{busy ? 'Saving...' : 'Save profile'}</button>
-        {error && <p className="store-form__error" role="alert" style={{ color: '#ff6b6b', margin: '4px 0 0' }}>{error}</p>}
-        {message && <p className="store-form__status" role="status" style={{ color: '#7bc74d', margin: '4px 0 0' }}>{message}</p>}
+        {error && <p className="store-form__error" role="alert">{error}</p>}
+        {message && <p className="store-form__status" role="status">{message}</p>}
       </form>
     </section>
     <section className="account-section"><h2>Session settings</h2>
@@ -129,9 +136,9 @@ export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut
       {orders.loading && <p role="status">Loading orders...</p>}{orders.error && <div role="alert">{orders.error}<button type="button" onClick={orders.retry}>Retry orders</button></div>}
       {!orders.loading && !orders.error && orders.data?.length === 0 && <p>No orders yet.</p>}
       <div className="order-list">{orders.data?.map(order => <article key={order.id}>
-        <h3>Order #{order.id}</h3><p>{new Date(order.created_at).toLocaleDateString()} / {formatMoney(order.total, order.currency || currency)}</p>
+        <h3>Order #{order.id}</h3><p>{new Date(order.created_at).toLocaleDateString()} / {formatMoney(order.total, order.currency)}</p>
         <ul>{order.items.map(item => <li key={item.game_id}>
-          <a href={`#/games/${item.game_id}`}>Game #{item.game_id}</a> / {formatMoney(item.price_at_purchase, order.currency || currency)}
+          <a href={`#/games/${item.game_id}`}>Game #{item.game_id}</a> / {formatMoney(item.price_at_purchase, item.currency || order.currency)}
         </li>)}</ul>
       </article>)}</div>
     </section>

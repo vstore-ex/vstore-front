@@ -40,7 +40,7 @@ export async function refreshSession() {
 }
 export async function waitForRefresh() { await refreshPromise?.catch(() => {}) }
 
-export async function apiRequest(path, { body, headers, signal, timeout = 20000, auth = true, ...options } = {}) {
+export async function apiRequest(path, { body, headers, signal, timeout = 20000, auth = true, credentials = 'include', ...options } = {}) {
   const version = generation
   const refreshVersion = refreshed
   const multipart = body instanceof FormData
@@ -50,7 +50,7 @@ export async function apiRequest(path, { body, headers, signal, timeout = 20000,
     try { token = localStorage.getItem('vstore:token') } catch { /* storage disabled */ }
     const authHeaders = auth && token ? { Authorization: `Bearer ${token}` } : {}
     return fetch(API_BASE_URL + path, {
-      ...options, credentials: 'include', cache: 'no-store',
+      ...options, credentials, cache: 'no-store',
       headers: { ...(body && !multipart && !encoded ? { 'Content-Type': 'application/json' } : {}), ...authHeaders, ...headers },
       body: body == null ? undefined : multipart || encoded || typeof body === 'string' ? body : JSON.stringify(body),
       signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(timeout)]) : AbortSignal.timeout(timeout),

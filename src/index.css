@@ -4,20 +4,21 @@
 @import '@fontsource/roboto/700.css';
 @import '@fontsource/roboto/800.css';
 @import '@fontsource/roboto-condensed/700.css';
+@import './styles/tokens.css';
 
 * {
   box-sizing: border-box;
 }
 
 html {
-  background: #1f2329;
+  background: var(--color-page);
 }
 
 body {
   margin: 0;
   min-width: 320px;
-  color: #eeeeee;
-  background: #1f2329;
+  color: var(--color-text);
+  background: var(--color-page);
   font-family: Roboto, Arial, sans-serif;
 }
 

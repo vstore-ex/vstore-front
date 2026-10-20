@@ -25,7 +25,7 @@ function ProductCard({ product, onSelect }) {
         if (cached.current?.id === product.id) url = cached.current.url
         else {
           try {
-            const game = await getGame(String(product.id), controller.signal)
+            const game = await getGame(String(product.id), controller.signal, product.currency)
             url = mediaUrl(game?.media.find(item => item.media_type === 'video')?.url)
             if (!controller.signal.aborted) cached.current = { id: product.id, url }
           } catch { return }

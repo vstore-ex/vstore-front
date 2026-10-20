@@ -11,7 +11,7 @@ if (isOAuthCallback) {
 }
 
 function safeDestination(hash) {
-  return typeof hash === 'string' && /^#\/(?:discover(?:\?[^#]*)?|account|orders|cart(?:\?add=[^#&]+)?|wishlist(?:\?add=[^#&]+)?|support|games\/[a-zA-Z0-9_-]+(?:\/achievements)?)$/.test(hash)
+  return typeof hash === 'string' && /^#\/(?:discover(?:\?[^#]*)?|account|wallet|orders|cart(?:\?add=[^#&]+)?|wishlist(?:\?add=[^#&]+)?|support|games\/[a-zA-Z0-9_-]+(?:\/achievements)?)$/.test(hash)
     ? hash : '#/discover'
 }
 export function rememberOAuthDestination() {

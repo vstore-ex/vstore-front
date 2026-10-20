@@ -1,9 +1,9 @@
 .support-page {
   min-height: 1460px;
-  color: #eeeeee;
+  color: var(--color-text);
   background:
     linear-gradient(98deg, rgba(0, 0, 0, 0) 7%, rgba(123, 199, 77, 0.1) 93%),
-    #222831;
+    var(--color-surface);
 }
 
 .support-page__inner {
@@ -14,7 +14,7 @@
 
 .support-page h1 {
   margin: 0;
-  color: #eeeeee;
+  color: var(--color-text);
   font-size: 48px;
   font-weight: 900;
   line-height: normal;
@@ -29,7 +29,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  border: 1px solid #eeeeee;
+  border: 1px solid var(--color-text);
   border-radius: 24px;
   padding: 12px 14px;
   background: rgba(96, 105, 118, 0.6);
@@ -47,7 +47,7 @@
   border: 0;
   outline: 0;
   padding: 0;
-  color: #eeeeee;
+  color: var(--color-text);
   background: transparent;
   font-size: 18px;
   font-weight: 400;
@@ -55,12 +55,12 @@
 }
 
 .support-search input::placeholder {
-  color: #eeeeee;
+  color: var(--color-text);
   opacity: 1;
 }
 
 .support-search:focus-within {
-  border-color: #7bc74d;
+  border-color: var(--color-accent);
   box-shadow: 0 0 0 3px rgba(123, 199, 77, 0.16);
 }
 
@@ -73,7 +73,7 @@
 .support-topic {
   overflow: hidden;
   border-radius: 7px;
-  background: #393e46;
+  background: var(--color-control);
 }
 
 .support-topic__button {
@@ -85,7 +85,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  color: #eeeeee;
+  color: var(--color-text);
   background: transparent;
   font-size: 20px;
   font-weight: 500;
@@ -125,7 +125,7 @@
 
 .support-topic__button:hover,
 .support-topic__button:focus-visible {
-  color: #7bc74d;
+  color: var(--color-accent);
 }
 
 .support-empty {
@@ -133,7 +133,7 @@
   display: grid;
   place-items: center;
   border-radius: 7px;
-  background: #393e46;
+  background: var(--color-control);
 }
 
 .support-empty p {
@@ -148,7 +148,7 @@
   align-items: center;
   justify-content: center;
   gap: 17px;
-  color: #eeeeee;
+  color: var(--color-text);
 }
 
 .support-pagination button {
@@ -173,7 +173,7 @@
 }
 
 .support-pagination__active {
-  color: #7bc74d !important;
+  color: var(--color-accent) !important;
 }
 
 .support-contact {
@@ -185,7 +185,7 @@
 
 .support-contact h2 {
   margin: 0;
-  color: #eeeeee;
+  color: var(--color-text);
   font-size: 40px;
   font-weight: 900;
   line-height: normal;
@@ -201,8 +201,8 @@
   justify-content: center;
   border-radius: 7px;
   padding: 20px;
-  color: #222831;
-  background: #7bc74d;
+  color: var(--color-surface);
+  background: var(--color-accent);
   font-size: 25px;
   font-weight: 700;
   line-height: normal;

@@ -73,7 +73,7 @@ function ReviewFeed({ id, isFree = false, onSignIn }) {
           Write a review
         </button>
       ) : isAuthenticated && !orders?.loading ? (
-        <p role="status" style={{ opacity: 0.8, fontSize: 14 }}>You must own this game in your library to write a review.</p>
+        <p className="review-ownership-hint" role="status">You must own this game in your library to write a review.</p>
       ) : null}
       {writing && canReview && !alreadyReviewed && <ReviewEditor key={id + ':' + currentUser.id} gameId={id} onCancel={() => setWriting(false)}
         onDuplicate={() => { setReviewedBy(currentUser.id); setWriting(false) }} onSaved={review => saved(review, true)} />}

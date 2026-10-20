@@ -74,7 +74,7 @@
   display: block;
   border-radius: 7px;
   object-fit: cover;
-  background: #393e46;
+  background: var(--color-control);
 }
 
 .showcase-item__body {
@@ -86,7 +86,7 @@
 
 .showcase-item__title {
   width: min(210px, 100%);
-  color: #eeeeee;
+  color: var(--color-text);
   font-size: 18px;
   font-weight: 900;
   line-height: normal;
@@ -94,7 +94,7 @@
 
 .showcase-item__price,
 .showcase-item__old-price {
-  color: #eeeeee;
+  color: var(--color-text);
   font-size: 16px;
   font-weight: 600;
   line-height: normal;
@@ -111,8 +111,8 @@
 .showcase-item__discount {
   border-radius: 20px;
   padding: 2px 5px;
-  color: #222831;
-  background: #7bc74d;
+  color: var(--color-surface);
+  background: var(--color-accent);
   font-size: 16px;
   font-weight: 400;
   line-height: normal;
@@ -128,7 +128,7 @@
 .showcase-column__title:focus-visible,
 .showcase-item__button:hover .showcase-item__title,
 .showcase-item__button:focus-visible .showcase-item__title {
-  color: #7bc74d;
+  color: var(--color-accent);
 }
 
 .showcase-column__title:hover img,

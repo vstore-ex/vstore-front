@@ -13,13 +13,8 @@ import mobileLinkIcon from '../../assets/discover/figma/99b90.svg'
 import chevronLeft from '../../assets/discover/figma/bbb18.svg'
 import './DiscoverPage.css'
 
-// Keep API amounts and currency; the home design omits trailing zero cents.
 function homeGame(game) {
-  const product = game
-  const symbol = (game.currency && game.currency !== 'USD') ? `${game.currency} ` : '$'
-  const price = value => symbol + Number(value).toLocaleString('en', { useGrouping: false, maximumFractionDigits: 2 })
-  return { ...product, price: game.release_label || (game.is_free ? 'Free' : price(game.amount)),
-    originalPrice: product.originalPrice ? price(game.original_price) : '' }
+  return { ...game, price: game.release_label || game.price }
 }
 
 function ProductSection({ title, games, onSelect, sale = false, game_overrides = {} }) {

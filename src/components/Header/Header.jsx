@@ -1,18 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import userIcon from '../../assets/discover/figma/2451d.svg'
 import heartIcon from '../../assets/discover/figma/0ac49.svg'
 import cartIcon from '../../assets/discover/figma/066ed.svg'
-import globeIcon from '../../assets/discover/figma/977c7.svg'
+import CurrencySelector from '../../currency/CurrencySelector'
 import searchIcon from '../../assets/icon-search.svg'
 import logoMark from '../../assets/discover/figma/ededd.svg'
 import './Header.css'
+import { useWallet } from '../../wallet/context'
+import { formatMoney } from '../../api/cart'
 
 const navItems = ['Discover', 'Support', 'News']
 const actionIcons = [
   { label: 'Account', icon: userIcon },
   { label: 'Wishlist', icon: heartIcon },
   { label: 'Cart', icon: cartIcon },
-  { label: 'Language', icon: globeIcon },
 ]
 
 function Header({
@@ -29,19 +30,34 @@ function Header({
   cartCount = 0,
   wishlistCount = 0,
 }) {
+  const wallet = useWallet()
   const readQuery = () => new URLSearchParams(window.location.hash.split('?')[1]).get('q') || ''
   const [query, setQuery] = useState(readQuery)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuId = useId()
+  const menuButton = useRef(null)
+  const menu = useRef(null)
   useEffect(() => {
-    const sync = () => setQuery(new URLSearchParams(window.location.hash.split('?')[1]).get('q') || '')
+    const sync = () => {
+      setQuery(new URLSearchParams(window.location.hash.split('?')[1]).get('q') || '')
+      setMenuOpen(false)
+      if (menu.current?.contains(document.activeElement) && menuButton.current?.getClientRects().length) menuButton.current.focus()
+    }
     window.addEventListener('hashchange', sync)
     return () => window.removeEventListener('hashchange', sync)
   }, [])
   function search(event) {
     event.preventDefault()
     const value = query.trim()
-    window.location.hash = value ? '#/discover?' + new URLSearchParams({ q: value }) : '#/discover?view=catalog'
+    closeMenu()
+    window.location.assign(value ? '#/discover?' + new URLSearchParams({ q: value }) : '#/discover?view=catalog')
+  }
+  function closeMenu() {
+    setMenuOpen(false)
+    if (menuButton.current?.getClientRects().length) menuButton.current.focus()
   }
   function handleActionClick(label) {
+    closeMenu()
     if (label === 'Account') {
       onAccount?.()
     }
@@ -56,6 +72,7 @@ function Header({
   }
 
   function handleNavClick(event, item) {
+    closeMenu()
     if (item === 'Discover') {
       event.preventDefault()
       onDiscover?.()
@@ -69,70 +86,84 @@ function Header({
 
   return (
     <header className="store-header" aria-label="Store navigation">
-      <a className="brand" href="#discover" aria-label="V Store home" onClick={onDiscover}>
+      <a className="brand" href="#/discover" aria-label="V Store home" onClick={event => handleNavClick(event, 'Discover')}>
         <img className="brand__mark" src={logoMark} alt="" />
         <span className="brand__text">STORE</span>
       </a>
+      <button ref={menuButton} type="button" className="header-menu-toggle button button--secondary"
+        aria-expanded={menuOpen} aria-controls={menuId} onClick={() => setMenuOpen(value => !value)}>
+        {menuOpen ? 'Close menu' : 'Menu'}
+      </button>
+      <div ref={menu} id={menuId} className={'header-menu' + (menuOpen ? ' header-menu--open' : '')} onKeyDown={event => {
+        if (event.key === 'Escape' && !event.defaultPrevented && menuOpen) {
+          event.preventDefault(); setMenuOpen(false); menuButton.current?.focus()
+        }
+      }}>
+        <div className="header-left">
+          <nav className="primary-nav" aria-label="Primary navigation">
+            {navItems.map((item) => (
+              <a
+                className={`primary-nav__link${
+                  activeView === item.toLowerCase() ? ' primary-nav__link--active' : ''
+                }`}
+                href={`#/${item.toLowerCase()}`}
+                onClick={(event) => handleNavClick(event, item)}
+                key={item}
+              >
+                {item}
+              </a>
+            ))}
+          </nav>
 
-      <div className="header-left">
-        <nav className="primary-nav" aria-label="Primary navigation">
-          {navItems.map((item) => (
-            <a
-              className={`primary-nav__link${
-                activeView === item.toLowerCase() ? ' primary-nav__link--active' : ''
-              }`}
-              href={`#/${item.toLowerCase()}`}
-              onClick={(event) => handleNavClick(event, item)}
-              key={item}
-            >
-              {item}
-            </a>
-          ))}
-        </nav>
-
-        <form className="search-field" role="search" aria-label="Search store" onSubmit={search}>
-          <button className="search-field__submit" type="submit" aria-label="Search"><img className="search-field__icon" src={searchIcon} alt="" /></button>
-          <input className="search-field__input" type="search" aria-label="Search store" placeholder="Search store" maxLength={200} value={query} onChange={event => setQuery(event.target.value)} />
-        </form>
-      </div>
-
-      <div className="header-actions">
-        <div className="icon-actions" aria-label="Quick actions">
-          {actionIcons.map(({ label, icon }) => (
-            <button
-              className={`icon-button${activeView === label.toLowerCase() ? ' icon-button--active' : ''}`}
-              type="button"
-              aria-label={label}
-              aria-describedby={
-                label === 'Cart' && cartCount > 0
-                  ? 'cart-count'
-                  : label === 'Wishlist' && wishlistCount > 0
-                    ? 'wishlist-count'
-                    : undefined
-              }
-              onClick={() => handleActionClick(label)}
-              key={label}
-            >
-              <img src={icon} alt="" />
-              {label === 'Cart' && cartCount > 0 && <span id="cart-count" className="cart-count" aria-live="polite" aria-label={`${cartCount} items in cart`}>{cartCount}</span>}
-              {label === 'Wishlist' && wishlistCount > 0 && <span id="wishlist-count" className="cart-count wishlist-count" aria-live="polite" aria-label={`${wishlistCount} items in wishlist`}>{wishlistCount}</span>}
-            </button>
-          ))}
+          <form className="search-field" role="search" aria-label="Search store" onSubmit={search}>
+            <button className="search-field__submit" type="submit" aria-label="Search"><img className="search-field__icon" src={searchIcon} alt="" /></button>
+            <input className="search-field__input" type="search" aria-label="Search store" placeholder="Search store" maxLength={200} value={query} onChange={event => setQuery(event.target.value)} />
+          </form>
         </div>
 
-        {(isAuthenticated || isLoggingOut) && (
-          <button className="button button--secondary" type="button" onClick={onSignOut} disabled={isLoggingOut}>
-            {isLoggingOut ? 'Signing out...' : 'Sign out'}
+        <div className="header-actions">
+          {isAuthenticated && <a className="header-wallet" href="#/wallet" aria-label="Open wallet" onClick={closeMenu}>
+            <span>Wallet</span><strong>{wallet.error ? 'Unavailable' : wallet.loading ? 'Updating...' : wallet.data ? formatMoney(wallet.data.balance, wallet.data.currency) : 'Loading...'}</strong>
+            {wallet.data?.is_frozen && <small>Frozen</small>}
+          </a>}
+          <div className="icon-actions" aria-label="Quick actions">
+            {actionIcons.map(({ label, icon }) => (
+              <button
+                className={`icon-button${activeView === label.toLowerCase() ? ' icon-button--active' : ''}`}
+                type="button"
+                aria-label={label}
+                aria-describedby={
+                  label === 'Cart' && cartCount > 0
+                    ? 'cart-count'
+                    : label === 'Wishlist' && wishlistCount > 0
+                      ? 'wishlist-count'
+                      : undefined
+                }
+                onClick={() => handleActionClick(label)}
+                key={label}
+              >
+                <img src={icon} alt="" />
+                {label === 'Cart' && cartCount > 0 && <span id="cart-count" className="cart-count" aria-live="polite" aria-label={`${cartCount} items in cart`}>{cartCount}</span>}
+                {label === 'Wishlist' && wishlistCount > 0 && <span id="wishlist-count" className="cart-count wishlist-count" aria-live="polite" aria-label={`${wishlistCount} items in wishlist`}>{wishlistCount}</span>}
+              </button>
+            ))}
+            <CurrencySelector />
+          </div>
+
+          {(isAuthenticated || isLoggingOut) && (
+            <button className="button button--secondary" type="button" onClick={onSignOut} disabled={isLoggingOut}>
+              {isLoggingOut ? 'Signing out...' : 'Sign out'}
+            </button>
+          )}
+          {!isAuthenticated && !isLoggingOut && (
+            <button className="button button--secondary" type="button" onClick={onSignIn}>
+              Sign in
+            </button>
+          )}
+          <button className="button button--accent" type="button">
+            Download
           </button>
-        )}
-        {!isAuthenticated && !isLoggingOut && (
-          <button className="button button--secondary" type="button" onClick={onSignIn}>
-            Sign in
-          </button>
-        )}
-        <button className="button button--accent" type="button">
-          Download
-        </button>
+        </div>
       </div>
     </header>
   )

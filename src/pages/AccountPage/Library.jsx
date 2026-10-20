@@ -1,13 +1,20 @@
 import { useEffect, useState } from 'react'
 import { getGame } from '../../api/catalog'
 import useOrders from '../../hooks/useOrders'
+import { useCurrency } from '../../currency/context'
+import { useWallet } from '../../wallet/context'
+import { MediaImage } from '../../components/Catalog/Media'
 
 export default function Library() {
   const orders = useOrders()
+  const { code, unavailable, refreshWallet } = useCurrency()
+  const { loading: walletLoading, busy: walletBusy } = useWallet()
   const key = JSON.stringify([...orders.ownedIds].sort())
   const [attempt, setAttempt] = useState(0)
   const [result, setResult] = useState(null)
+  const [query, setQuery] = useState('')
   useEffect(() => {
+    if (!code) return
     const controller = new AbortController()
     const ids = JSON.parse(key)
     const games = new Array(ids.length)
@@ -16,7 +23,7 @@ export default function Library() {
       while (next < ids.length && !controller.signal.aborted) {
         const index = next++, id = ids[index]
         try {
-          const game = await getGame(id, controller.signal)
+          const game = await getGame(id, controller.signal, code)
           games[index] = { id, game, unavailable: !game }
         } catch (error) {
           games[index] = { id, unavailable: error.status === 404, error: error.status !== 404 }
@@ -25,25 +32,44 @@ export default function Library() {
     }
     // Limit concurrent detail requests for large libraries.
     Promise.all(Array.from({ length: Math.min(4, ids.length) }, worker)).then(() => {
-      if (!controller.signal.aborted) setResult({ key, attempt, games })
+      if (!controller.signal.aborted) setResult({ key, attempt, code, games })
     })
     return () => controller.abort()
-  }, [key, attempt])
-  const current = result?.key === key && result?.attempt === attempt
+  }, [key, attempt, code])
+  const current = result?.key === key && result?.attempt === attempt && result?.code === code
+  const search = query.trim().normalize('NFKC').toLocaleLowerCase()
+  const visibleGames = current ? result.games.filter(({ id, game }) =>
+    (game?.title || `Game #${id}`).normalize('NFKC').toLocaleLowerCase().includes(search)) : []
   return <section className="account-section user-library" aria-labelledby="library-title">
     <h2 id="library-title">Your library</h2>
     {orders.loading && <p role="status">Loading library...</p>}
     {orders.error && <div role="alert"><p>Could not load your purchases. {orders.error}</p><button onClick={orders.retry}>Retry library</button></div>}
     {!orders.loading && !orders.error && !orders.ownedIds.length && <p>Your library is empty. <a href="#/discover">Explore the catalog</a></p>}
-    {!!orders.ownedIds.length && !current && <p role="status">Loading game details...</p>}
+    {!!orders.ownedIds.length && !current && (unavailable
+      ? <div role="alert"><p>Could not load your wallet currency. {unavailable}</p><button type="button" disabled={walletLoading || walletBusy} onClick={refreshWallet}>Retry wallet</button></div>
+      : <p role="status">Loading game details...</p>)}
     {current && <>
       {result.games.some(item => item.error) && <p role="alert">Some games could not be loaded. <button onClick={() => setAttempt(value => value + 1)}>Retry game details</button></p>}
-      <div className="library-grid">{result.games.map(({ id, game, unavailable, error }) => <article className="library-card" key={id}>
-        <a href={`#/games/${id}`} aria-label={game?.title || `Game #${id}`}>
-          {game?.libraryHero || game?.headerImage || game?.image ? <img src={game.libraryHero || game.headerImage || game.image} alt="" loading="lazy" onError={event => { event.currentTarget.hidden = true }} /> : <div className="library-cover-placeholder" aria-hidden="true" />}
-          <h3>{game?.title || `Game #${id}`}</h3>
+      {!!result.games.length && <>
+        <div className="library-search">
+          <label htmlFor="library-search">Search your library</label>
+          <div><input id="library-search" type="search" value={query} maxLength={200} placeholder="Game title"
+            onChange={event => setQuery(event.target.value)} aria-controls="library-games" />
+            {query && <button type="button" className="button button--secondary" onClick={() => setQuery('')}>Clear search</button>}</div>
+        </div>
+        <p role="status">Showing {visibleGames.length} of {result.games.length} games</p>
+        {!visibleGames.length && <p>No games in your library match this search.</p>}
+      </>}
+      <div id="library-games" className="library-grid">{visibleGames.map(({ id, game, unavailable, error }) => <article className="library-card" key={id} aria-labelledby={`library-title-${id}`}>
+        <a className="library-card__cover" href={`#/games/${encodeURIComponent(id)}`} aria-label={game?.title || `Game #${id}`}>
+          <MediaImage src={game?.libraryPoster || game?.image} fallbackSrc={game?.headerImage || game?.libraryHero} alt="" />
         </a>
+        <h3 id={`library-title-${id}`}>{game?.title || `Game #${id}`}</h3>
         <p>{unavailable ? 'No longer available in the catalog' : error ? 'Game details unavailable' : 'In your library'}</p>
+        <div className="library-card__actions">
+          <a className="button button--secondary" href={`#/games/${encodeURIComponent(id)}`}>View game</a>
+          <a className="button button--secondary" href={`#/products/${encodeURIComponent(id)}/achievements`}>Achievements</a>
+        </div>
       </article>)}</div>
     </>}
   </section>

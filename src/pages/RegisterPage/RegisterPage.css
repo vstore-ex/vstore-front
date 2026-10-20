@@ -3,12 +3,12 @@
   inset: 0;
   z-index: 1000;
   min-height: 100dvh;
-  background: #222831;
+  background: var(--color-surface);
 }
 
 .auth-page {
   overflow: auto;
-  color: #eeeeee;
+  color: var(--color-text);
 }
 
 .auth-page::before {
@@ -65,7 +65,7 @@
 
 .auth-title {
   margin: 0 0 36px 42px;
-  color: #eeeeee;
+  color: var(--color-text);
   font-family: Roboto, Arial, sans-serif;
   font-size: 36px;
   font-weight: 800;
@@ -79,7 +79,7 @@
   border-radius: 20px;
   background:
     linear-gradient(90deg, rgba(24, 27, 32, 0.96), rgba(34, 39, 46, 0.92)),
-    #222831;
+    var(--color-surface);
 }
 
 .auth-card--figma {
@@ -111,7 +111,7 @@
 
 .auth-card--created h2 {
   margin: 0 0 16px;
-  color: #eeeeee;
+  color: var(--color-text);
   font-size: 36px;
   font-weight: 800;
   line-height: normal;
@@ -164,7 +164,7 @@
   border: 1px solid transparent;
   border-radius: 5px;
   padding: 0 18px;
-  color: #eeeeee;
+  color: var(--color-text);
   background: rgba(96, 105, 118, 0.4);
   font-family: Roboto, Arial, sans-serif;
   font-size: 18px;
@@ -213,7 +213,7 @@
 
 .auth-terms input,
 .auth-captcha input {
-  accent-color: #eeeeee;
+  accent-color: var(--color-text);
 }
 
 .auth-terms input {
@@ -225,14 +225,14 @@
 .auth-captcha {
   width: 326px;
   min-height: 62px;
-  border: 1px solid #eeeeee;
+  border: 1px solid var(--color-text);
   border-radius: 4px;
   padding: 10px 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  color: #eeeeee;
+  color: var(--color-text);
   background: #606976;
   cursor: pointer;
 }
@@ -297,7 +297,7 @@
 
 .auth-submit {
   color: rgba(34, 40, 49, 0.8);
-  background: linear-gradient(90deg, #7bc74d 0%, #82ca77 100%);
+  background: linear-gradient(90deg, var(--color-accent) 0%, #82ca77 100%);
 }
 
 .auth-submit--create {
@@ -355,7 +355,7 @@
 }
 
 .form-status--success {
-  color: #7bc74d;
+  color: var(--color-accent);
 }
 
 .qr-panel {
@@ -365,7 +365,7 @@
 
 .qr-panel__title {
   margin: 0 0 27px;
-  color: #7bc74d;
+  color: var(--color-accent);
   font-family: Roboto, Arial, sans-serif;
   font-size: 16px;
   font-weight: 700;

@@ -1,0 +1,58 @@
+/* Existing storefront palette and dimensions, shared without changing page layouts. */
+:root {
+  --color-page: #1f2329;
+  --color-surface: #222831;
+  --color-surface-raised: #292f36;
+  --color-control: #393e46;
+  --color-text: #eeeeee;
+  --color-text-muted: #c4cbd3;
+  --color-accent: #7bc74d;
+  --color-on-accent: #222831;
+  --color-success: #9dde75;
+  --color-warning: #ffd393;
+  --color-error: #ffb4ab;
+  --color-border: #48525f;
+  --color-border-control: #66717c;
+  --color-backdrop: #000b;
+  --color-focus: var(--color-accent);
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 20px;
+  --radius-pill: 999px;
+  --shadow-popover: 0 12px 36px #0006;
+  --shadow-dialog: 0 16px 48px #0006;
+  --focus-ring: 2px solid var(--color-focus);
+  --focus-offset: 3px;
+
+  --duration-fast: 160ms;
+  --duration-normal: 240ms;
+  --ease-standard: ease;
+  --transition-colors: color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
+
+  --font-body: Roboto, Arial, sans-serif;
+  --font-control: Inter, Roboto, Arial, sans-serif;
+  --control-height: 44px;
+  --control-choice-size: 20px;
+  --opacity-disabled: 0.55;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-normal: 0ms;
+  }
+}
