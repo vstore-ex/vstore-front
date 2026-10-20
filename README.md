@@ -21,6 +21,28 @@ report unformatted files. Use the shared check for the migrated scope. Formattin
 are local commands and are not added to CI. Imported assets, generated output, dependencies,
 coverage, Vite caches, and deployment files are excluded through `.prettierignore`.
 
+## Local unit and component tests
+
+Use Node.js 22.12+ (or a supported newer LTS) and install dependencies with `npm ci`.
+Tests run headlessly with Vitest, jsdom, and React Testing Library; no backend,
+database, or Vite development server is needed.
+
+- `npm test`: run the unit/component suite once.
+- `npm run test:watch`: rerun affected tests while editing.
+- `npm run test:coverage`: run with text, HTML, and LCOV coverage reports in `coverage/`.
+- `npm test -- tests/api/client.test.js`: run a specific suite.
+
+The API tests cover authentication headers, refresh/error handling, cart contracts,
+currency formatting, and review validation. Shopping tests exercise the real state
+providers, header, cart/checkout, and wishlist components with isolated API responses.
+Fixtures and request mocks live only under `tests/`; unexpected fetch calls fail tests.
+The dialog shim checks visibility and state, not native focus trapping or browser layout.
+Coverage is scoped to the modules under test and is not a whole-application coverage claim.
+
+`vitest.config.js` is separate from the development/deployment configuration. These
+commands are local; CI integration from #65 remains pending. The existing Playwright
+`test:e2e` command is unchanged and has its own running-app requirements.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
