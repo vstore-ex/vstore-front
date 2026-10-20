@@ -16,11 +16,42 @@ export default function AddToCartButton({ gameId, className = 'button button--se
     }
     if (owned || orders.loading || orders.error) return
     setError('')
-    try { const added = await addToCart(gameId); if (added) window.location.hash = '#/cart' }
-    catch (reason) { setError(cartError(reason)) }
+    try {
+      const added = await addToCart(gameId)
+      if (added) window.location.hash = '#/cart'
+    } catch (reason) {
+      setError(cartError(reason))
+    }
   }
-  if (owned) return <div className="add-to-cart-control"><span>In your library</span> <a href="#/account">View library</a></div>
-  return <div className="add-to-cart-control"><button type="button" className={className} disabled={busy || (isAuthenticated && (orders.loading || !!orders.error))} onClick={add}>{isAuthenticated && orders.loading ? 'Checking library...' : 'Add to cart'}</button>
-    {isAuthenticated && orders.error && <p role="alert">Could not check your library. <button type="button" onClick={orders.retry}>Retry</button></p>}
-    {error && <p className="cart-action-error" role="alert">{error}</p>}</div>
+  if (owned)
+    return (
+      <div className="add-to-cart-control">
+        <span>In your library</span> <a href="#/account">View library</a>
+      </div>
+    )
+  return (
+    <div className="add-to-cart-control">
+      <button
+        type="button"
+        className={className}
+        disabled={busy || (isAuthenticated && (orders.loading || !!orders.error))}
+        onClick={add}
+      >
+        {isAuthenticated && orders.loading ? 'Checking library...' : 'Add to cart'}
+      </button>
+      {isAuthenticated && orders.error && (
+        <p role="alert">
+          Could not check your library.{' '}
+          <button type="button" onClick={orders.retry}>
+            Retry
+          </button>
+        </p>
+      )}
+      {error && (
+        <p className="cart-action-error" role="alert">
+          {error}
+        </p>
+      )}
+    </div>
+  )
 }

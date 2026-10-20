@@ -39,7 +39,8 @@
   --duration-fast: 160ms;
   --duration-normal: 240ms;
   --ease-standard: ease;
-  --transition-colors: color var(--duration-fast) var(--ease-standard),
+  --transition-colors:
+    color var(--duration-fast) var(--ease-standard),
     background-color var(--duration-fast) var(--ease-standard),
     border-color var(--duration-fast) var(--ease-standard);
 
