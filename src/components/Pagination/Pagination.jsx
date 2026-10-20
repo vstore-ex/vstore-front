@@ -4,12 +4,20 @@ function buildPages(currentPage, totalPages, maxVisiblePages) {
   }
 
   if (currentPage <= maxVisiblePages - 2) {
-    return [...Array.from({ length: maxVisiblePages }, (_, index) => index + 1), 'end-ellipsis', totalPages]
+    return [
+      ...Array.from({ length: maxVisiblePages }, (_, index) => index + 1),
+      'end-ellipsis',
+      totalPages,
+    ]
   }
 
   if (currentPage >= totalPages - (maxVisiblePages - 3)) {
     const firstVisiblePage = totalPages - maxVisiblePages + 1
-    return [1, 'start-ellipsis', ...Array.from({ length: maxVisiblePages }, (_, index) => firstVisiblePage + index)]
+    return [
+      1,
+      'start-ellipsis',
+      ...Array.from({ length: maxVisiblePages }, (_, index) => firstVisiblePage + index),
+    ]
   }
 
   const pages = [1]

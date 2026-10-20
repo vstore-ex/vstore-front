@@ -12,6 +12,18 @@ import './styles/controls.css'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <AuthProvider><WalletProvider><CurrencyProvider><CartProvider><OrdersProvider><WishlistProvider><App /></WishlistProvider></OrdersProvider></CartProvider></CurrencyProvider></WalletProvider></AuthProvider>
+    <AuthProvider>
+      <WalletProvider>
+        <CurrencyProvider>
+          <CartProvider>
+            <OrdersProvider>
+              <WishlistProvider>
+                <App />
+              </WishlistProvider>
+            </OrdersProvider>
+          </CartProvider>
+        </CurrencyProvider>
+      </WalletProvider>
+    </AuthProvider>
   </StrictMode>,
 )
