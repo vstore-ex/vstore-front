@@ -25,7 +25,7 @@
 .news-body .product-markdown :is(img,.catalog-placeholder) { max-width: 100%; height: auto; aspect-ratio: auto; }
 .news-body .product-markdown pre { overflow: auto; }
 .news-body .product-markdown a { color: var(--color-accent); }
-.news-game-link { display: inline-block; text-decoration: none; margin-top: 32px; }
+.news-game-link { display: inline-block; max-width: 100%; overflow-wrap: anywhere; text-decoration: none; margin-top: 32px; }
 .news-status { min-height: 32px; }
 .news-page .catalog-status { margin: 0; padding: 12px 0; }
 .product-detail-page .product-news { margin-top: 60px; }

@@ -24,14 +24,14 @@ export default function MediaGallery({ game }) {
     if (!expanded) return
     const element = stage.current
     const previousFocus = document.activeElement
-    const previousOverflow = document.body.style.overflow
+    const alreadyLocked = document.body.classList.contains('gallery-open')
     const siblings = []
     for (let node = element; node?.parentElement; node = node.parentElement) {
       for (const sibling of node.parentElement.children) {
         if (sibling !== node) { siblings.push([sibling, sibling.inert]); sibling.inert = true }
       }
     }
-    document.body.style.overflow = 'hidden'
+    document.body.classList.add('gallery-open')
     expandButton.current?.focus()
     const keydown = event => {
       if (event.key === 'Escape') { event.preventDefault(); setExpanded(false) }
@@ -45,7 +45,7 @@ export default function MediaGallery({ game }) {
     element.addEventListener('keydown', keydown)
     return () => {
       element.removeEventListener('keydown', keydown)
-      document.body.style.overflow = previousOverflow
+      if (!alreadyLocked) document.body.classList.remove('gallery-open')
       siblings.forEach(([sibling, inert]) => { sibling.inert = inert })
       if (previousFocus?.isConnected) previousFocus.focus()
     }

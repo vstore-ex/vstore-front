@@ -57,6 +57,8 @@
 
 .account-hero__identity {
   align-self: center;
+  min-width: 0;
+  overflow-wrap: anywhere;
   padding-top: 14px;
 }
 
@@ -89,6 +91,8 @@
 
 .account-stat {
   display: grid;
+  min-width: 0;
+  overflow-wrap: anywhere;
   gap: 8px;
   text-align: center;
 }
@@ -366,7 +370,7 @@
   }
 
   .account-hero {
-    grid-template-columns: 112px 1fr;
+    grid-template-columns: 112px minmax(0, 1fr);
     gap: 16px;
   }
 

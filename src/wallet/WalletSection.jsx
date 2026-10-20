@@ -35,10 +35,10 @@ function Transactions({ revision }) {
       <caption className="wallet-sr-only">Wallet transaction history, page {data.page}</caption>
       <thead><tr><th scope="col">Date</th><th scope="col">Type</th><th scope="col">Amount</th><th scope="col">Balance after</th></tr></thead>
       <tbody>{data.items.map(item => <tr key={item.id}>
-        <td><time dateTime={item.created_at}>{new Date(item.created_at).toLocaleString()}</time></td>
-        <td>{transactionLabels[item.transaction_type] || 'Other transaction'}{item.description && <small>{item.description}</small>}</td>
-        <td className={moneyCents(item.amount) > 0 ? 'wallet-credit' : 'wallet-debit'}>{moneyCents(item.amount) > 0 ? '+' : ''}{formatMoney(item.amount, item.currency)}</td>
-        <td>{formatMoney(item.balance_after, item.currency)}</td>
+        <td><span className="wallet-cell-label" aria-hidden="true">Date</span><time dateTime={item.created_at}>{new Date(item.created_at).toLocaleString()}</time></td>
+        <td><span className="wallet-cell-label" aria-hidden="true">Type</span><span>{transactionLabels[item.transaction_type] || 'Other transaction'}{item.description && <small>{item.description}</small>}</span></td>
+        <td className={moneyCents(item.amount) > 0 ? 'wallet-credit' : 'wallet-debit'}><span className="wallet-cell-label" aria-hidden="true">Amount</span><span>{moneyCents(item.amount) > 0 ? '+' : ''}{formatMoney(item.amount, item.currency)}</span></td>
+        <td><span className="wallet-cell-label" aria-hidden="true">Balance after</span><span>{formatMoney(item.balance_after, item.currency)}</span></td>
       </tr>)}</tbody>
     </table></div>}
     {data && data.total_pages > 1 && <nav className="wallet-pagination" aria-label="Transaction pages">

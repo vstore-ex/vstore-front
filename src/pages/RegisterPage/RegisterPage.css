@@ -39,8 +39,8 @@
   left: 10px;
   top: 10px;
   z-index: 3;
-  width: 40px;
-  height: 40px;
+  width: var(--control-height);
+  height: var(--control-height);
   display: grid;
   place-items: center;
   border: 0;
@@ -198,6 +198,7 @@
 }
 
 .auth-terms {
+  min-height: var(--control-height);
   width: min(594px, 100%);
   margin: 4px 0 18px;
   display: grid;
@@ -273,7 +274,7 @@
 }
 
 .auth-check-error {
-  margin: -10px 0 12px;
+  margin: 8px 0 12px;
 }
 
 .auth-actions {
@@ -432,6 +433,10 @@
   .auth-card--figma {
     padding: 24px 18px;
     border-radius: 14px;
+  }
+
+  .auth-card--create {
+    padding: 24px 18px;
   }
 
   .auth-card__texture {

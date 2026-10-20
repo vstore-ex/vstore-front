@@ -60,14 +60,14 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
   const activeForm = isRegister ? registerForm : loginForm
 
   useEffect(() => {
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    const alreadyLocked = document.body.classList.contains('auth-open')
+    document.body.classList.add('auth-open')
     const restored = () => { setIsSubmitting(false); setGoogleConnecting(false) }
     window.addEventListener('pageshow', restored)
 
     return () => {
       window.removeEventListener('pageshow', restored)
-      document.body.style.overflow = previousOverflow
+      if (!alreadyLocked) document.body.classList.remove('auth-open')
     }
   }, [])
 
