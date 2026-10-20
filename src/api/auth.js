@@ -22,15 +22,24 @@ export async function registerUser(payload) {
 }
 export async function loginUser(payload) {
   await waitForRefresh()
-  const res = await apiRequest('/auth/login', { method: 'POST', body: new URLSearchParams(payload), auth: false })
+  const res = await apiRequest('/auth/login', {
+    method: 'POST',
+    body: new URLSearchParams(payload),
+    auth: false,
+  })
   if (res?.access_token) {
-    try { localStorage.setItem('vstore:token', res.access_token) } catch { /* storage disabled */ }
+    try {
+      localStorage.setItem('vstore:token', res.access_token)
+    } catch {
+      /* storage disabled */
+    }
   }
   return { data: await getCurrentUser(), message: 'Signed in successfully.' }
 }
 export async function getCurrentUser() {
   const data = await apiRequest('/users/me')
-  if (data?.id == null || typeof data.username !== 'string') throw new Error('The server returned an invalid account.')
+  if (data?.id == null || typeof data.username !== 'string')
+    throw new Error('The server returned an invalid account.')
   return normalizeUser(data)
 }
 export const refreshUser = refreshSession
@@ -41,34 +50,54 @@ export async function logoutUser(all = false) {
   try {
     await apiRequest(all ? '/auth/logout-all' : '/auth/logout', { method: 'POST', auth: false })
   } finally {
-    try { localStorage.removeItem('vstore:token') } catch { /* storage disabled */ }
+    try {
+      localStorage.removeItem('vstore:token')
+    } catch {
+      /* storage disabled */
+    }
   }
 }
 export async function updateUser(body) {
   return normalizeUser(await apiRequest('/users/me', { method: 'PATCH', body }))
 }
 export async function updateAvatar(file) {
-  const body = new FormData(); body.append('file', file)
-  return normalizeUser(await apiRequest('/users/me/avatar', { method: 'PATCH', body, timeout: 120000 }))
+  const body = new FormData()
+  body.append('file', file)
+  return normalizeUser(
+    await apiRequest('/users/me/avatar', { method: 'PATCH', body, timeout: 120000 }),
+  )
 }
 export function registrationErrors(error) {
   if (Array.isArray(error.errors) && error.errors.length > 0) {
-    return Object.fromEntries(error.errors.map(item => [item.field, item.message]))
+    return Object.fromEntries(error.errors.map((item) => [item.field, item.message]))
   }
-  if (Array.isArray(error.detail)) return Object.fromEntries(error.detail.map(item => [item.loc?.at(-1), item.msg]))
+  if (Array.isArray(error.detail))
+    return Object.fromEntries(error.detail.map((item) => [item.loc?.at(-1), item.msg]))
   if (error.status !== 400 && error.status !== 422) return {}
   if (/email/i.test(error.message)) return { email: error.message }
   if (/username/i.test(error.message)) return { username: error.message }
-  if (/already exists/i.test(error.message)) return { username: 'Username or email already exists.', email: 'Username or email already exists.' }
+  if (/already exists/i.test(error.message))
+    return {
+      username: 'Username or email already exists.',
+      email: 'Username or email already exists.',
+    }
   return {}
 }
 
 export async function getGoogleAuthorizationUrl() {
   const data = await apiRequest('/auth/google/login?redirect=false', { auth: false })
   let url
-  try { url = new URL(data?.authorization_url) } catch { throw new Error('Google sign-in is unavailable. Please try again.') }
-  if (url.origin !== 'https://accounts.google.com' || url.pathname !== '/o/oauth2/v2/auth' ||
-      !data?.state || url.searchParams.get('state') !== data.state) {
+  try {
+    url = new URL(data?.authorization_url)
+  } catch {
+    throw new Error('Google sign-in is unavailable. Please try again.')
+  }
+  if (
+    url.origin !== 'https://accounts.google.com' ||
+    url.pathname !== '/o/oauth2/v2/auth' ||
+    !data?.state ||
+    url.searchParams.get('state') !== data.state
+  ) {
     throw new Error('Google sign-in is unavailable. Please try again.')
   }
   return url.href
