@@ -2,8 +2,7 @@
   min-height: 1460px;
   color: var(--color-text);
   background:
-    linear-gradient(98deg, rgba(0, 0, 0, 0) 7%, rgba(123, 199, 77, 0.1) 93%),
-    var(--color-surface);
+    linear-gradient(98deg, rgba(0, 0, 0, 0) 7%, rgba(123, 199, 77, 0.1) 93%), var(--color-surface);
 }
 
 .support-page__inner {

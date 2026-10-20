@@ -15,11 +15,12 @@ ESLint continues to check code quality, with conflicting formatting rules disabl
   cart, data, hooks, orders, utilities, and wishlist modules (including state providers).
 - To format a single file, use `npm exec -- prettier --write src/api/client.js`.
 
-The migration is staged: shared logic is covered by #69; screens, components, and CSS
-remain for #70. Until that second batch is migrated, the full-source check is expected to
-report unformatted files. Use the shared check for the migrated scope. Formatting checks
-are local commands and are not added to CI. Imported assets, generated output, dependencies,
-coverage, Vite caches, and deployment files are excluded through `.prettierignore`.
+Shared logic (#69) and the remaining screens, components, and CSS (#70) now follow the
+same formatting rules. Run `npm run format:check` to verify all source files before
+submitting changes. Formatting checks remain local commands; the CI enforcement
+acceptance criteria in #70 are still pending. Imported assets, generated output,
+dependencies, coverage, Vite caches, and deployment files are excluded through
+`.prettierignore`.
 
 ## Local unit and component tests
 

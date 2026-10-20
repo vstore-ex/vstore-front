@@ -19,24 +19,35 @@ import { isOAuthCallback } from './auth/oauth'
 import './auth/Auth.css'
 import './App.css'
 
-
 const defaultRoute = { view: 'discover', gameId: null }
 
 function parseRouteFromHash() {
-  const route = window.location.hash ? window.location.hash.replace(/^#\/?/, '') : window.location.pathname.replace(/^\//, '') + window.location.search
+  const route = window.location.hash
+    ? window.location.hash.replace(/^#\/?/, '')
+    : window.location.pathname.replace(/^\//, '') + window.location.search
   const [path, query] = route.split('?')
   const parts = path.split('/').filter(Boolean)
-  if (parts[0] === 'login') return { view: 'login', gameId: null, next: new URLSearchParams(query).get('next') || 'discover' }
+  if (parts[0] === 'login')
+    return {
+      view: 'login',
+      gameId: null,
+      next: new URLSearchParams(query).get('next') || 'discover',
+    }
 
   if (!parts.length || parts[0] === 'discover') {
     return defaultRoute
   }
 
-  if (parts[0] === 'users' && parts[1]) return { view: 'userProfile', userId: parts[1], gameId: null }
+  if (parts[0] === 'users' && parts[1])
+    return { view: 'userProfile', userId: parts[1], gameId: null }
 
-  if (parts[0] === 'news') return { view: parts[1] ? 'newsDetail' : 'news', newsId: parts[1], gameId: null }
+  if (parts[0] === 'news')
+    return { view: parts[1] ? 'newsDetail' : 'news', newsId: parts[1], gameId: null }
 
-  if ((parts[0] === 'games' || (parts[0] === 'products' && parts[2] === 'achievements')) && parts[1]) {
+  if (
+    (parts[0] === 'games' || (parts[0] === 'products' && parts[2] === 'achievements')) &&
+    parts[1]
+  ) {
     return {
       view: parts[2] === 'achievements' ? 'achievements' : 'product',
       gameId: parts[1],
@@ -64,7 +75,15 @@ function navigateTo(path) {
 function App() {
   const initialRoute = parseRouteFromHash()
   const [authMode, setAuthMode] = useState(null)
-  const { currentUser: user, isAuthenticated, status, error, isLoggingOut, logout, updateUser } = useAuth()
+  const {
+    currentUser: user,
+    isAuthenticated,
+    status,
+    error,
+    isLoggingOut,
+    logout,
+    updateUser,
+  } = useAuth()
   const completedLogin = useRef(false)
   const [selectedGameId, setSelectedGameId] = useState(initialRoute.gameId)
   const [selectedUserId, setSelectedUserId] = useState(initialRoute.userId)
@@ -94,13 +113,19 @@ function App() {
 
   useEffect(() => {
     if (status === 'loading' || status === 'banned' || status === 'error' || isLoggingOut) return
-    if (['account', 'wallet', 'orders', 'cart', 'wishlist'].includes(currentView) && !isAuthenticated) {
+    if (
+      ['account', 'wallet', 'orders', 'cart', 'wishlist'].includes(currentView) &&
+      !isAuthenticated
+    ) {
       navigateTo('login?next=' + currentView)
     }
   }, [status, isLoggingOut, currentView, isAuthenticated])
 
   useEffect(() => {
-    const expired = () => { if (isAuthenticated && !['news', 'newsDetail', 'userProfile'].includes(currentView)) navigateTo('login?next=' + currentView) }
+    const expired = () => {
+      if (isAuthenticated && !['news', 'newsDetail', 'userProfile'].includes(currentView))
+        navigateTo('login?next=' + currentView)
+    }
     window.addEventListener('vstore:session-expired', expired)
     return () => window.removeEventListener('vstore:session-expired', expired)
   }, [currentView, isAuthenticated])
@@ -120,7 +145,12 @@ function App() {
   async function handleAuthenticated() {
     completedLogin.current = true
     const route = parseRouteFromHash()
-    if (route.view === 'login') navigateTo(/^(?:account|wallet|orders|(?:wishlist|cart)(?:\?add=[^#&]+)?)$/.test(route.next) ? route.next : 'discover')
+    if (route.view === 'login')
+      navigateTo(
+        /^(?:account|wallet|orders|(?:wishlist|cart)(?:\?add=[^#&]+)?)$/.test(route.next)
+          ? route.next
+          : 'discover',
+      )
 
     if (pendingAction?.type === 'open-cart') {
       openCartPage()
@@ -157,24 +187,57 @@ function App() {
     navigateTo('wishlist')
   }
 
-  function openCart() { openCartPage() }
-  function openWishlist() { openWishlistPage() }
+  function openCart() {
+    openCartPage()
+  }
+  function openWishlist() {
+    openWishlistPage()
+  }
 
   async function signOut(all = false) {
-    setAuthMode(null); setPendingAction(null); navigateTo('discover')
-    try { await logout(all) } catch { /* The auth context displays the server error. */ }
+    setAuthMode(null)
+    setPendingAction(null)
+    navigateTo('discover')
+    try {
+      await logout(all)
+    } catch {
+      /* The auth context displays the server error. */
+    }
   }
   if (isOAuthCallback) return <OAuthCallbackPage />
   const publicNews = ['news', 'newsDetail'].includes(currentView)
   const publicPage = publicNews || currentView === 'userProfile'
-  if (!publicPage && status === 'loading') return <main className="store-page"><p className="store-status" role="status">Loading account...</p></main>
-  if (!publicPage && status === 'banned') return <main className="store-page"><section className="store-status" role="alert">
-    <h1>Account blocked</h1><p>Your account is blocked. Contact support for assistance.</p>
-    <button type="button" disabled={isLoggingOut} onClick={() => signOut()}>Sign out</button>
-  </section></main>
-  if (!publicPage && status === 'error') return <main className="store-page"><section className="store-status" role="alert">
-    <p>{error}</p><button type="button" onClick={() => window.location.reload()}>Retry loading account</button>
-  </section></main>
+  if (!publicPage && status === 'loading')
+    return (
+      <main className="store-page">
+        <p className="store-status" role="status">
+          Loading account...
+        </p>
+      </main>
+    )
+  if (!publicPage && status === 'banned')
+    return (
+      <main className="store-page">
+        <section className="store-status" role="alert">
+          <h1>Account blocked</h1>
+          <p>Your account is blocked. Contact support for assistance.</p>
+          <button type="button" disabled={isLoggingOut} onClick={() => signOut()}>
+            Sign out
+          </button>
+        </section>
+      </main>
+    )
+  if (!publicPage && status === 'error')
+    return (
+      <main className="store-page">
+        <section className="store-status" role="alert">
+          <p>{error}</p>
+          <button type="button" onClick={() => window.location.reload()}>
+            Retry loading account
+          </button>
+        </section>
+      </main>
+    )
 
   return (
     <main className="store-page">
@@ -192,11 +255,30 @@ function App() {
         cartCount={cart.count}
         wishlistCount={wishlist?.count ?? 0}
       />
-      {error && !publicPage && <div className="store-status" role="alert">{error}
-        {error.startsWith('Could not complete sign out') && <button type="button" disabled={isLoggingOut} onClick={() => signOut()}>Retry sign out</button>}
-      </div>}
-      {currentView === 'userProfile' ? <UserProfilePage key={selectedUserId} id={selectedUserId} onSignIn={() => openAuth('login')} /> : currentView === 'news' ? <NewsPage /> : currentView === 'newsDetail' ? <NewsDetailPage key={selectedNewsId} id={selectedNewsId} /> : ['account', 'wallet', 'orders', 'cart', 'wishlist'].includes(currentView) && !user ? (
-        <p className="store-status" role="status">Please sign in to continue.</p>
+      {error && !publicPage && (
+        <div className="store-status" role="alert">
+          {error}
+          {error.startsWith('Could not complete sign out') && (
+            <button type="button" disabled={isLoggingOut} onClick={() => signOut()}>
+              Retry sign out
+            </button>
+          )}
+        </div>
+      )}
+      {currentView === 'userProfile' ? (
+        <UserProfilePage
+          key={selectedUserId}
+          id={selectedUserId}
+          onSignIn={() => openAuth('login')}
+        />
+      ) : currentView === 'news' ? (
+        <NewsPage />
+      ) : currentView === 'newsDetail' ? (
+        <NewsDetailPage key={selectedNewsId} id={selectedNewsId} />
+      ) : ['account', 'wallet', 'orders', 'cart', 'wishlist'].includes(currentView) && !user ? (
+        <p className="store-status" role="status">
+          Please sign in to continue.
+        </p>
       ) : ['product', 'achievements'].includes(currentView) ? (
         <ProductDetailPage
           key={selectedGameId}
@@ -206,7 +288,13 @@ function App() {
           onViewAllAchievements={() => navigateTo(`games/${selectedGameId}/achievements`)}
         />
       ) : ['account', 'wallet', 'orders'].includes(currentView) ? (
-        <AccountPage user={user} onUpdated={updateUser} onLogoutAll={() => signOut(true)} isLoggingOut={isLoggingOut} focusWallet={currentView === 'wallet'} />
+        <AccountPage
+          user={user}
+          onUpdated={updateUser}
+          onLogoutAll={() => signOut(true)}
+          isLoggingOut={isLoggingOut}
+          focusWallet={currentView === 'wallet'}
+        />
       ) : currentView === 'cart' ? (
         <CartPage />
       ) : currentView === 'wishlist' ? (

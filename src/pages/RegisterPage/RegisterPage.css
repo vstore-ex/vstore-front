@@ -12,25 +12,21 @@
 }
 
 .auth-page::before {
-  content: "";
+  content: '';
   position: fixed;
   inset: 0;
   top: 0;
   background:
     linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)),
-    url("../../assets/auth-background.png") center / cover no-repeat;
+    url('../../assets/auth-background.png') center / cover no-repeat;
   opacity: 0.2;
 }
 
 .auth-page::after {
-  content: "";
+  content: '';
   position: fixed;
   inset: 0;
-  background: linear-gradient(
-    169.8deg,
-    rgba(0, 0, 0, 0) 6.66%,
-    rgba(123, 199, 77, 0.35) 93.34%
-  );
+  background: linear-gradient(169.8deg, rgba(0, 0, 0, 0) 6.66%, rgba(123, 199, 77, 0.35) 93.34%);
   opacity: 0.5;
 }
 
@@ -78,8 +74,7 @@
   border: 0;
   border-radius: 20px;
   background:
-    linear-gradient(90deg, rgba(24, 27, 32, 0.96), rgba(34, 39, 46, 0.92)),
-    var(--color-surface);
+    linear-gradient(90deg, rgba(24, 27, 32, 0.96), rgba(34, 39, 46, 0.92)), var(--color-surface);
 }
 
 .auth-card--figma {
@@ -176,7 +171,7 @@
   box-shadow: 0 0 0 3px rgba(123, 199, 77, 0.16);
 }
 
-.auth-field input[aria-invalid="true"] {
+.auth-field input[aria-invalid='true'] {
   border-color: #e67474;
 }
 
@@ -480,7 +475,29 @@
   }
 }
 
-.auth-google { width: 100%; min-height: 48px; padding: 12px 20px; border: 1px solid #8d959f; border-radius: 5px; background: #fff; color: #202124; font: inherit; font-weight: 600; cursor: pointer; }
-.auth-google:focus-visible { outline: 3px solid #8bd04f; outline-offset: 3px; }
-.auth-google:disabled { opacity: .65; cursor: wait; }
-.auth-method-divider { margin: 16px 0; text-align: center; color: #c8ced4; font-size: 14px; }
+.auth-google {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 20px;
+  border: 1px solid #8d959f;
+  border-radius: 5px;
+  background: #fff;
+  color: #202124;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.auth-google:focus-visible {
+  outline: 3px solid #8bd04f;
+  outline-offset: 3px;
+}
+.auth-google:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+.auth-method-divider {
+  margin: 16px 0;
+  text-align: center;
+  color: #c8ced4;
+  font-size: 14px;
+}

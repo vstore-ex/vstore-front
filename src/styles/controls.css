@@ -22,8 +22,17 @@
 }
 
 /* Keep compact icon and text actions tappable across pointer types. */
-:root :is(.back-to-top, .gallery-expand, .product-text-button, .review-card__reactions button,
-  .wishlist-item__remove, .search-field__submit, .icon-button, .currency-trigger) {
+:root
+  :is(
+    .back-to-top,
+    .gallery-expand,
+    .product-text-button,
+    .review-card__reactions button,
+    .wishlist-item__remove,
+    .search-field__submit,
+    .icon-button,
+    .currency-trigger
+  ) {
   min-width: var(--control-height);
   min-height: var(--control-height);
 }
@@ -41,7 +50,9 @@
   text-decoration: none;
 }
 
-.button--secondary { background: var(--color-control); }
+.button--secondary {
+  background: var(--color-control);
+}
 .button--accent {
   border-color: var(--color-accent);
   color: var(--color-on-accent);
@@ -49,18 +60,26 @@
 }
 
 @media (hover: hover) {
-  :where(button:not(:disabled):not([aria-disabled="true"])),
-  .button:not(:disabled):not([aria-disabled="true"]) {
-    transition: var(--transition-colors), filter var(--duration-fast) var(--ease-standard);
+  :where(button:not(:disabled):not([aria-disabled='true'])),
+  .button:not(:disabled):not([aria-disabled='true']) {
+    transition:
+      var(--transition-colors),
+      filter var(--duration-fast) var(--ease-standard);
   }
 
-  :where(button:not(:disabled):not([aria-disabled="true"]):hover),
-  .button:not(:disabled):not([aria-disabled="true"]):hover {
+  :where(button:not(:disabled):not([aria-disabled='true']):hover),
+  .button:not(:disabled):not([aria-disabled='true']):hover {
     filter: brightness(1.08);
   }
 }
 
-:where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]):not([type="file"]):not([type="submit"]):not([type="button"]), textarea, select) {
+:where(
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='hidden']):not(
+      [type='file']
+    ):not([type='submit']):not([type='button']),
+  textarea,
+  select
+) {
   min-height: var(--control-height);
   min-width: 0;
   max-width: 100%;
@@ -73,10 +92,14 @@
 }
 
 /* Search has a shared outer field and keeps its compact inner input. */
-.search-field__input { min-height: 0; }
+.search-field__input {
+  min-height: 0;
+}
 
-:where(textarea) { resize: vertical; }
-:where(input[type="file"])::file-selector-button {
+:where(textarea) {
+  resize: vertical;
+}
+:where(input[type='file'])::file-selector-button {
   min-height: var(--control-height);
   margin-right: var(--space-3);
   padding: var(--space-2) var(--space-3);
@@ -88,8 +111,11 @@
   cursor: pointer;
 }
 
-:where(input, textarea)::placeholder { color: var(--color-text-muted); opacity: 1; }
-:where(input[type="checkbox"], input[type="radio"]) {
+:where(input, textarea)::placeholder {
+  color: var(--color-text-muted);
+  opacity: 1;
+}
+:where(input[type='checkbox'], input[type='radio']) {
   width: var(--control-choice-size);
   height: var(--control-choice-size);
   flex-shrink: 0;
@@ -103,21 +129,27 @@
   outline-offset: var(--focus-offset);
 }
 
-:root :is(input, textarea, select):is([aria-invalid="true"], :user-invalid) {
+:root :is(input, textarea, select):is([aria-invalid='true'], :user-invalid) {
   border-color: var(--color-error);
 }
 
 :root :is(button, input, textarea, select):disabled,
-:root .button[aria-disabled="true"] {
+:root .button[aria-disabled='true'] {
   opacity: var(--opacity-disabled);
   cursor: not-allowed;
   filter: none;
 }
 
 .store-form__error,
-.store-form__status { margin: var(--space-1) 0 0; }
-.store-form__error { color: var(--color-error); }
-.store-form__status { color: var(--color-success); }
+.store-form__status {
+  margin: var(--space-1) 0 0;
+}
+.store-form__error {
+  color: var(--color-error);
+}
+.store-form__status {
+  color: var(--color-success);
+}
 
 .ui-dialog {
   width: min(var(--dialog-width, 520px), calc(100% - var(--space-8)));
@@ -132,9 +164,16 @@
   box-shadow: var(--shadow-dialog);
 }
 
-.ui-dialog[open] { animation: dialog-enter var(--duration-fast) var(--ease-standard); }
-.ui-dialog::backdrop { background: var(--color-backdrop); }
-.ui-dialog h2 { margin-top: 0; padding-right: var(--control-height); }
+.ui-dialog[open] {
+  animation: dialog-enter var(--duration-fast) var(--ease-standard);
+}
+.ui-dialog::backdrop {
+  background: var(--color-backdrop);
+}
+.ui-dialog h2 {
+  margin-top: 0;
+  padding-right: var(--control-height);
+}
 .ui-dialog__close {
   position: absolute;
   inset: var(--space-3) var(--space-3) auto auto;
@@ -152,15 +191,27 @@
 }
 
 @keyframes dialog-enter {
-  from { opacity: 0; transform: translateY(var(--space-2)); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(var(--space-2));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media (max-width: 600px) {
-  .ui-dialog { padding: var(--space-5); }
+  .ui-dialog {
+    padding: var(--space-5);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  :root :is(button, input, textarea, select, .button) { transition: none; }
-  .ui-dialog[open] { animation: none; }
+  :root :is(button, input, textarea, select, .button) {
+    transition: none;
+  }
+  .ui-dialog[open] {
+    animation: none;
+  }
 }

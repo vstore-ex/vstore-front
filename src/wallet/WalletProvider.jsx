@@ -20,15 +20,20 @@ function WalletSession({ owner, children }) {
     request.current?.abort()
     const controller = new AbortController()
     request.current = controller
-    return getWallet(controller.signal).then(wallet => {
-      if (!controller.signal.aborted && active.current) {
-        setData(wallet); setError(''); setRevision(value => value + 1)
-      }
-    }).catch(reason => {
-      if (!controller.signal.aborted && active.current) setError(walletError(reason))
-    }).finally(() => {
-      if (!controller.signal.aborted && active.current) setLoading(false)
-    })
+    return getWallet(controller.signal)
+      .then((wallet) => {
+        if (!controller.signal.aborted && active.current) {
+          setData(wallet)
+          setError('')
+          setRevision((value) => value + 1)
+        }
+      })
+      .catch((reason) => {
+        if (!controller.signal.aborted && active.current) setError(walletError(reason))
+      })
+      .finally(() => {
+        if (!controller.signal.aborted && active.current) setLoading(false)
+      })
   }, [owner])
 
   const refresh = useCallback(() => {
@@ -41,7 +46,11 @@ function WalletSession({ owner, children }) {
     active.current = true
     load()
     window.addEventListener('focus', refresh)
-    return () => { active.current = false; request.current?.abort(); window.removeEventListener('focus', refresh) }
+    return () => {
+      active.current = false
+      request.current?.abort()
+      window.removeEventListener('focus', refresh)
+    }
   }, [load, refresh])
 
   async function mutate(action, type) {
@@ -49,27 +58,54 @@ function WalletSession({ owner, children }) {
     if (lock.current) throw new Error('A wallet operation is already being processed.')
     lock.current = true
     request.current?.abort()
-    setBusy(true); setOperation(type); setLoading(false)
+    setBusy(true)
+    setOperation(type)
+    setLoading(false)
     try {
       const wallet = await action()
       if (!active.current) return null
-      setData(wallet); setError(''); setRevision(value => value + 1)
+      setData(wallet)
+      setError('')
+      setRevision((value) => value + 1)
       return wallet
     } catch (reason) {
       // A lost response may still represent a successful deposit. Reconcile, never auto-retry a payment.
       lock.current = false
       await refresh()
       throw reason
-    } finally { lock.current = false; if (active.current) { setBusy(false); setOperation(null) } }
+    } finally {
+      lock.current = false
+      if (active.current) {
+        setBusy(false)
+        setOperation(null)
+      }
+    }
   }
 
-  return <WalletContext.Provider value={{ data, loading, error, busy, operation, revision, refresh,
-    topUp: amount => mutate(() => topUpWallet(amount), 'top-up'),
-    changeCurrency: code => mutate(() => changeCurrency(code), 'currency'),
-  }}>{children}</WalletContext.Provider>
+  return (
+    <WalletContext.Provider
+      value={{
+        data,
+        loading,
+        error,
+        busy,
+        operation,
+        revision,
+        refresh,
+        topUp: (amount) => mutate(() => topUpWallet(amount), 'top-up'),
+        changeCurrency: (code) => mutate(() => changeCurrency(code), 'currency'),
+      }}
+    >
+      {children}
+    </WalletContext.Provider>
+  )
 }
 
 export default function WalletProvider({ children }) {
   const { currentUser } = useAuth()
-  return <WalletSession key={currentUser?.id ?? 'guest'} owner={currentUser?.id}>{children}</WalletSession>
+  return (
+    <WalletSession key={currentUser?.id ?? 'guest'} owner={currentUser?.id}>
+      {children}
+    </WalletSession>
+  )
 }
