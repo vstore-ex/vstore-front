@@ -4,12 +4,10 @@ import { useCart } from '../cart/context'
 import { useAuth } from '../auth/context'
 import { OrdersContext } from './context'
 
-export default function OrdersProvider({ children }) {
-  const { currentUser } = useAuth()
+function OrdersSession({ owner, children }) {
   const { orderVersion, lastOrder } = useCart()
   const [attempt, setAttempt] = useState(0)
   const [result, setResult] = useState(null)
-  const owner = currentUser?.id
   useEffect(() => {
     const refresh = () => setAttempt((value) => value + 1)
     window.addEventListener('focus', refresh)
@@ -27,13 +25,21 @@ export default function OrdersProvider({ children }) {
       })
       .catch((error) => {
         if (!controller.signal.aborted)
-          setResult({ owner, orderVersion, attempt, error: error.message })
+          setResult((previous) => ({
+            owner,
+            orderVersion,
+            attempt,
+            data: previous?.data,
+            error: error.message,
+          }))
       })
     return () => controller.abort()
   }, [owner, orderVersion, attempt])
   const current =
     result?.owner === owner && result?.orderVersion === orderVersion && result?.attempt === attempt
-  const data = owner != null && current ? result.data || [] : []
+  // Keep confirmed purchases visible during refreshes and recoverable failures.
+  // The keyed session below discards this history when the signed-in user changes.
+  const data = owner != null ? result?.data || [] : []
   // Prefer authoritative order status, including refunds, once the server returns it.
   const orders =
     owner != null && lastOrder && !data.some((order) => order.id === lastOrder.id)
@@ -60,5 +66,14 @@ export default function OrdersProvider({ children }) {
     >
       {children}
     </OrdersContext.Provider>
+  )
+}
+
+export default function OrdersProvider({ children }) {
+  const { currentUser } = useAuth()
+  return (
+    <OrdersSession key={currentUser?.id ?? 'guest'} owner={currentUser?.id}>
+      {children}
+    </OrdersSession>
   )
 }
