@@ -16,22 +16,20 @@ import { useWishlist } from './wishlist/context'
 import { useAuth } from './auth/context'
 import OAuthCallbackPage from './pages/OAuthCallbackPage/OAuthCallbackPage'
 import { isOAuthCallback } from './auth/oauth'
+import { readStoreLocation } from './utils/location'
 import './auth/Auth.css'
 import './App.css'
 
 const defaultRoute = { view: 'discover', gameId: null }
 
 function parseRouteFromHash() {
-  const route = window.location.hash
-    ? window.location.hash.replace(/^#\/?/, '')
-    : window.location.pathname.replace(/^\//, '') + window.location.search
-  const [path, query] = route.split('?')
+  const { path, params } = readStoreLocation()
   const parts = path.split('/').filter(Boolean)
   if (parts[0] === 'login')
     return {
       view: 'login',
       gameId: null,
-      next: new URLSearchParams(query).get('next') || 'discover',
+      next: params.get('next') || 'discover',
     }
 
   if (!parts.length || parts[0] === 'discover') {
@@ -55,7 +53,12 @@ function parseRouteFromHash() {
   }
 
   if (['account', 'wallet', 'orders', 'cart', 'wishlist', 'support'].includes(parts[0])) {
-    return { view: parts[0], gameId: null }
+    const add = ['cart', 'wishlist'].includes(parts[0]) ? params.get('add')?.trim() : null
+    return {
+      view: parts[0],
+      gameId: null,
+      next: parts[0] + (add ? '?' + new URLSearchParams({ add }) : ''),
+    }
   }
 
   return defaultRoute
@@ -117,7 +120,8 @@ function App() {
       ['account', 'wallet', 'orders', 'cart', 'wishlist'].includes(currentView) &&
       !isAuthenticated
     ) {
-      navigateTo('login?next=' + currentView)
+      const route = parseRouteFromHash()
+      if (route.view === currentView) navigateTo('login?next=' + encodeURIComponent(route.next))
     }
   }, [status, isLoggingOut, currentView, isAuthenticated])
 
@@ -207,6 +211,7 @@ function App() {
   if (isOAuthCallback) return <OAuthCallbackPage />
   const publicNews = ['news', 'newsDetail'].includes(currentView)
   const publicPage = publicNews || currentView === 'userProfile'
+  const publicCatalog = ['discover', 'product', 'achievements'].includes(currentView)
   if (!publicPage && status === 'loading')
     return (
       <main className="store-page">
@@ -227,7 +232,7 @@ function App() {
         </section>
       </main>
     )
-  if (!publicPage && status === 'error')
+  if (!publicPage && !publicCatalog && status === 'error')
     return (
       <main className="store-page">
         <section className="store-status" role="alert">
@@ -258,6 +263,11 @@ function App() {
       {error && !publicPage && (
         <div className="store-status" role="alert">
           {error}
+          {status === 'error' && (
+            <button type="button" onClick={() => window.location.reload()}>
+              Retry loading account
+            </button>
+          )}
           {error.startsWith('Could not complete sign out') && (
             <button type="button" disabled={isLoggingOut} onClick={() => signOut()}>
               Retry sign out

@@ -71,12 +71,12 @@ function Shopping({ view = 'cart' }) {
   </>
 }
 
-function Shop({ userId = 7, view = 'cart' }) {
+function Shop({ userId = 7, view = 'cart', currencyCode = 'USD' }) {
   const wallet = {
     data: { balance: '100.00', currency: 'USD' }, error: '', loading: false, busy: false,
     operation: null, revision: 0, refresh: vi.fn(async () => wallet.data), topUp: vi.fn(), changeCurrency: vi.fn(),
   }
-  const currency = { code: 'USD', currencies: [{ code: 'USD', name: 'US Dollar' }], choose: vi.fn(),
+  const currency = { code: currencyCode, currencies: [{ code: 'USD', name: 'US Dollar' }], choose: vi.fn(),
     switching: false, unavailable: '', walletError: '', refreshWallet: vi.fn(), disabled: false, loading: false }
   return <AuthContext.Provider value={{ currentUser: userId == null ? null : { id: userId }, isAuthenticated: userId != null }}>
     <WalletContext.Provider value={wallet}><CurrencyContext.Provider value={currency}>
@@ -95,6 +95,37 @@ async function ready() {
 }
 
 describe('authenticated cart and header', () => {
+  test('waits for currency and initial cart before consuming a post-login add', async () => {
+    window.history.replaceState(null, '', '/#/cart?add=1')
+    const pending = deferred()
+    cartApi.addToCart.mockReturnValueOnce(pending.promise)
+    const { rerender } = render(<Shop currencyCode={null} />)
+    expect(cartApi.addToCart).not.toHaveBeenCalled()
+    expect(window.location.hash).toBe('#/cart?add=1')
+    rerender(<Shop currencyCode="USD" />)
+    await waitFor(() => expect(cartApi.addToCart).toHaveBeenCalledExactlyOnceWith('1'))
+    serverCart = cartData([game])
+    await act(async () => pending.resolve())
+    expect(await screen.findByRole('heading', { name: 'Orbit' })).toBeInTheDocument()
+    expect(header().getByLabelText('1 items in cart')).toBeInTheDocument()
+    expect(window.location.hash).toBe('#/cart')
+  })
+
+  test('waits for currency before consuming a post-login wishlist add', async () => {
+    window.history.replaceState(null, '', '/#/wishlist?add=1')
+    const pending = deferred()
+    wishlistApi.addToWishlist.mockReturnValueOnce(pending.promise)
+    const { rerender } = render(<Shop currencyCode={null} view="wishlist" />)
+    expect(wishlistApi.addToWishlist).not.toHaveBeenCalled()
+    rerender(<Shop currencyCode="USD" view="wishlist" />)
+    await waitFor(() => expect(wishlistApi.addToWishlist).toHaveBeenCalledExactlyOnceWith('1'))
+    serverWishlist = [wish]
+    await act(async () => pending.resolve())
+    expect(await screen.findByRole('heading', { name: 'Orbit' })).toBeInTheDocument()
+    expect(header().getByLabelText('1 items in wishlist')).toBeInTheDocument()
+    expect(window.location.hash).toBe('#/wishlist')
+  })
+
   test('shows initial loading, then server totals and an accessible reactive badge', async () => {
     const initial = deferred()
     cartApi.getCart.mockReturnValueOnce(initial.promise)

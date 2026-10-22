@@ -5,6 +5,7 @@ import DiscoverShowcase from '../../components/DiscoverShowcase/DiscoverShowcase
 import { MediaImage } from '../../components/Catalog/Media'
 import { mediaUrl, PAGE_SIZE } from '../../api/catalog'
 import useCatalogResource from '../../hooks/useCatalogResource'
+import { readStoreLocation } from '../../utils/location'
 import ResourceStatus from '../../components/Catalog/ResourceStatus'
 import '../../components/Catalog/Catalog.css'
 import giftIcon from '../../assets/discover/figma/97d7f.svg'
@@ -225,7 +226,7 @@ function MobileBanner({ banner }) {
 }
 
 function readFilters() {
-  const params = new URLSearchParams(window.location.hash.split('?')[1])
+  const { params } = readStoreLocation()
   const page = Number(params.get('page'))
   const tag = /^\d+$/.test(params.get('tag_id') || '') ? params.get('tag_id') : ''
   return {
@@ -393,8 +394,7 @@ function DiscoverContent({ onProductSelect }) {
 }
 
 export default function DiscoverPage(props) {
-  const readQuery = () =>
-    (new URLSearchParams(window.location.hash.split('?')[1]).get('q') || '').trim().slice(0, 200)
+  const readQuery = () => (readStoreLocation().params.get('q') || '').trim().slice(0, 200)
   const [query, setQuery] = useState(readQuery)
   useEffect(() => {
     const sync = () => setQuery(readQuery())
