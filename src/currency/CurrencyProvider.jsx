@@ -116,7 +116,9 @@ export default function CurrencyProvider({ children }) {
     return () => window.removeEventListener('storage', sync)
   }, [])
   const currencies = result?.data || []
-  const guestSupported = !currencies.length || currencies.some((item) => item.code === guestCode)
+  const guestSupported = currencies.some((item) => item.code === guestCode)
+  const listError = result?.attempt === attempt ? result.error?.message || '' : ''
+  const retryCurrencies = () => setAttempt((value) => value + 1)
   const code =
     status === 'loading'
       ? null
@@ -124,7 +126,17 @@ export default function CurrencyProvider({ children }) {
         ? wallet.data?.currency || null
         : guestSupported
           ? guestCode
-          : currencies.find((item) => item.code === 'USD')?.code || currencies[0].code
+          : currencies.find((item) => item.code === 'USD')?.code || currencies[0]?.code || null
+  // A saved preference is not evidence that a currency is still active. Wait
+  // for the server list, then persist the validated choice (including fallback).
+  useEffect(() => {
+    if (currentUser || !code) return
+    try {
+      if (localStorage.getItem(storageKey) !== code) localStorage.setItem(storageKey, code)
+    } catch {
+      /* Selection still works when storage is unavailable. */
+    }
+  }, [currentUser, code, guestCode])
   function choose(code) {
     const target = currencies.find((item) => item.code === code)
     if (!target || wallet.busy || (currentUser && (wallet.loading || !wallet.data || wallet.error)))
@@ -134,11 +146,6 @@ export default function CurrencyProvider({ children }) {
         setSelection({ owner, currency: wallet.data.currency, pending: target })
     } else {
       setGuestCode(code)
-      try {
-        localStorage.setItem(storageKey, code)
-      } catch {
-        /* Selection still works when storage is unavailable. */
-      }
     }
   }
   return (
@@ -148,16 +155,17 @@ export default function CurrencyProvider({ children }) {
         currencies,
         choose,
         switching: wallet.operation === 'currency',
-        unavailable: !!currentUser && !wallet.data ? wallet.error : '',
+        unavailable: currentUser ? (!wallet.data ? wallet.error : '') : listError,
         walletError: currentUser ? wallet.error : '',
         refreshWallet: wallet.refresh,
+        retryPrices: currentUser ? wallet.refresh : retryCurrencies,
         disabled:
           status === 'loading' ||
           wallet.busy ||
-          (!!currentUser && (wallet.loading || !wallet.data || !!wallet.error)),
+          (currentUser ? wallet.loading || !wallet.data || !!wallet.error : !currencies.length),
         loading: result?.attempt !== attempt,
-        error: result?.attempt === attempt ? result.error?.message : '',
-        retry: () => setAttempt((value) => value + 1),
+        error: listError,
+        retry: retryCurrencies,
       }}
     >
       {children}
