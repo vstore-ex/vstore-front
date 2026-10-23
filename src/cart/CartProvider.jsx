@@ -118,7 +118,10 @@ function CartSession({ owner, children }) {
           if (!pricesReady || isLoading || wallet.busy)
             return Promise.reject(new Error('Wait for current prices before placing your order.'))
           return mutate(() => api.createOrder(method, termsAccepted), true).finally(() => {
-            if (method === 'wallet') return wallet.refresh()
+            // The order response is final. Refresh balance independently so a slow
+            // wallet request cannot delay confirmation or obscure a checkout error.
+            // WalletProvider owns the refresh loading/error state and retry.
+            if (method === 'wallet') wallet.refresh()
           })
         },
       }}
