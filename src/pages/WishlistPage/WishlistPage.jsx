@@ -4,6 +4,7 @@ import { useCart } from '../../cart/context'
 import useOrders from '../../hooks/useOrders'
 import { cartError } from '../../api/cart'
 import { MediaImage } from '../../components/Catalog/Media'
+import { readStoreLocation } from '../../utils/location'
 import './WishlistPage.css'
 
 export default function WishlistPage() {
@@ -15,9 +16,9 @@ export default function WishlistPage() {
   const [addingId, setAddingId] = useState(null)
   const [error, setError] = useState('')
   useEffect(() => {
-    if (consumed.current) return
+    if (consumed.current || wishlist.loading || wishlist.busy || wishlist.error) return
     consumed.current = true
-    const id = new URLSearchParams(window.location.hash.split('?')[1]).get('add')
+    const id = readStoreLocation().params.get('add')
     if (!id || !id.trim()) return
     window.history.replaceState(
       null,

@@ -8,6 +8,7 @@ import logoMark from '../../assets/discover/figma/ededd.svg'
 import './Header.css'
 import { useWallet } from '../../wallet/context'
 import { formatMoney } from '../../api/cart'
+import { readStoreLocation } from '../../utils/location'
 
 const navItems = ['Discover', 'Support', 'News']
 const actionIcons = [
@@ -31,7 +32,7 @@ function Header({
   wishlistCount = 0,
 }) {
   const wallet = useWallet()
-  const readQuery = () => new URLSearchParams(window.location.hash.split('?')[1]).get('q') || ''
+  const readQuery = () => readStoreLocation().params.get('q') || ''
   const [query, setQuery] = useState(readQuery)
   const [menuOpen, setMenuOpen] = useState(false)
   const menuId = useId()
@@ -39,7 +40,7 @@ function Header({
   const menu = useRef(null)
   useEffect(() => {
     const sync = () => {
-      setQuery(new URLSearchParams(window.location.hash.split('?')[1]).get('q') || '')
+      setQuery(readQuery())
       setMenuOpen(false)
       if (
         menu.current?.contains(document.activeElement) &&

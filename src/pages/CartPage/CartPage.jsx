@@ -5,6 +5,7 @@ import { moneyCents } from '../../api/wallet'
 import { useWallet } from '../../wallet/context'
 import TopUpDialog from '../../wallet/TopUpDialog'
 import Dialog from '../../components/Dialog/Dialog'
+import { readStoreLocation } from '../../utils/location'
 import './CartPage.css'
 function Totals({ cart }) {
   return (
@@ -228,9 +229,10 @@ export default function CartPage() {
   const [order, setOrder] = useState(null)
   const consumed = useRef(false)
   useEffect(() => {
-    if (consumed.current) return
+    // A post-login intent must wait for the currency-specific cart session.
+    if (consumed.current || cart.loading || cart.busy || cart.error || !cart.pricesReady) return
     consumed.current = true
-    const params = new URLSearchParams(window.location.hash.split('?')[1])
+    const { params } = readStoreLocation()
     const id = params.get('add')
     if (!id || !id.trim()) return
     window.history.replaceState(
