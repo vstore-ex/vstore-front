@@ -3,6 +3,7 @@ import { getWalletTransactions, moneyCents, walletError } from '../api/wallet'
 import { formatMoney } from '../api/cart'
 import { useWallet } from './context'
 import TopUpDialog from './TopUpDialog'
+import { useAuth } from '../auth/context'
 import './Wallet.css'
 
 const transactionLabels = {
@@ -26,7 +27,13 @@ function Transactions({ revision }) {
     const controller = new AbortController()
     getWalletTransactions({ page, per_page: 10 }, controller.signal)
       .then((data) => {
-        if (!controller.signal.aborted) setResult({ page, attempt, revision, data })
+        if (controller.signal.aborted) return
+        const lastPage = Math.max(1, data.total_pages)
+        if (page > lastPage) {
+          setPage(lastPage)
+          return
+        }
+        setResult({ page, attempt, revision, data })
       })
       .catch((reason) => {
         if (!controller.signal.aborted)
@@ -142,7 +149,7 @@ function Transactions({ revision }) {
   )
 }
 
-export default function WalletSection({ focusWallet = false }) {
+function AccountWalletSection({ focusWallet = false }) {
   const wallet = useWallet()
   const [topUpOpen, setTopUpOpen] = useState(false)
   const section = useRef(null)
@@ -200,4 +207,10 @@ export default function WalletSection({ focusWallet = false }) {
       {topUpOpen && <TopUpDialog onClose={() => setTopUpOpen(false)} />}
     </section>
   )
+}
+
+export default function WalletSection(props) {
+  const { currentUser } = useAuth()
+  // Reset statement pages, retained rows and dialogs when the wallet owner changes.
+  return currentUser ? <AccountWalletSection key={currentUser.id} {...props} /> : null
 }

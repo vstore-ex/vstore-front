@@ -20,9 +20,13 @@ function readGuestCurrency() {
 
 function Confirmation({ target, wallet, onClose }) {
   const [error, setError] = useState('')
+  const frozen = wallet.data?.is_frozen
+  const message = frozen
+    ? 'Your wallet is frozen. Currency changes are unavailable. Contact support.'
+    : error || wallet.error
   async function confirm(event) {
     event.preventDefault()
-    if (wallet.busy || wallet.loading || !wallet.data || wallet.error) return
+    if (wallet.busy || wallet.loading || !wallet.data || wallet.error || frozen) return
     setError('')
     try {
       if (await wallet.changeCurrency(target.code)) onClose()
@@ -50,7 +54,7 @@ function Confirmation({ target, wallet, onClose }) {
           wishlist prices will update after confirmation.
         </p>
         <p>Previous orders and transactions keep their original purchase currencies.</p>
-        {(error || wallet.error) && <p role="alert">{error || wallet.error}</p>}
+        {message && <p role="alert">{message}</p>}
         {wallet.error && (
           <button type="button" disabled={wallet.loading || wallet.busy} onClick={wallet.refresh}>
             Refresh wallet
@@ -68,7 +72,7 @@ function Confirmation({ target, wallet, onClose }) {
           <button
             type="submit"
             className="button button--accent"
-            disabled={wallet.busy || wallet.loading || !!wallet.error || !wallet.data}
+            disabled={wallet.busy || wallet.loading || !!wallet.error || !wallet.data || frozen}
           >
             {wallet.busy ? 'Converting...' : 'Confirm currency change'}
           </button>
@@ -80,11 +84,19 @@ function Confirmation({ target, wallet, onClose }) {
 
 export default function CurrencyProvider({ children }) {
   const { currentUser, status } = useAuth()
+  const owner = currentUser?.id ?? null
   const wallet = useWallet()
   const [guestCode, setGuestCode] = useState(readGuestCurrency)
   const [attempt, setAttempt] = useState(0)
   const [result, setResult] = useState(null)
-  const [pending, setPending] = useState(null)
+  const [selection, setSelection] = useState({ owner, pending: null })
+  const selectionCurrent =
+    selection.owner === owner &&
+    (!selection.pending || selection.currency === wallet.data?.currency)
+  // Discard stale consent before rendering children; it must not survive a new
+  // account or a currency change confirmed by another session.
+  if (!selectionCurrent) setSelection({ owner, pending: null })
+  const pending = selectionCurrent ? selection.pending : null
   useEffect(() => {
     const controller = new AbortController()
     getCurrencies(controller.signal)
@@ -118,7 +130,8 @@ export default function CurrencyProvider({ children }) {
     if (!target || wallet.busy || (currentUser && (wallet.loading || !wallet.data || wallet.error)))
       return
     if (currentUser) {
-      if (code !== wallet.data.currency) setPending(target)
+      if (code !== wallet.data.currency)
+        setSelection({ owner, currency: wallet.data.currency, pending: target })
     } else {
       setGuestCode(code)
       try {
@@ -153,7 +166,11 @@ export default function CurrencyProvider({ children }) {
           key={pending.code}
           target={pending}
           wallet={wallet}
-          onClose={() => setPending(null)}
+          onClose={() =>
+            setSelection((previous) =>
+              previous === selection ? { owner, pending: null } : previous,
+            )
+          }
         />
       )}
     </CurrencyContext.Provider>
