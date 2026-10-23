@@ -71,7 +71,10 @@ function WalletSession({ owner, children }) {
     } catch (reason) {
       // A lost response may still represent a successful deposit. Reconcile, never auto-retry a payment.
       lock.current = false
-      await refresh()
+      const reconciliation = refresh()
+      // Report deposit failures immediately. While reconciliation is pending,
+      // loading prevents another top-up and WalletProvider owns any refresh error.
+      if (type !== 'top-up') await reconciliation
       throw reason
     } finally {
       lock.current = false
