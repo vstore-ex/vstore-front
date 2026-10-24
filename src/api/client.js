@@ -1,5 +1,6 @@
 export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '')
 let refreshPromise
+let refreshGeneration
 let generation = 0
 let refreshed = 0
 let ended = false
@@ -21,18 +22,36 @@ export class ApiError extends Error {
 function emit(name, detail) {
   window.dispatchEvent(new CustomEvent(name, { detail }))
 }
+function clearToken(version) {
+  if (version !== generation) return
+  try {
+    localStorage.removeItem('vstore:token')
+  } catch {
+    /* storage disabled */
+  }
+}
 function rejectSession(error, version) {
   if (version !== generation || ended) return
+  clearToken(version)
   ended = true
   generation += 1
   emit(error.banned ? 'vstore:account-banned' : 'vstore:session-expired', error.message)
 }
 export async function refreshSession() {
+  const version = generation
+  if (refreshPromise && refreshGeneration !== version) {
+    // Serialize cookie updates, but never reuse another session's refresh result.
+    await waitForRefresh()
+    if (version !== generation)
+      throw new ApiError('Your session has ended. Please sign in again.', 401)
+    return refreshSession()
+  }
   if (!refreshPromise) {
-    const version = generation
+    refreshGeneration = version
     emit('vstore:refresh', true)
     refreshPromise = apiRequest('/auth/refresh', { method: 'POST', auth: false })
       .then((data) => {
+        if (version !== generation) return
         if (data?.access_token) {
           try {
             localStorage.setItem('vstore:token', data.access_token)
@@ -40,14 +59,10 @@ export async function refreshSession() {
             /* storage disabled */
           }
         }
-        if (version === generation) refreshed += 1
+        refreshed += 1
       })
       .catch((error) => {
-        try {
-          localStorage.removeItem('vstore:token')
-        } catch {
-          /* storage disabled */
-        }
+        clearToken(version)
         rejectSession(error, version)
         throw error
       })
