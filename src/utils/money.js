@@ -9,6 +9,10 @@ const symbols = {
   JPY: '\u00a5',
 }
 export const isCurrencyCode = (value) => typeof value === 'string' && /^[A-Z]{3}$/.test(value)
+export const isMoneyAmount = (value) =>
+  (typeof value === 'string' || typeof value === 'number') &&
+  String(value).trim() !== '' &&
+  Number.isFinite(Number(value))
 export function currencySymbol(code) {
   if (!isCurrencyCode(code)) return ''
   return (
@@ -24,13 +28,7 @@ export function currencySymbol(code) {
   )
 }
 export function formatMoney(amount, currency) {
-  if (
-    !isCurrencyCode(currency) ||
-    amount == null ||
-    String(amount).trim() === '' ||
-    !Number.isFinite(Number(amount))
-  )
-    return 'Price unavailable'
+  if (!isCurrencyCode(currency) || !isMoneyAmount(amount)) return 'Price unavailable'
   // Preserve server precision, including fractional JPY amounts, without inventing a denomination.
   const fraction = Number.isInteger(Number(amount)) && currency === 'JPY' ? 0 : 2
   return new Intl.NumberFormat('en-US', {
