@@ -1,5 +1,5 @@
 import { apiRequest, mediaUrl } from './client'
-import { formatMoney } from '../utils/money'
+import { formatMoney, isMoneyAmount } from '../utils/money'
 export { mediaUrl } from './client'
 
 export const PAGE_SIZE = 24
@@ -41,15 +41,14 @@ export function mapGame(game) {
   // Main capsule (616x353): main_capsule -> header_capsule
   const mainCapsule = getBanner('main_capsule') || getBanner('header_capsule') || hero
 
-  const original = Number(game.original_price),
-    price = game.is_free ? 0 : Number(game.price)
-  if (
-    !game.is_free &&
-    (game.price == null || String(game.price).trim() === '' || !Number.isFinite(price) || price < 0)
-  )
+  const free = game.is_free === true
+  if (!free && (!isMoneyAmount(game.price) || Number(game.price) < 0))
     throw new Error('The server returned an invalid game price.')
+  const price = free ? 0 : Number(game.price)
+  const original = isMoneyAmount(game.original_price) ? Number(game.original_price) : null
   return {
     ...game,
+    is_free: free,
     currency,
     id: String(game.id),
     type: 'Base Game',
@@ -63,7 +62,7 @@ export function mapGame(game) {
     capsuleImage: mediaUrl(capsule),
     mainCapsule: mediaUrl(mainCapsule),
     amount: price,
-    price: game.is_free ? 'Free' : priceLabel(price, currency),
+    price: free ? 'Free' : priceLabel(price, currency),
     originalPrice: original > price ? priceLabel(original, currency) : '',
     discount: original > price ? `-${Math.round((1 - price / original) * 100)}%` : '',
     tags: array(game.tags).filter((tag) => tag?.id != null),
