@@ -99,7 +99,9 @@ function Transactions({ revision }) {
                       Type
                     </span>
                     <span>
-                      {transactionLabels[item.transaction_type] || 'Other transaction'}
+                      {Object.hasOwn(transactionLabels, item.transaction_type)
+                        ? transactionLabels[item.transaction_type]
+                        : 'Other transaction'}
                       {item.description && <small>{item.description}</small>}
                     </span>
                   </td>
