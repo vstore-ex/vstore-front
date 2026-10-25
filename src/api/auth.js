@@ -1,4 +1,4 @@
-import { apiRequest, refreshSession, waitForRefresh } from './client'
+import { apiRequest, refreshSession, validationErrors, waitForRefresh } from './client'
 
 export function normalizeUser(data) {
   if (!data) return null
@@ -68,11 +68,15 @@ export async function updateAvatar(file) {
   )
 }
 export function registrationErrors(error) {
-  if (Array.isArray(error.errors) && error.errors.length > 0) {
-    return Object.fromEntries(error.errors.map((item) => [item.field, item.message]))
+  for (const source of [error.errors, error.detail]) {
+    const fields = validationErrors(source)
+      .map((item) => [
+        item.field ?? (Array.isArray(item.loc) ? item.loc.at(-1) : null),
+        item.message,
+      ])
+      .filter(([field]) => ['username', 'email', 'password'].includes(field))
+    if (fields.length) return Object.fromEntries(fields)
   }
-  if (Array.isArray(error.detail))
-    return Object.fromEntries(error.detail.map((item) => [item.loc?.at(-1), item.msg]))
   if (error.status !== 400 && error.status !== 422) return {}
   if (/email/i.test(error.message)) return { email: error.message }
   if (/username/i.test(error.message)) return { username: error.message }

@@ -38,6 +38,23 @@ function Header({
   const menuId = useId()
   const menuButton = useRef(null)
   const menu = useRef(null)
+  const focusedControl = useRef(null)
+  useEffect(() => {
+    const compact = window.matchMedia?.('(max-width: 680px)')
+    if (!compact) return
+    const syncLayout = ({ matches }) => {
+      // Browsers can blur a newly hidden control before the media-query event.
+      const active = document.activeElement
+      const focused = active === document.body ? focusedControl.current : active
+      // Move focus only when the layout is about to hide its current control.
+      if (matches && menu.current?.contains(focused)) menuButton.current?.focus()
+      else if (!matches && focused === menuButton.current)
+        menu.current?.querySelector('a[href]')?.focus()
+      setMenuOpen(false)
+    }
+    compact.addEventListener('change', syncLayout)
+    return () => compact.removeEventListener('change', syncLayout)
+  }, [])
   useEffect(() => {
     const sync = () => {
       setQuery(readQuery())
@@ -92,7 +109,18 @@ function Header({
   }
 
   return (
-    <header className="store-header" aria-label="Store navigation">
+    <header
+      className="store-header"
+      aria-label="Store navigation"
+      onFocusCapture={(event) => {
+        focusedControl.current = event.target
+      }}
+      onBlurCapture={(event) => {
+        // Preserve only automatic blur caused by hiding the focused control.
+        if (event.relatedTarget || event.target.getClientRects().length)
+          focusedControl.current = null
+      }}
+    >
       <a
         className="brand"
         href="#/discover"

@@ -1,4 +1,5 @@
 import { apiRequest } from './client'
+import { isCurrencyCode } from '../utils/money'
 
 // Work in integer cents for comparisons; do not round invalid user input.
 export function moneyCents(value) {
@@ -38,30 +39,47 @@ export const topUpWallet = (amount, signal) =>
   }).then(validateWallet)
 
 export async function getWalletTransactions({ page = 1, per_page = 10 } = {}, signal) {
+  if (
+    !Number.isSafeInteger(page) ||
+    page < 1 ||
+    !Number.isInteger(per_page) ||
+    per_page < 1 ||
+    per_page > 100
+  )
+    throw new Error('Invalid transaction pagination.')
   // The backend route names this parameter page_size; keep the public UI API per_page.
   const query = new URLSearchParams({ page, page_size: per_page })
   const data = await apiRequest(`/me/wallet/transactions?${query}`, { signal })
   const size = data?.page_size ?? data?.per_page
   if (
     !Array.isArray(data?.items) ||
-    !Number.isInteger(data.total) ||
+    !Number.isSafeInteger(data.total) ||
     data.total < 0 ||
-    !Number.isInteger(data.page) ||
-    data.page < 1 ||
-    !Number.isInteger(size) ||
-    size < 1 ||
-    !Number.isInteger(data.total_pages) ||
-    data.total_pages < 0 ||
+    data.page !== page ||
+    size !== per_page ||
+    (data.total === 0
+      ? ![0, 1].includes(data.total_pages)
+      : data.total_pages !== Math.ceil(data.total / size)) ||
+    data.items.length > size ||
+    data.items.length > data.total ||
     data.items.some(
       (item) =>
         !item ||
-        item.id == null ||
+        !(
+          (typeof item.id === 'string' && item.id.trim()) ||
+          (Number.isSafeInteger(item.id) && item.id > 0)
+        ) ||
         moneyCents(item.amount) == null ||
         moneyCents(item.balance_after) == null ||
-        !/^[A-Z]{3}$/.test(item.currency) ||
+        moneyCents(item.balance_after) < 0 ||
+        !isCurrencyCode(item.currency) ||
         typeof item.transaction_type !== 'string' ||
+        !item.transaction_type.trim() ||
+        (item.description != null && typeof item.description !== 'string') ||
+        typeof item.created_at !== 'string' ||
         !Number.isFinite(Date.parse(item.created_at)),
-    )
+    ) ||
+    new Set(data.items.map((item) => String(item.id))).size !== data.items.length
   ) {
     throw new Error('The server returned an invalid transaction history.')
   }
