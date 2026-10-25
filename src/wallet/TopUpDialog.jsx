@@ -9,24 +9,35 @@ export default function TopUpDialog({ onClose }) {
   const wallet = useWallet()
   const [amount, setAmount] = useState('25')
   const [error, setError] = useState('')
+  const [validationError, setValidationError] = useState('')
   const [success, setSuccess] = useState(false)
   const amountInput = useRef(null)
   const unavailable =
     wallet.loading || wallet.busy || !!wallet.error || !wallet.data || wallet.data.is_frozen
+  function changeAmount(value) {
+    setAmount(value)
+    setValidationError('')
+  }
   async function submit(event) {
     event.preventDefault()
     if (unavailable || success) return
     setError('')
-    let submitted = false
+    setValidationError('')
+    let validated
     try {
-      const validated = topUpAmount(amount)
-      submitted = true
+      validated = topUpAmount(amount)
+    } catch (reason) {
+      setValidationError(reason.message)
+      amountInput.current?.focus()
+      return
+    }
+    try {
       const result = await wallet.topUp(validated)
       if (result) setSuccess(true)
     } catch (reason) {
       setError(
         walletError(reason) +
-          (submitted && (!reason.status || reason.status >= 500)
+          (!reason.status || reason.status >= 500
             ? ' Check your balance and transaction history before trying again.'
             : ''),
       )
@@ -42,6 +53,7 @@ export default function TopUpDialog({ onClose }) {
     >
       <form onSubmit={submit} noValidate>
         <h2 id="top-up-title">Top up wallet</h2>
+        {wallet.loading && <p role="status">Updating balance...</p>}
         {wallet.data && (
           <p>Current balance: {formatMoney(wallet.data.balance, wallet.data.currency)}</p>
         )}
@@ -57,7 +69,7 @@ export default function TopUpDialog({ onClose }) {
                   key={value}
                   disabled={unavailable}
                   aria-pressed={Number(amount) === value}
-                  onClick={() => setAmount(String(value))}
+                  onClick={() => changeAmount(String(value))}
                 >
                   {formatMoney(value, wallet.data?.currency)}
                 </button>
@@ -71,11 +83,17 @@ export default function TopUpDialog({ onClose }) {
                 value={amount}
                 maxLength={12}
                 disabled={unavailable}
-                onChange={(event) => setAmount(event.target.value)}
-                aria-describedby="top-up-hint"
+                onChange={(event) => changeAmount(event.target.value)}
+                aria-invalid={!!validationError}
+                aria-describedby={`top-up-hint${validationError ? ' top-up-error' : ''}`}
               />
             </label>
             <p id="top-up-hint">Enter 0.01 to 10,000, with up to two decimal places.</p>
+            {validationError && (
+              <p id="top-up-error" role="alert">
+                {validationError}
+              </p>
+            )}
           </>
         )}
         {wallet.data?.is_frozen && (

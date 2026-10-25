@@ -283,9 +283,13 @@
   background: transparent;
   cursor: pointer;
 }
-.search-field:focus-within {
+.search-field:has(.search-field__input:focus) {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
+}
+/* The rounded container owns input focus; the submit button keeps its own ring. */
+.search-field .search-field__input:focus-visible {
+  outline: none;
 }
 .header-wallet {
   display: grid;

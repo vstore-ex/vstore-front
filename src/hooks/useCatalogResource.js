@@ -62,7 +62,7 @@ export default function useCatalogResource(type, key = '', retainScope = null) {
       data: null,
       loading: false,
       error: new Error(currency.unavailable),
-      retry: currency.refreshWallet,
+      retry: currency.retryPrices || currency.refreshWallet,
     }
   const current =
     !waiting &&
