@@ -8,13 +8,22 @@ export function resetSession(active = true) {
   generation += 1
   ended = !active
 }
+const errorText = (value) => (typeof value === 'string' ? value.trim() : '')
+export function validationErrors(value) {
+  if (!Array.isArray(value)) return []
+  return value.flatMap((item) => {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) return []
+    const message = errorText(item.message) || errorText(item.msg)
+    return message ? [{ ...item, message }] : []
+  })
+}
 export class ApiError extends Error {
   constructor(message, status, detail, problem = null) {
     super(message)
     this.status = status
     this.detail = detail
     this.problem = problem
-    this.errors = Array.isArray(problem?.errors) ? problem.errors : []
+    this.errors = validationErrors(problem?.errors)
     this.requestId = problem?.request_id || null
     this.banned = status === 403 && /account banned/i.test(message)
   }
@@ -130,24 +139,18 @@ export async function apiRequest(
   }
   if (!response.ok) {
     const detail = data?.detail || data?.message
-    let message
-    if (Array.isArray(data?.errors) && data.errors.length > 0) {
-      message = data.errors
-        .map((item) => item.message || item.msg)
-        .filter(Boolean)
-        .join('. ')
-    } else if (Array.isArray(detail)) {
-      message = detail
-        .map((item) => item.msg || item.message)
-        .filter(Boolean)
-        .join(' ')
-    } else if (typeof detail === 'string') {
-      message = detail
-    } else if (response.status === 413) {
-      message = 'The uploaded file is too large. Please choose a smaller image.'
-    } else {
-      message = `Request failed (${response.status}). Please try again.`
-    }
+    const message =
+      validationErrors(data?.errors)
+        .map((item) => item.message)
+        .join('. ') ||
+      validationErrors(data?.detail)
+        .map((item) => item.message)
+        .join(' ') ||
+      errorText(data?.detail) ||
+      errorText(data?.message) ||
+      (response.status === 413
+        ? 'The uploaded file is too large. Please choose a smaller image.'
+        : `Request failed (${response.status}). Please try again.`)
     const error = new ApiError(message, response.status, detail, data)
     error.requestId = data?.request_id || response.headers.get('X-Request-ID') || null
     const retryAfter = response.headers.get('Retry-After')

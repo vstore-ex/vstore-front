@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { getGame } from '../../api/catalog'
 import useOrders from '../../hooks/useOrders'
 import { useCurrency } from '../../currency/context'
 import { useWallet } from '../../wallet/context'
 import { MediaImage } from '../../components/Catalog/Media'
+import { useAuth } from '../../auth/context'
 
-export default function Library() {
+function LibrarySession() {
   const orders = useOrders()
   const { code, unavailable, refreshWallet } = useCurrency()
   const { loading: walletLoading, busy: walletBusy } = useWallet()
@@ -13,37 +14,54 @@ export default function Library() {
   const [attempt, setAttempt] = useState(0)
   const [result, setResult] = useState(null)
   const [query, setQuery] = useState('')
+  const cache = useRef({ code: null, games: new Map() })
   useEffect(() => {
     if (!code) return
     const controller = new AbortController()
     const ids = JSON.parse(key)
-    const games = new Array(ids.length)
+    if (cache.current.code !== code) cache.current = { code, games: new Map() }
+    const games = cache.current.games
+    const owned = new Set(ids)
+    for (const id of games.keys()) {
+      if (!owned.has(id)) games.delete(id)
+    }
+    const missing = ids.filter((id) => !games.has(id) || games.get(id).error)
+    const publish = (complete = false) => {
+      if (!controller.signal.aborted)
+        setResult({ key, attempt, code, games: new Map(games), complete })
+    }
     let next = 0
     async function worker() {
-      while (next < ids.length && !controller.signal.aborted) {
-        const index = next++,
-          id = ids[index]
+      while (next < missing.length && !controller.signal.aborted) {
+        const id = missing[next++]
+        let detail
         try {
           const game = await getGame(id, controller.signal, code)
-          games[index] = { id, game, unavailable: !game }
+          detail = { id, game, unavailable: !game }
         } catch (error) {
-          games[index] = { id, unavailable: error.status === 404, error: error.status !== 404 }
+          detail = { id, unavailable: error.status === 404, error: error.status !== 404 }
+        }
+        if (!controller.signal.aborted) {
+          games.set(id, detail)
+          publish()
         }
       }
     }
-    // Limit concurrent detail requests for large libraries.
-    Promise.all(Array.from({ length: Math.min(4, ids.length) }, worker)).then(() => {
-      if (!controller.signal.aborted) setResult({ key, attempt, code, games })
-    })
+    // Publish each completed card, reuse known details and keep large libraries bounded.
+    Promise.all(Array.from({ length: Math.min(4, missing.length) }, worker)).then(() =>
+      publish(true),
+    )
     return () => controller.abort()
   }, [key, attempt, code])
-  const current = result?.key === key && result?.attempt === attempt && result?.code === code
+  const current =
+    result?.key === key && result?.attempt === attempt && result?.code === code && result.complete
+  // Ownership is authoritative even while metadata requests are pending.
+  const games =
+    result?.code === code ? orders.ownedIds.map((id) => result.games.get(id)).filter(Boolean) : []
   const search = query.trim().normalize('NFKC').toLocaleLowerCase()
-  const visibleGames = current
-    ? result.games.filter(({ id, game }) =>
-        (game?.title || `Game #${id}`).normalize('NFKC').toLocaleLowerCase().includes(search),
-      )
-    : []
+  const visibleGames = games.filter(({ id, game }) =>
+    (game?.title || `Game #${id}`).normalize('NFKC').toLocaleLowerCase().includes(search),
+  )
   return (
     <section className="account-section user-library" aria-labelledby="library-title">
       <h2 id="library-title">Your library</h2>
@@ -71,15 +89,17 @@ export default function Library() {
         ) : (
           <p role="status">Loading game details...</p>
         ))}
-      {current && (
+      {!!orders.ownedIds.length && (
         <>
-          {result.games.some((item) => item.error) && (
+          {games.some((item) => item.error) && (
             <p role="alert">
               Some games could not be loaded.{' '}
-              <button onClick={() => setAttempt((value) => value + 1)}>Retry game details</button>
+              <button disabled={!current} onClick={() => setAttempt((value) => value + 1)}>
+                Retry game details
+              </button>
             </p>
           )}
-          {!!result.games.length && (
+          {!!orders.ownedIds.length && (
             <>
               <div className="library-search">
                 <label htmlFor="library-search">Search your library</label>
@@ -105,9 +125,11 @@ export default function Library() {
                 </div>
               </div>
               <p role="status">
-                Showing {visibleGames.length} of {result.games.length} games
+                Showing {visibleGames.length} of {orders.ownedIds.length} games
               </p>
-              {!visibleGames.length && <p>No games in your library match this search.</p>}
+              {current && !visibleGames.length && (
+                <p>No games in your library match this search.</p>
+              )}
             </>
           )}
           <div id="library-games" className="library-grid">
@@ -153,4 +175,9 @@ export default function Library() {
       )}
     </section>
   )
+}
+
+export default function Library() {
+  const { currentUser } = useAuth()
+  return currentUser ? <LibrarySession key={currentUser.id} /> : null
 }

@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { registerUser, registrationErrors, getGoogleAuthorizationUrl } from '../../api/auth'
 import { rememberOAuthDestination } from '../../auth/oauth'
 import { useAuth } from '../../auth/context'
 import { validateLogin } from '../../utils/validation'
+import Dialog from '../../components/Dialog/Dialog'
 import chevronLeft from '../../assets/icon-chevron-left.svg'
 import authPanel from '../../assets/auth-panel.png'
 import authQr from '../../assets/auth-qr.png'
@@ -54,14 +55,16 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
   const [status, setStatus] = useState({ type: '', message: '' })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isGoogleConnecting, setGoogleConnecting] = useState(false)
+  const firstField = useRef(null)
+  const createdTitle = useRef(null)
+  const form = useRef(null)
+  const focusErrors = useRef(false)
 
   const isRegister = mode === 'register'
   const isCreated = mode === 'created'
   const activeForm = isRegister ? registerForm : loginForm
 
   useEffect(() => {
-    const alreadyLocked = document.body.classList.contains('auth-open')
-    document.body.classList.add('auth-open')
     const restored = () => {
       setIsSubmitting(false)
       setGoogleConnecting(false)
@@ -70,9 +73,20 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
 
     return () => {
       window.removeEventListener('pageshow', restored)
-      if (!alreadyLocked) document.body.classList.remove('auth-open')
     }
   }, [])
+
+  useEffect(() => {
+    if (mode === 'created') createdTitle.current?.focus()
+    else firstField.current?.focus()
+  }, [mode])
+
+  useEffect(() => {
+    if (!isSubmitting && focusErrors.current) {
+      focusErrors.current = false
+      form.current?.querySelector('[aria-invalid="true"]')?.focus()
+    }
+  }, [errors, isSubmitting])
 
   function switchMode(nextMode) {
     setMode(nextMode)
@@ -113,6 +127,7 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
     setErrors(nextErrors)
 
     if (Object.keys(nextErrors).length > 0) {
+      focusErrors.current = true
       setStatus({ type: 'error', message: 'Please fix the highlighted fields.' })
       return
     }
@@ -145,7 +160,10 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
         onClose()
       }
     } catch (error) {
-      if (isRegister) setErrors(registrationErrors(error))
+      if (isRegister) {
+        focusErrors.current = true
+        setErrors(registrationErrors(error))
+      }
       setStatus({
         type: 'error',
         message: error.message || 'Could not connect to auth server.',
@@ -156,17 +174,15 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
   }
 
   return (
-    <section className="auth-page auth-overlay" aria-label="Authentication">
-      <button
-        className="auth-back"
-        type="button"
-        aria-label="Go back"
-        onClick={onClose}
-        disabled={isSubmitting}
-      >
-        <img src={chevronLeft} alt="" />
-      </button>
-
+    <Dialog
+      className="auth-page auth-overlay"
+      labelledBy="auth-title"
+      busy={isSubmitting}
+      initialFocusRef={firstField}
+      closeLabel="Go back"
+      closeContent={<img src={chevronLeft} alt="" />}
+      onClose={onClose}
+    >
       <div className="auth-shell">
         {!isCreated && (
           <h1 id="auth-title" className="auth-title">
@@ -177,7 +193,9 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
         {isCreated ? (
           <div className="auth-card auth-card--created">
             <img className="auth-card__texture" src={authPanel} alt="" aria-hidden="true" />
-            <h2>Account created!</h2>
+            <h2 id="auth-title" ref={createdTitle} tabIndex={-1}>
+              Account created!
+            </h2>
             <p>Your account is ready. You can sign in now.</p>
             <button className="auth-submit" type="button" onClick={() => switchMode('login')}>
               LOG IN
@@ -185,6 +203,7 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
           </div>
         ) : (
           <form
+            ref={form}
             className={`auth-card ${isRegister ? 'auth-card--create' : 'auth-card--figma'}`}
             onSubmit={handleSubmit}
             noValidate
@@ -205,6 +224,7 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
                 <div className="auth-field">
                   <label htmlFor="email">PUT YOUR EMAIL HERE</label>
                   <input
+                    ref={firstField}
                     id="email"
                     name="email"
                     type="email"
@@ -212,8 +232,14 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
                     onChange={updateField}
                     autoComplete="email"
                     aria-invalid={Boolean(errors.email)}
+                    aria-describedby={errors.email ? 'auth-email-error' : undefined}
+                    disabled={isSubmitting}
                   />
-                  {errors.email && <span className="field-error">{errors.email}</span>}
+                  {errors.email && (
+                    <span id="auth-email-error" className="field-error">
+                      {errors.email}
+                    </span>
+                  )}
                 </div>
               )}
 
@@ -223,14 +249,21 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
                     {isRegister ? 'CREATE AN ACCOUNT NAME' : 'SIGN IN WITH ACCOUNT NAME'}
                   </label>
                   <input
+                    ref={isRegister ? undefined : firstField}
                     id="username"
                     name="username"
                     value={activeForm.username}
                     onChange={updateField}
                     autoComplete="username"
                     aria-invalid={Boolean(errors.username)}
+                    aria-describedby={errors.username ? 'auth-username-error' : undefined}
+                    disabled={isSubmitting}
                   />
-                  {errors.username && <span className="field-error">{errors.username}</span>}
+                  {errors.username && (
+                    <span id="auth-username-error" className="field-error">
+                      {errors.username}
+                    </span>
+                  )}
                 </div>
               }
 
@@ -244,8 +277,14 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
                   onChange={updateField}
                   autoComplete={isRegister ? 'new-password' : 'current-password'}
                   aria-invalid={Boolean(errors.password)}
+                  aria-describedby={errors.password ? 'auth-password-error' : undefined}
+                  disabled={isSubmitting}
                 />
-                {errors.password && <span className="field-error">{errors.password}</span>}
+                {errors.password && (
+                  <span id="auth-password-error" className="field-error">
+                    {errors.password}
+                  </span>
+                )}
               </div>
 
               {isRegister && (
@@ -256,6 +295,9 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
                       type="checkbox"
                       checked={registerForm.acceptedTerms}
                       onChange={updateField}
+                      disabled={isSubmitting}
+                      aria-invalid={Boolean(errors.acceptedTerms)}
+                      aria-describedby={errors.acceptedTerms ? 'auth-terms-error' : undefined}
                     />
                     <span>
                       I am 13 years of age or older and agree to the terms of the Steam Subscriber
@@ -263,7 +305,9 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
                     </span>
                   </label>
                   {errors.acceptedTerms && (
-                    <span className="field-error auth-check-error">{errors.acceptedTerms}</span>
+                    <span id="auth-terms-error" className="field-error auth-check-error">
+                      {errors.acceptedTerms}
+                    </span>
                   )}
 
                   <label className="auth-captcha">
@@ -273,6 +317,9 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
                         type="checkbox"
                         checked={registerForm.human}
                         onChange={updateField}
+                        disabled={isSubmitting}
+                        aria-invalid={Boolean(errors.human)}
+                        aria-describedby={errors.human ? 'auth-human-error' : undefined}
                       />
                       <span>I am human</span>
                     </span>
@@ -283,7 +330,9 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
                     </span>
                   </label>
                   {errors.human && (
-                    <span className="field-error auth-check-error">{errors.human}</span>
+                    <span id="auth-human-error" className="field-error auth-check-error">
+                      {errors.human}
+                    </span>
                   )}
                 </>
               )}
@@ -294,7 +343,7 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
                     <button className="auth-submit" type="submit" disabled={isSubmitting}>
                       {isSubmitting ? 'PLEASE WAIT...' : 'SIGN IN'}
                     </button>
-                    <button className="auth-help" type="button">
+                    <button className="auth-help" type="button" disabled={isSubmitting}>
                       Help, i cant log in
                     </button>
                   </div>
@@ -323,7 +372,10 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
               )}
 
               {status.message && (
-                <p className={`form-status form-status--${status.type}`} role="status">
+                <p
+                  className={`form-status form-status--${status.type}`}
+                  role={status.type === 'error' ? 'alert' : 'status'}
+                >
                   {status.message}
                 </p>
               )}
@@ -341,7 +393,7 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
           </form>
         )}
       </div>
-    </section>
+    </Dialog>
   )
 }
 
