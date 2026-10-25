@@ -14,6 +14,7 @@ function WishlistSession({ owner, orderVersion, children }) {
   const active = useRef(false),
     lock = useRef(false),
     version = useRef(0)
+  const latestRefresh = useRef(null)
   const refresh = useCallback(() => {
     if (owner == null || !code) return
     const request = ++version.current
@@ -39,6 +40,7 @@ function WishlistSession({ owner, orderVersion, children }) {
   }, [owner, code])
   useEffect(() => {
     active.current = true
+    latestRefresh.current = refresh
     refresh()
     const sync = () => {
       if (owner != null && !lock.current) {
@@ -49,6 +51,7 @@ function WishlistSession({ owner, orderVersion, children }) {
     window.addEventListener('focus', sync)
     return () => {
       active.current = false
+      latestRefresh.current = null
       version.current += 1
       window.removeEventListener('focus', sync)
     }
@@ -67,11 +70,12 @@ function WishlistSession({ owner, orderVersion, children }) {
     try {
       await action()
       if (!active.current) return false
-      await refresh()
+      // Reconcile against the currency active now, not when the action started.
+      await latestRefresh.current()
       return active.current
     } catch (reason) {
       if (active.current) {
-        if ([400, 404].includes(reason.status)) await refresh()
+        if ([400, 404].includes(reason.status)) await latestRefresh.current()
         if (active.current) setError(api.wishlistError(reason))
       }
       throw reason

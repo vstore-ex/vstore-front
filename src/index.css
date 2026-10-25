@@ -12,6 +12,12 @@
 
 html {
   background: var(--color-page);
+  scrollbar-gutter: stable;
+}
+
+/* Keep the page still while any shared modal is open, including nested dialogs. */
+html:has(.ui-dialog[open]) {
+  overflow: hidden;
 }
 
 body {

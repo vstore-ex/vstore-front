@@ -15,6 +15,7 @@ function CartSession({ owner, children }) {
   const [orderVersion, setOrderVersion] = useState(0)
   const [lastOrder, setLastOrder] = useState(null)
   const active = useRef(false)
+  const latest = useRef(null)
   const lock = useRef(false)
   const requestVersion = useRef(0)
   const refresh = useCallback(() => {
@@ -41,6 +42,7 @@ function CartSession({ owner, children }) {
   }, [owner, code])
   useEffect(() => {
     active.current = true
+    latest.current = { code, refresh }
     refresh()
     const sync = () => {
       if (owner != null && !lock.current) {
@@ -51,10 +53,11 @@ function CartSession({ owner, children }) {
     window.addEventListener('focus', sync)
     return () => {
       active.current = false
+      latest.current = null
       requestVersion.current += 1
       window.removeEventListener('focus', sync)
     }
-  }, [refresh, owner])
+  }, [refresh, owner, code])
   async function mutate(action, checkout = false) {
     if (owner == null) throw new Error('Please sign in to use your cart.')
     if (lock.current) throw new Error('Please wait for the current cart action to finish.')
@@ -70,16 +73,22 @@ function CartSession({ owner, children }) {
           throw new Error(
             'The server did not return an order number. Check your order history before trying again.',
           )
-        setCart({ ...emptyCart, currency: result.currency })
+        // A currency refresh may have started while checkout was pending. Its
+        // pre-purchase contents must not restore the cart after a paid order.
+        requestVersion.current += 1
+        setCart({ ...emptyCart, currency: latest.current.code })
         setLoading(false)
         setLastOrder(result)
         setOrderVersion((v) => v + 1)
-      } else await refresh()
+      } else {
+        // The wallet can change currency while the mutation is awaiting the API.
+        await latest.current.refresh()
+      }
       return result ?? true
     } catch (reason) {
       if (active.current) {
         // Reconcile changes made by another tab/device, without discarding a failed checkout's cart.
-        if ([400, 404].includes(reason.status)) await refresh()
+        if ([400, 404].includes(reason.status)) await latest.current.refresh()
         if (active.current) setError(api.cartError(reason))
       }
       throw reason
