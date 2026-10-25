@@ -123,7 +123,9 @@ export default function CurrencyProvider({ children }) {
     status === 'loading'
       ? null
       : currentUser
-        ? wallet.data?.currency || null
+        ? wallet.currencyUncertain
+          ? null
+          : wallet.data?.currency || null
         : guestSupported
           ? guestCode
           : currencies.find((item) => item.code === 'USD')?.code || currencies[0]?.code || null
@@ -155,7 +157,11 @@ export default function CurrencyProvider({ children }) {
         currencies,
         choose,
         switching: wallet.operation === 'currency',
-        unavailable: currentUser ? (!wallet.data ? wallet.error : '') : listError,
+        unavailable: currentUser
+          ? !wallet.data || wallet.currencyUncertain
+            ? wallet.error
+            : ''
+          : listError,
         walletError: currentUser ? wallet.error : '',
         refreshWallet: wallet.refresh,
         retryPrices: currentUser ? wallet.refresh : retryCurrencies,
