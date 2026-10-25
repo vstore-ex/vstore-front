@@ -1,16 +1,13 @@
 import { apiRequest } from './client'
 import { walletError } from './wallet'
+import { isMoneyAmount } from '../utils/money'
 export { formatMoney } from '../utils/money'
 const gamePath = (id) => {
   if (!id || (typeof id !== 'string' && typeof id !== 'number'))
     throw new Error('This game is not available in the server catalog.')
   return '/me/cart/' + encodeURIComponent(String(id).trim())
 }
-const validAmount = (value) =>
-  (typeof value === 'string' || typeof value === 'number') &&
-  String(value).trim() !== '' &&
-  Number.isFinite(Number(value)) &&
-  Number(value) >= 0
+const validAmount = (value) => isMoneyAmount(value) && Number(value) >= 0
 export async function getCart(signal) {
   const data = await apiRequest('/me/cart', { signal })
   if (
