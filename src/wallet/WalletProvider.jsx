@@ -11,6 +11,7 @@ function WalletSession({ owner, children }) {
   const [busy, setBusy] = useState(false)
   const [operation, setOperation] = useState(null)
   const [revision, setRevision] = useState(0)
+  const [currencyUncertain, setCurrencyUncertain] = useState(false)
   const active = useRef(false)
   const lock = useRef(false)
   const request = useRef(null)
@@ -24,6 +25,7 @@ function WalletSession({ owner, children }) {
       .then((wallet) => {
         if (!controller.signal.aborted && active.current) {
           setData(wallet)
+          setCurrencyUncertain(false)
           setError('')
           setRevision((value) => value + 1)
         }
@@ -60,11 +62,15 @@ function WalletSession({ owner, children }) {
     request.current?.abort()
     setBusy(true)
     setOperation(type)
+    // A lost conversion response can leave the server in either currency.
+    // Only an authoritative wallet response can make prices usable again.
+    if (type === 'currency') setCurrencyUncertain(true)
     setLoading(false)
     try {
       const wallet = await action()
       if (!active.current) return null
       setData(wallet)
+      setCurrencyUncertain(false)
       setError('')
       setRevision((value) => value + 1)
       return wallet
@@ -94,6 +100,7 @@ function WalletSession({ owner, children }) {
         busy,
         operation,
         revision,
+        currencyUncertain,
         refresh,
         topUp: (amount) => mutate(() => topUpWallet(amount), 'top-up'),
         changeCurrency: (code) => mutate(() => changeCurrency(code), 'currency'),
