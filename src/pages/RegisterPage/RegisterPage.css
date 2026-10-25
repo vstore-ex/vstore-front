@@ -1,9 +1,24 @@
-.auth-overlay {
+.auth-page.auth-overlay {
   position: fixed;
   inset: 0;
   z-index: 1000;
-  min-height: 100dvh;
+  width: 100%;
+  max-width: none;
+  height: 100dvh;
+  max-height: 100dvh;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
   background: var(--color-surface);
+}
+
+.auth-page.auth-overlay[open] {
+  animation: none;
+}
+
+.auth-page.auth-overlay h2 {
+  padding-right: 0;
 }
 
 .auth-page {
@@ -30,10 +45,11 @@
   opacity: 0.5;
 }
 
-.auth-back {
+.auth-overlay > .ui-dialog__close {
   position: fixed;
   left: 10px;
   top: 10px;
+  right: auto;
   z-index: 3;
   width: var(--control-height);
   height: var(--control-height);
@@ -45,7 +61,7 @@
   cursor: pointer;
 }
 
-.auth-back img {
+.auth-overlay > .ui-dialog__close img {
   width: 40px;
   height: 40px;
   display: block;
