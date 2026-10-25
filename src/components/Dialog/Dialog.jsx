@@ -6,6 +6,8 @@ export default function Dialog({
   labelledBy,
   busy = false,
   initialFocusRef,
+  closeLabel = 'Close dialog',
+  closeContent = <span aria-hidden="true">×</span>,
   onClose,
 }) {
   const dialog = useRef(null)
@@ -43,11 +45,11 @@ export default function Dialog({
       <button
         className="ui-dialog__close"
         type="button"
-        aria-label="Close dialog"
+        aria-label={closeLabel}
         disabled={busy}
         onClick={onClose}
       >
-        <span aria-hidden="true">×</span>
+        {closeContent}
       </button>
       {children}
     </dialog>
