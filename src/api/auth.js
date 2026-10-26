@@ -57,14 +57,14 @@ export async function logoutUser(all = false) {
     }
   }
 }
-export async function updateUser(body) {
-  return normalizeUser(await apiRequest('/users/me', { method: 'PATCH', body }))
+export async function updateUser(body, signal) {
+  return normalizeUser(await apiRequest('/users/me', { method: 'PATCH', body, signal }))
 }
-export async function updateAvatar(file) {
+export async function updateAvatar(file, signal) {
   const body = new FormData()
   body.append('file', file)
   return normalizeUser(
-    await apiRequest('/users/me/avatar', { method: 'PATCH', body, timeout: 120000 }),
+    await apiRequest('/users/me/avatar', { method: 'PATCH', body, signal, timeout: 120000 }),
   )
 }
 export function registrationErrors(error) {

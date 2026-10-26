@@ -4,7 +4,7 @@ import CurrencySelector from '../../currency/CurrencySelector'
 import useCatalogResource from '../../hooks/useCatalogResource'
 import UserLink from '../../components/User/UserLink'
 import FriendsSection from './FriendsSection'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { mediaUrl } from '../../api/client'
 import useOrders from '../../hooks/useOrders'
 import { formatMoney } from '../../api/cart'
@@ -14,7 +14,11 @@ import fallbackAvatar from '../../assets/avatar.webp'
 import Library from './Library'
 import './AccountPage.css'
 
-export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut, focusWallet }) {
+export default function AccountPage(props) {
+  return <AccountSession key={props.user.id} {...props} />
+}
+
+function AccountSession({ user, onUpdated, onLogoutAll, isLoggingOut, focusWallet }) {
   const [values, setValues] = useState({
     full_name: user.fullName,
     email: user.email,
@@ -26,6 +30,14 @@ export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut
   const [avatarFile, setAvatarFile] = useState(null)
   const [avatarPreview, setAvatarPreview] = useState(null)
   const [avatarTimestamp, setAvatarTimestamp] = useState(() => Date.now())
+  const avatarInput = useRef(null)
+  const activeSave = useRef(null)
+  useEffect(() => () => activeSave.current?.abort(), [])
+  useEffect(() => {
+    return () => {
+      if (avatarPreview) URL.revokeObjectURL(avatarPreview)
+    }
+  }, [avatarPreview])
   const achievements = useCatalogResource('userAchievements', String(user.id))
   const orders = useOrders()
   const wishlist = useWishlist()
@@ -56,45 +68,45 @@ export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut
     setAvatarPreview(URL.createObjectURL(file))
   }
 
-  async function uploadAvatarDirect() {
-    if (!avatarFile) return
+  async function saveProfile(includeDetails) {
+    if (activeSave.current || (!includeDetails && !avatarFile)) return
+    const controller = new AbortController()
+    activeSave.current = controller
+    const { signal } = controller
+    let avatarSaved = false
     setBusy(true)
     setMessage('')
     setError('')
     try {
-      const updated = await updateAvatar(avatarFile)
-      onUpdated(updated)
-      setAvatarFile(null)
-      setAvatarPreview(null)
-      setAvatarTimestamp(Date.now())
-      setMessage('Avatar saved successfully.')
-    } catch (err) {
-      setError(err.message || 'Avatar upload failed.')
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function save(event) {
-    event.preventDefault()
-    setBusy(true)
-    setMessage('')
-    setError('')
-    try {
-      let updated = user
       if (avatarFile) {
-        updated = await updateAvatar(avatarFile)
+        const updated = await updateAvatar(avatarFile, signal)
+        if (signal.aborted) return
+        // Each request commits independently; keep the confirmed avatar if details fail.
+        onUpdated(updated)
+        avatarSaved = true
         setAvatarFile(null)
         setAvatarPreview(null)
+        if (avatarInput.current) avatarInput.current.value = ''
         setAvatarTimestamp(Date.now())
       }
-      updated = await updateUser(values)
-      onUpdated(updated)
-      setMessage('Profile saved.')
+      if (includeDetails) {
+        const updated = await updateUser(values, signal)
+        if (signal.aborted) return
+        onUpdated(updated)
+      }
+      setMessage(includeDetails ? 'Profile saved.' : 'Avatar saved successfully.')
     } catch (err) {
-      setError(err.message || 'Could not save profile.')
+      if (!signal.aborted) {
+        setError(
+          err.message || (includeDetails ? 'Could not save profile.' : 'Avatar upload failed.'),
+        )
+        if (avatarSaved) setMessage('Your avatar was saved. Retry to save your profile details.')
+      }
     } finally {
-      setBusy(false)
+      if (activeSave.current === controller) {
+        activeSave.current = null
+        if (!signal.aborted) setBusy(false)
+      }
     }
   }
 
@@ -117,7 +129,7 @@ export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut
             alt=""
             referrerPolicy="no-referrer"
             onError={(e) => {
-              if (e.currentTarget.src !== fallbackAvatar) {
+              if (e.currentTarget.getAttribute('src') !== fallbackAvatar) {
                 e.currentTarget.src = fallbackAvatar
               }
             }}
@@ -143,7 +155,13 @@ export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut
         <FriendsSection />
         <section className="account-section">
           <h2>Profile settings</h2>
-          <form className="store-form" onSubmit={save}>
+          <form
+            className="store-form"
+            onSubmit={(event) => {
+              event.preventDefault()
+              saveProfile(true)
+            }}
+          >
             {Object.entries({ full_name: 'Full name', email: 'Email', phone: 'Phone' }).map(
               ([name, label]) => (
                 <label key={name}>
@@ -152,6 +170,7 @@ export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut
                     type={name === 'email' ? 'email' : name === 'phone' ? 'tel' : 'text'}
                     value={values[name]}
                     required={name === 'email'}
+                    disabled={busy}
                     onChange={(e) => setValues((v) => ({ ...v, [name]: e.target.value }))}
                   />
                 </label>
@@ -159,7 +178,13 @@ export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut
             )}
             <label>
               Avatar
-              <input type="file" accept="image/*" disabled={busy} onChange={handleAvatarChange} />
+              <input
+                ref={avatarInput}
+                type="file"
+                accept="image/*"
+                disabled={busy}
+                onChange={handleAvatarChange}
+              />
             </label>
             {avatarFile && (
               <div className="account-avatar-upload">
@@ -167,7 +192,7 @@ export default function AccountPage({ user, onUpdated, onLogoutAll, isLoggingOut
                   type="button"
                   className="button button--secondary"
                   disabled={busy}
-                  onClick={uploadAvatarDirect}
+                  onClick={() => saveProfile(false)}
                 >
                   {busy ? 'Uploading...' : 'Upload avatar now'}
                 </button>
