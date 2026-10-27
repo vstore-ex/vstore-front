@@ -1,4 +1,5 @@
 import { getReviewSummary } from '../api/reviews'
+import { searchUsers, searchReviews } from '../api/search'
 import { getUserById } from '../api/users'
 import { getNews, getNewsById } from '../api/news'
 import { useEffect, useState } from 'react'
@@ -13,6 +14,8 @@ const loaders = {
   news: (key, signal) => getNews(JSON.parse(key), signal),
   newsDetail: getNewsById,
   search: searchGames,
+  searchPeople: searchUsers,
+  searchReviews,
   discover: getDiscover,
   game: getGame,
   games: getGames,

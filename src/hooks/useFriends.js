@@ -29,7 +29,12 @@ function applyResults(previous, results) {
     Object.entries(results).map(([key, result]) => [
       key,
       {
-        items: result.status === 'fulfilled' ? result.value : previous[key].items,
+        items:
+          result.status === 'fulfilled'
+            ? result.value
+            : [401, 403].includes(result.reason.status)
+              ? []
+              : previous[key].items,
         loading: false,
         error: result.status === 'rejected' ? friendError(result.reason) : '',
       },

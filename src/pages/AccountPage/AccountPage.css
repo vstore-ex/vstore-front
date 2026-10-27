@@ -582,3 +582,6 @@
   font-size: 13px;
   color: var(--color-text-muted);
 }
+.account-email-status {
+  overflow-wrap: anywhere;
+}
