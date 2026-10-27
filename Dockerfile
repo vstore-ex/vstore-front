@@ -34,7 +34,9 @@ RUN apk --no-cache upgrade \
 USER 101
 
 # Copy custom Nginx configuration and compiled static assets
-COPY nginx/default.conf /etc/nginx/conf.d/default.conf
+# The standard entrypoint renders only this setting; Nginx variables stay literal.
+ENV EDGE_PROXY_IP=172.31.240.2 NGINX_ENVSUBST_FILTER="^EDGE_PROXY_IP$"
+COPY nginx/default.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Default non-root HTTP listening port for nginx-unprivileged
