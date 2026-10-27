@@ -8,7 +8,17 @@ const idPath = (id) => {
 function profile(user) {
   if (!user || user.id == null || typeof user.username !== 'string')
     throw new Error('Could not read a friend profile.')
-  return { ...user, avatar: mediaUrl(user.avatar) }
+  return {
+    ...user,
+    avatar: mediaUrl(user.avatar),
+    is_online: typeof user.is_online === 'boolean' ? user.is_online : null,
+    status: typeof user.status === 'string' ? user.status.slice(0, 32) : '',
+    activity: typeof user.activity === 'string' ? user.activity.slice(0, 128) : '',
+    last_seen:
+      typeof user.last_seen === 'string' && Number.isFinite(Date.parse(user.last_seen))
+        ? user.last_seen
+        : null,
+  }
 }
 function requestItem(item) {
   if (!item || item.id == null) throw new Error('Could not read a friend request.')
@@ -24,6 +34,12 @@ async function list(path, transform, signal) {
   return data.map(transform)
 }
 export const getFriends = (signal) => list('/friends', profile, signal)
+export const sendPresence = (signal) =>
+  apiRequest('/friends/presence', {
+    method: 'POST',
+    body: { status: 'online' },
+    signal,
+  })
 export const getIncomingRequests = (signal) =>
   list('/friends/requests/incoming', requestItem, signal)
 export const getOutgoingRequests = (signal) =>
@@ -47,6 +63,8 @@ export const declineFriendRequest = (id, signal) =>
 export const cancelFriendRequest = (id, signal) =>
   apiRequest('/friends/requests/' + idPath(id), { method: 'DELETE', signal })
 export function friendError(error) {
+  if (error.status === 403)
+    return 'Friends and presence are unavailable for this account. Please refresh or sign in again.'
   const messages = {
     'cannot send friend request to yourself': 'You cannot add yourself.',
     'already friends': 'This user is already your friend.',

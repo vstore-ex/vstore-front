@@ -11,7 +11,40 @@ const empty = {
   incoming: 'No incoming requests.',
   outgoing: 'No outgoing requests.',
 }
-function Profile({ user, id }) {
+function FriendPresence({ user, stale }) {
+  const labels = {
+    online: 'Online',
+    offline: 'Offline',
+    away: 'Away',
+    in_game: 'In game',
+    busy: 'Busy',
+  }
+  const online = user?.is_online
+  const status = user?.status
+  const label = Object.hasOwn(labels, status) ? labels[status] : status
+  return (
+    <div className="friend-presence">
+      <p className={online ? 'friend-presence--online' : ''}>
+        {stale && 'Last known status: '}
+        {online == null ? 'Status unavailable' : online ? 'Online' : 'Offline'}
+        {online && label && status !== 'online' && status !== 'offline' && ` · ${label}`}
+      </p>
+      {online && user.activity && <p>{user.activity}</p>}
+      {user?.last_seen && (
+        <small>
+          Last seen{' '}
+          <time dateTime={user.last_seen}>
+            {new Date(user.last_seen).toLocaleString('en', {
+              dateStyle: 'medium',
+              timeStyle: 'short',
+            })}
+          </time>
+        </small>
+      )}
+    </div>
+  )
+}
+function Profile({ user, id, presence = false, stale = false }) {
   return (
     <UserLink id={user?.id ?? id} className="friend-profile">
       <img
@@ -28,6 +61,7 @@ function Profile({ user, id }) {
         <strong>{user?.username ? '@' + user.username : 'User #' + id}</strong>
         {user?.full_name && <p>{user.full_name}</p>}
         <small>ID: {user?.id ?? id}</small>
+        {presence && <FriendPresence user={user} stale={stale} />}
       </div>
     </UserLink>
   )
@@ -43,6 +77,7 @@ function FriendsPanel({ user }) {
     if (await state.send(receiver)) setReceiver('')
   }
   function changeTab(next) {
+    if (next === 'friends' && tab !== 'friends') state.refresh()
     setTab(next)
     setConfirm(null)
   }
@@ -152,6 +187,8 @@ function FriendsPanel({ user }) {
           {group.items.map((item) => (
             <article className="friend-card" key={item.id}>
               <Profile
+                presence={tab === 'friends'}
+                stale={group.loading || Boolean(group.error)}
                 key={
                   (tab === 'friends'
                     ? item.avatar
