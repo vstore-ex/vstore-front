@@ -1,5 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { registerUser, registrationErrors, getGoogleAuthorizationUrl } from '../../api/auth'
+import {
+  registerUser,
+  registrationErrors,
+  getGoogleAuthorizationUrl,
+  isUnverifiedLogin,
+} from '../../api/auth'
+import EmailVerification from '../../auth/EmailVerification'
 import { rememberOAuthDestination } from '../../auth/oauth'
 import { useAuth } from '../../auth/context'
 import { validateLogin } from '../../utils/validation'
@@ -55,13 +61,14 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
   const [status, setStatus] = useState({ type: '', message: '' })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isGoogleConnecting, setGoogleConnecting] = useState(false)
+  const [verification, setVerification] = useState(null)
   const firstField = useRef(null)
   const createdTitle = useRef(null)
   const form = useRef(null)
   const focusErrors = useRef(false)
 
   const isRegister = mode === 'register'
-  const isCreated = mode === 'created'
+  const isCreated = mode === 'created' || mode === 'resend'
   const activeForm = isRegister ? registerForm : loginForm
 
   useEffect(() => {
@@ -77,7 +84,7 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
   }, [])
 
   useEffect(() => {
-    if (mode === 'created') createdTitle.current?.focus()
+    if (mode === 'created' || mode === 'resend') createdTitle.current?.focus()
     else firstField.current?.focus()
   }, [mode])
 
@@ -151,6 +158,10 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
 
       setStatus({ type: 'success', message: result.message })
       if (isRegister) {
+        setVerification({
+          email: result.data?.email || registerForm.email.trim(),
+          delivery: result.data?.email_sent,
+        })
         setLoginForm({ username: registerForm.username.trim(), password: '' })
         setRegisterForm(initialRegisterForm)
         setMode('created')
@@ -160,6 +171,10 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
         onClose()
       }
     } catch (error) {
+      if (!isRegister && isUnverifiedLogin(error)) {
+        setVerification(null)
+        setMode('resend')
+      }
       if (isRegister) {
         focusErrors.current = true
         setErrors(registrationErrors(error))
@@ -194,11 +209,19 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
           <div className="auth-card auth-card--created">
             <img className="auth-card__texture" src={authPanel} alt="" aria-hidden="true" />
             <h2 id="auth-title" ref={createdTitle} tabIndex={-1}>
-              Account created!
+              Confirm your email
             </h2>
-            <p>Your account is ready. You can sign in now.</p>
+            <p>
+              Open the confirmation link in your email before signing in. Check your spam folder, or
+              request another email.
+            </p>
+            <EmailVerification
+              key={mode}
+              email={verification?.email}
+              delivery={verification?.delivery}
+            />
             <button className="auth-submit" type="button" onClick={() => switchMode('login')}>
-              LOG IN
+              Back to log in
             </button>
           </div>
         ) : (
@@ -343,8 +366,16 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
                     <button className="auth-submit" type="submit" disabled={isSubmitting}>
                       {isSubmitting ? 'PLEASE WAIT...' : 'SIGN IN'}
                     </button>
-                    <button className="auth-help" type="button" disabled={isSubmitting}>
-                      Help, i cant log in
+                    <button
+                      className="auth-help"
+                      type="button"
+                      disabled={isSubmitting}
+                      onClick={() => {
+                        setVerification(null)
+                        switchMode('resend')
+                      }}
+                    >
+                      Resend confirmation email
                     </button>
                   </div>
 
