@@ -11,6 +11,7 @@ import { formatMoney } from '../../api/cart'
 import { useWishlist } from '../../wishlist/context'
 import { updateUser, updateAvatar } from '../../api/auth'
 import fallbackAvatar from '../../assets/avatar.webp'
+import EmailVerification from '../../auth/EmailVerification'
 import Library from './Library'
 import './AccountPage.css'
 
@@ -82,7 +83,7 @@ function AccountSession({ user, onUpdated, onLogoutAll, isLoggingOut, focusWalle
         const updated = await updateAvatar(avatarFile, signal)
         if (signal.aborted) return
         // Each request commits independently; keep the confirmed avatar if details fail.
-        onUpdated(updated)
+        onUpdated({ ...user, ...updated })
         avatarSaved = true
         setAvatarFile(null)
         setAvatarPreview(null)
@@ -93,6 +94,8 @@ function AccountSession({ user, onUpdated, onLogoutAll, isLoggingOut, focusWalle
         const updated = await updateUser(values, signal)
         if (signal.aborted) return
         onUpdated(updated)
+        // Keep the editable email aligned with the active address, not the pending one.
+        setValues((current) => ({ ...current, email: updated.email }))
       }
       setMessage(includeDetails ? 'Profile saved.' : 'Avatar saved successfully.')
     } catch (err) {
@@ -155,6 +158,29 @@ function AccountSession({ user, onUpdated, onLogoutAll, isLoggingOut, focusWalle
         <FriendsSection />
         <section className="account-section">
           <h2>Profile settings</h2>
+          {user.pendingEmail && (
+            <div className="account-email-status">
+              <p>
+                Active email: <strong>{user.email}</strong>
+              </p>
+              <p>
+                Pending email: <strong>{user.pendingEmail}</strong>
+              </p>
+              <p>Your email changes only after you confirm the new address.</p>
+              {user.emailVerificationSent === true && (
+                <p role="status">Confirmation email sent. Check your inbox.</p>
+              )}
+              <EmailVerification
+                key={user.pendingEmail}
+                email={user.pendingEmail}
+                delivery={user.emailVerificationSent}
+                disabled={busy}
+              />
+            </div>
+          )}
+          {!user.pendingEmail && user.emailVerified === false && (
+            <EmailVerification key={user.email} email={user.email} disabled={busy} />
+          )}
           <form
             className="store-form"
             onSubmit={(event) => {
