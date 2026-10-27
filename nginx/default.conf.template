@@ -1,3 +1,16 @@
+# Only the configured edge peer may supply the original request scheme.
+# Direct requests and malformed/duplicate headers retain the local scheme.
+geo $trusted_edge_proxy {
+    default 0;
+    ${EDGE_PROXY_IP} 1;
+}
+
+map "$trusted_edge_proxy:$http_x_forwarded_proto" $forwarded_scheme {
+    default $scheme;
+    "1:https" https;
+    "1:http" http;
+}
+
 server {
     listen 8080;
     server_name _;
@@ -64,7 +77,7 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Proto $forwarded_scheme;
     }
 
     # Reverse proxy for admin users endpoints with path rewrite
@@ -76,7 +89,7 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Proto $forwarded_scheme;
     }
 
     # Reverse proxy for all backend API endpoints
@@ -86,7 +99,7 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Proto $forwarded_scheme;
     }
 
     # Reverse proxy for backend static files (media uploads, thumbnails)
@@ -96,7 +109,7 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Proto $forwarded_scheme;
     }
 
     # Long-term immutable caching for Vite build assets (content-hashed filenames)
