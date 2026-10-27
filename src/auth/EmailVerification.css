@@ -1,0 +1,25 @@
+.email-verification {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+  margin-block: var(--space-4);
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.email-verification label {
+  display: grid;
+  gap: var(--space-2);
+}
+.email-verification input {
+  width: 100%;
+  min-width: 0;
+}
+.email-verification p {
+  margin: 0;
+}
+.email-verification .email-verification__error {
+  color: var(--color-error);
+}
+.email-verification button {
+  white-space: normal;
+}

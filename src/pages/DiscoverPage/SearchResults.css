@@ -1,0 +1,46 @@
+.search-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-block: var(--space-4);
+}
+.search-categories [role='tab'] {
+  padding: var(--space-2) var(--space-4);
+}
+.search-categories [aria-selected='true'] {
+  border-color: var(--color-accent);
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+}
+#search-title,
+.search-results :is(.search-result--person, .search-result--review) {
+  overflow-wrap: anywhere;
+}
+.search-result--person,
+.search-result--review {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+.search-results :is(.search-result--person, .search-result--review) > :is(h2, p) {
+  margin: 0;
+}
+.search-review-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  color: var(--color-text-muted);
+}
+.search-review-excerpt {
+  line-height: 1.5;
+}
+.search-review-excerpt :is(ul, ol) {
+  padding-inline-start: var(--space-5);
+}
+.search-results .search-result--review > a {
+  margin-top: auto;
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
