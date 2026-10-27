@@ -7,6 +7,11 @@ export function normalizeUser(data) {
     id: data.id ?? null,
     username: data.username ?? '',
     email: data.email ?? '',
+    ...(typeof data.email_verified === 'boolean' ? { emailVerified: data.email_verified } : {}),
+    ...('pending_email' in data ? { pendingEmail: data.pending_email || null } : {}),
+    ...('email_verification_sent' in data
+      ? { emailVerificationSent: data.email_verification_sent }
+      : {}),
     role: data.role ?? data.role_name ?? 'User',
     permissions: data.permissions ?? null,
     avatar: data.avatar ?? null,
@@ -16,9 +21,29 @@ export function normalizeUser(data) {
   }
 }
 
-export async function registerUser(payload) {
-  const data = await apiRequest('/auth/register/', { method: 'POST', body: payload, auth: false })
-  return { data, message: 'Account created successfully. You can sign in now.' }
+export async function registerUser(payload, signal) {
+  const data = await apiRequest('/auth/register/', {
+    method: 'POST',
+    body: payload,
+    auth: false,
+    signal,
+  })
+  return { data, message: 'Confirm your email before signing in.' }
+}
+export async function resendVerification(email, signal) {
+  const data = await apiRequest('/auth/resend-verification', {
+    method: 'POST',
+    body: { email: email.trim() },
+    auth: false,
+    credentials: 'omit',
+    signal,
+  })
+  if (typeof data?.message !== 'string' || !data.message.trim())
+    throw new Error('Could not confirm the resend request. Please try again.')
+  return data.message
+}
+export function isUnverifiedLogin(error) {
+  return error.status === 403 && /email not confirmed/i.test(error.message)
 }
 export async function loginUser(payload) {
   await waitForRefresh()
@@ -57,14 +82,14 @@ export async function logoutUser(all = false) {
     }
   }
 }
-export async function updateUser(body) {
-  return normalizeUser(await apiRequest('/users/me', { method: 'PATCH', body }))
+export async function updateUser(body, signal) {
+  return normalizeUser(await apiRequest('/users/me', { method: 'PATCH', body, signal }))
 }
-export async function updateAvatar(file) {
+export async function updateAvatar(file, signal) {
   const body = new FormData()
   body.append('file', file)
   return normalizeUser(
-    await apiRequest('/users/me/avatar', { method: 'PATCH', body, timeout: 120000 }),
+    await apiRequest('/users/me/avatar', { method: 'PATCH', body, signal, timeout: 120000 }),
   )
 }
 export function registrationErrors(error) {

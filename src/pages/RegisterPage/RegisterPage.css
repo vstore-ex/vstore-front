@@ -139,6 +139,14 @@
   width: 100%;
 }
 
+.auth-card--created .email-verification {
+  width: 100%;
+}
+
+.auth-card--created .email-verification p {
+  margin: 0;
+}
+
 .auth-card__texture {
   position: absolute;
   inset: 0;
