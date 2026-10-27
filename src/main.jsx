@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import AuthProvider from './auth/AuthProvider'
+import PresenceHeartbeat from './friends/PresenceHeartbeat'
 import CartProvider from './cart/CartProvider'
 import WishlistProvider from './wishlist/WishlistProvider'
 import OrdersProvider from './orders/OrdersProvider'
@@ -13,6 +14,7 @@ import './styles/controls.css'
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <AuthProvider>
+      <PresenceHeartbeat />
       <WalletProvider>
         <CurrencyProvider>
           <CartProvider>
