@@ -4,20 +4,22 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, expect, test, vi } from 'vitest'
 import { AuthContext } from '../src/auth/context'
 import RegisterPage from '../src/pages/RegisterPage/RegisterPage'
-import { registerUser, getGoogleAuthorizationUrl } from '../src/api/auth'
+import { registerUser, getGoogleAuthorizationUrl, resendVerification } from '../src/api/auth'
 import { deferred } from './helpers'
 
 vi.mock('../src/api/auth', async (original) => ({
   ...(await original()),
   registerUser: vi.fn(),
   getGoogleAuthorizationUrl: vi.fn(),
+  resendVerification: vi.fn(),
 }))
 let login, close, authenticated
 beforeEach(() => {
   login = vi.fn(async () => ({ data: { id: 7 }, message: 'Signed in successfully.' }))
   close = vi.fn()
   authenticated = vi.fn()
-  registerUser.mockReset().mockResolvedValue({ message: 'Account created.' })
+  registerUser.mockReset().mockResolvedValue({ data: { email: 'reader@example.com', email_sent: true }, message: 'Confirm your email before signing in.' })
+  resendVerification.mockReset().mockResolvedValue('If an account needs verification, a confirmation email has been sent.')
   getGoogleAuthorizationUrl.mockReset()
 })
 
@@ -108,10 +110,10 @@ test('focuses server field validation, then announces account creation and refoc
   await user.clear(email)
   await user.type(email, 'other@example.com')
   await user.click(screen.getByRole('button', { name: 'SIGN IN', exact: true }))
-  const created = await screen.findByRole('heading', { name: 'Account created!' })
+  const created = await screen.findByRole('heading', { name: 'Confirm your email' })
   expect(created).toHaveFocus()
-  expect(screen.getByRole('dialog', { name: 'Account created!' })).toBeInTheDocument()
-  await user.click(screen.getByRole('button', { name: 'LOG IN', exact: true }))
+  expect(screen.getByRole('dialog', { name: 'Confirm your email' })).toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'Back to log in', exact: true }))
   expect(screen.getByLabelText('SIGN IN WITH ACCOUNT NAME')).toHaveFocus()
 })
 
@@ -154,4 +156,86 @@ test('keeps the dialog usable after Google authorization fails', async () => {
   expect(screen.getByRole('button', { name: 'Continue with Google' })).toBeEnabled()
   await user.click(screen.getByRole('button', { name: 'Go back' }))
   expect(close).toHaveBeenCalledTimes(1)
+})
+
+test('registration requires confirmation and identifies the destination without signing in', async () => {
+  const user = await open('register')
+  await fillRegistration(user)
+  await user.click(screen.getByRole('button', { name: 'SIGN IN', exact: true }))
+  expect(await screen.findByRole('heading', { name: 'Confirm your email' })).toHaveFocus()
+  expect(screen.getByText('reader@example.com')).toBeInTheDocument()
+  expect(screen.getByText(/before signing in/)).toBeInTheDocument()
+  expect(screen.queryByText(/Your account is ready|You can sign in now/)).not.toBeInTheDocument()
+  expect(login).not.toHaveBeenCalled()
+  expect(authenticated).not.toHaveBeenCalled()
+})
+
+test('failed signup delivery offers a recoverable resend with the generic backend response', async () => {
+  registerUser.mockResolvedValueOnce({ data: { email: 'reader@example.com', email_sent: false } })
+  const user = await open('register')
+  await fillRegistration(user)
+  await user.click(screen.getByRole('button', { name: 'SIGN IN', exact: true }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('could not be sent')
+  resendVerification.mockRejectedValueOnce(new Error('Email service unavailable.'))
+  await user.click(screen.getByRole('button', { name: 'Resend confirmation email' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('Email service unavailable.')
+  await user.click(screen.getByRole('button', { name: 'Resend confirmation email' }))
+  expect(await screen.findByRole('status')).toHaveTextContent('If an account needs verification, a confirmation email has been sent.')
+  expect(resendVerification.mock.calls[1][0]).toBe('reader@example.com')
+  expect(registerUser).toHaveBeenCalledTimes(1)
+})
+
+test('unverified login opens email guidance and resend, keeping the account name for a later login', async () => {
+  login.mockRejectedValueOnce({ status: 403, message: 'Email not confirmed. Open the link we sent or request a new one at /api/v1/auth/resend-verification.' })
+  const user = await open()
+  await user.type(screen.getByLabelText('SIGN IN WITH ACCOUNT NAME'), 'reader')
+  await user.type(screen.getByLabelText('PASSWORD', { exact: true }), 'secret123')
+  await user.click(screen.getByRole('button', { name: 'SIGN IN', exact: true }))
+  expect(await screen.findByRole('heading', { name: 'Confirm your email' })).toHaveFocus()
+  expect(screen.getByLabelText('Email address for confirmation')).toHaveValue('')
+  await user.type(screen.getByLabelText('Email address for confirmation'), 'reader@example.com')
+  await user.click(screen.getByRole('button', { name: 'Resend confirmation email' }))
+  expect(await screen.findByRole('status')).toHaveTextContent('If an account needs verification')
+  expect(authenticated).not.toHaveBeenCalled()
+  expect(close).not.toHaveBeenCalled()
+  await user.click(screen.getByRole('button', { name: 'Back to log in' }))
+  expect(screen.getByLabelText('SIGN IN WITH ACCOUNT NAME')).toHaveValue('reader')
+})
+
+test('resend validates email, blocks duplicate requests and aborts when leaving the confirmation view', async () => {
+  const user = await open()
+  await user.click(screen.getByRole('button', { name: 'Resend confirmation email' }))
+  await user.click(screen.getByRole('button', { name: 'Resend confirmation email' }))
+  const address = screen.getByLabelText('Email address for confirmation')
+  expect(address).toHaveFocus()
+  expect(address).toHaveAccessibleDescription('Enter a valid email address.')
+  expect(resendVerification).not.toHaveBeenCalled()
+  await user.type(address, 'reader@example.com')
+  const pending = deferred()
+  resendVerification.mockReturnValueOnce(pending.promise)
+  await user.click(screen.getByRole('button', { name: 'Resend confirmation email' }))
+  expect(screen.getByRole('button', { name: 'Requesting email...' })).toBeDisabled()
+  fireEvent.submit(screen.getByRole('form', { name: 'Email confirmation' }))
+  expect(resendVerification).toHaveBeenCalledTimes(1)
+  const signal = resendVerification.mock.calls[0][1]
+  await user.click(screen.getByRole('button', { name: 'Back to log in' }))
+  expect(signal.aborted).toBe(true)
+  await act(async () => pending.resolve('Late response'))
+  expect(screen.queryByText('Late response')).not.toBeInTheDocument()
+})
+
+test('resend rate limiting leaves a retry path and unrelated 403 errors stay on login', async () => {
+  login.mockRejectedValueOnce({ status: 403, message: 'Sign-in is unavailable.' })
+  const user = await open()
+  await user.type(screen.getByLabelText('SIGN IN WITH ACCOUNT NAME'), 'reader')
+  await user.type(screen.getByLabelText('PASSWORD', { exact: true }), 'secret123')
+  await user.click(screen.getByRole('button', { name: 'SIGN IN', exact: true }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('Sign-in is unavailable.')
+  expect(screen.getByRole('dialog', { name: 'Log in' })).toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'Resend confirmation email' }))
+  await user.type(screen.getByLabelText('Email address for confirmation'), 'reader@example.com')
+  resendVerification.mockRejectedValueOnce({ status: 429 })
+  await user.click(screen.getByRole('button', { name: 'Resend confirmation email' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('Too many requests. Please try again later.')
+  expect(screen.getByRole('button', { name: 'Resend confirmation email' })).toBeEnabled()
 })

@@ -51,8 +51,8 @@ beforeEach(() => {
   }))
 })
 
-function Account() {
-  const [user, setUser] = useState(normalizeUser(account))
+function Account({ initial = account }) {
+  const [user, setUser] = useState(normalizeUser(initial))
   return <AccountPage user={user} onUpdated={setUser} />
 }
 
@@ -189,4 +189,34 @@ test('resets drafts on account change and never continues the old avatar/profile
   await act(async () => pending.resolve(jsonResponse(uploaded)))
   expect(onUpdated).not.toHaveBeenCalled()
   expect(requests).toHaveLength(1)
+})
+
+test.each([true, false])('keeps email changes pending and reflects delivery=%s, with resend recovery', async (sent) => {
+  const user = userEvent.setup()
+  reply = (url) => url.endsWith('/auth/resend-verification')
+    ? jsonResponse({ message: 'If an account needs verification, a confirmation email has been sent.' }, 202)
+    : jsonResponse({ ...account, email_verified: true, pending_email: 'new@example.com', email_verification_sent: sent })
+  render(<Account />)
+  await user.clear(screen.getByLabelText('Email', { exact: true }))
+  await user.type(screen.getByLabelText('Email', { exact: true }), 'new@example.com')
+  await user.click(screen.getByRole('button', { name: 'Save profile' }))
+  expect(await screen.findByText('Your email changes only after you confirm the new address.')).toBeInTheDocument()
+  expect(screen.getByLabelText('Email', { exact: true })).toHaveValue('player@example.com')
+  expect(screen.getByText('Active email:', { exact: false })).toHaveTextContent('player@example.com')
+  expect(screen.getByText('Pending email:', { exact: false })).toHaveTextContent('new@example.com')
+  if (sent) expect(screen.getByText('Confirmation email sent. Check your inbox.')).toHaveAttribute('role', 'status')
+  else expect(screen.getByRole('alert')).toHaveTextContent('The confirmation email could not be sent.')
+  await user.click(screen.getByRole('button', { name: 'Resend confirmation email' }))
+  expect(await screen.findByText('If an account needs verification, a confirmation email has been sent.')).toBeInTheDocument()
+  expect(JSON.parse(requests.at(-1).body)).toEqual({ email: 'new@example.com' })
+})
+
+test('pending verification survives an avatar response that omits private email fields', async () => {
+  const user = userEvent.setup()
+  render(<Account initial={{ ...account, email_verified: true, pending_email: 'new@example.com' }} />)
+  await user.upload(screen.getByLabelText('Avatar'), avatarFile())
+  await user.click(screen.getByRole('button', { name: 'Upload avatar now' }))
+  await screen.findByText('Avatar saved successfully.')
+  expect(screen.getByText('Pending email:', { exact: false })).toHaveTextContent('new@example.com')
+  expect(screen.getByRole('button', { name: 'Resend confirmation email' })).toBeEnabled()
 })
