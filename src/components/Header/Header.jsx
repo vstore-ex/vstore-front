@@ -9,6 +9,7 @@ import './Header.css'
 import { useWallet } from '../../wallet/context'
 import { formatMoney } from '../../api/cart'
 import { readStoreLocation } from '../../utils/location'
+import NotificationCenter from '../../notifications/NotificationCenter'
 
 const navItems = ['Discover', 'Support', 'News']
 const actionIcons = [
@@ -244,6 +245,7 @@ function Header({
                 )}
               </button>
             ))}
+            {isAuthenticated && <NotificationCenter />}
             <CurrencySelector />
           </div>
 

@@ -11,6 +11,13 @@ vi.mock('../src/wallet/WalletSection', () => ({ default: () => null }))
 vi.mock('../src/currency/CurrencySelector', () => ({ default: () => null }))
 vi.mock('../src/pages/AccountPage/FriendsSection', () => ({ default: () => null }))
 vi.mock('../src/pages/AccountPage/Library', () => ({ default: () => null }))
+vi.mock('../src/api/newsPreferences', () => ({
+  getEmailNewsPreferences: vi.fn().mockResolvedValue({
+    email_news_notifications: false,
+    email_owned_game_news_notifications: false,
+  }),
+  updateEmailNewsPreferences: vi.fn(),
+}))
 vi.mock('../src/hooks/useCatalogResource', () => ({
   default: () => ({ data: [], loading: false, error: null }),
 }))

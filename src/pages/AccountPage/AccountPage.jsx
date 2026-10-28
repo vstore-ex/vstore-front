@@ -13,6 +13,7 @@ import { updateUser, updateAvatar } from '../../api/auth'
 import fallbackAvatar from '../../assets/avatar.webp'
 import EmailVerification from '../../auth/EmailVerification'
 import Library from './Library'
+import EmailNewsSettings from './EmailNewsSettings'
 import './AccountPage.css'
 
 export default function AccountPage(props) {
@@ -240,6 +241,7 @@ function AccountSession({ user, onUpdated, onLogoutAll, isLoggingOut, focusWalle
             )}
           </form>
         </section>
+        <EmailNewsSettings />
         <section className="account-section">
           <h2>Session settings</h2>
           <button
