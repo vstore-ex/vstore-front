@@ -210,3 +210,120 @@
     bottom: 16px;
   }
 }
+
+.notifications-page {
+  width: min(calc(100% - 32px), 1100px);
+  margin: 32px auto;
+  color: var(--color-text);
+}
+.notification-view-all {
+  display: block;
+  padding: 12px 16px;
+  color: var(--color-accent);
+}
+.notifications-heading,
+.notifications-toolbar,
+.notifications-pagination {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.notifications-heading {
+  justify-content: space-between;
+}
+.notifications-heading h1 {
+  margin: 0 0 8px;
+  font-size: 32px;
+}
+.notifications-heading p {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+.notifications-page label {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-height: 44px;
+  cursor: pointer;
+}
+.notifications-page input[type='checkbox'] {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  accent-color: var(--color-accent);
+}
+.notifications-list {
+  display: grid;
+  gap: 16px;
+  padding: 0;
+  list-style: none;
+}
+.notification-card {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-border);
+  border-radius: 8px;
+}
+.notification-card--unread {
+  border-left-color: var(--color-accent);
+}
+.notification-body {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.notification-body h2 {
+  font-size: 20px;
+  margin: 8px 0;
+}
+.notification-body p {
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+.notification-status,
+.notification-body time {
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+.notification-body a {
+  display: block;
+  width: fit-content;
+  margin-top: 12px;
+  color: var(--color-accent);
+}
+.notification-actions {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+.notifications-error {
+  color: var(--color-error);
+}
+.notifications-empty {
+  padding: 32px 0;
+  color: var(--color-text-muted);
+}
+.notifications-pagination {
+  justify-content: center;
+  margin-top: 24px;
+}
+@media (max-width: 680px) {
+  .notification-card {
+    flex-direction: column;
+    padding: 16px;
+  }
+  .notification-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .notifications-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
