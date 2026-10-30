@@ -25,19 +25,24 @@ function UserNotificationsProvider({ children }) {
     return window.Notification.permission
   })
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (signal) => {
     if (!mounted.current) return null
     const requestId = ++requestSequence.current
     setLoading(true)
     setError('')
     try {
-      const response = await getNotifications()
+      const response = await getNotifications(signal ? { signal } : undefined)
       if (!mounted.current || requestId !== requestSequence.current) return null
       setNotifications(Array.isArray(response?.items) ? response.items : [])
       setUnreadCount(Number(response?.unread_count) || 0)
       return response
     } catch (reason) {
-      if (mounted.current && requestId === requestSequence.current && reason.status !== 401) {
+      if (
+        mounted.current &&
+        !signal?.aborted &&
+        requestId === requestSequence.current &&
+        reason.status !== 401
+      ) {
         setError('Could not load notifications.')
       }
       return null
@@ -73,6 +78,7 @@ function UserNotificationsProvider({ children }) {
     let active = true
     let socket = null
     let reconnectTimer = null
+    let recoveryController = null
     let reconnectDelay = 1000
     let connectedOnce = false
     seenMessages.current.clear()
@@ -164,7 +170,12 @@ function UserNotificationsProvider({ children }) {
       if (!active || reconnectTimer != null) return
       reconnectTimer = window.setTimeout(() => {
         reconnectTimer = null
-        connect()
+        recoveryController = new AbortController()
+        const controller = recoveryController
+        void refresh(controller.signal).finally(() => {
+          if (recoveryController === controller) recoveryController = null
+          if (active && !controller.signal.aborted) connect()
+        })
       }, reconnectDelay)
       reconnectDelay = Math.min(reconnectDelay * 2, 30000)
     }
@@ -174,6 +185,7 @@ function UserNotificationsProvider({ children }) {
       active = false
       mounted.current = false
       if (reconnectTimer != null) window.clearTimeout(reconnectTimer)
+      recoveryController?.abort()
       socket?.close()
     }
   }, [refresh])
