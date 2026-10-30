@@ -15,6 +15,8 @@ export default function NotificationCenter() {
     unreadCount,
     loading,
     error,
+    countError,
+    busy,
     desktopPermission,
     refresh,
     markAsRead,
@@ -54,7 +56,13 @@ export default function NotificationCenter() {
         ref={toggle}
         className="icon-button notification-button"
         type="button"
-        aria-label={unreadCount ? `Notifications, ${unreadCount} unread` : 'Notifications'}
+        aria-label={
+          countError
+            ? 'Notifications, unread count unavailable'
+            : unreadCount === null
+              ? 'Notifications, loading unread count'
+              : `Notifications, ${unreadCount} unread`
+        }
         aria-expanded={open}
         aria-controls={panelId}
         aria-haspopup="dialog"
@@ -63,9 +71,9 @@ export default function NotificationCenter() {
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" />
         </svg>
-        {unreadCount > 0 && (
+        {(unreadCount > 0 || unreadCount === null || countError) && (
           <span className="cart-count notification-count" aria-live="polite">
-            {unreadCount > 99 ? '99+' : unreadCount}
+            {countError ? '!' : unreadCount === null ? '…' : unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
       </button>
@@ -81,16 +89,25 @@ export default function NotificationCenter() {
             <button
               type="button"
               className="notification-text-button"
+              disabled={loading || busy}
               onClick={() => void refresh()}
             >
               Refresh
             </button>
           </header>
+          <a
+            className="notification-view-all"
+            href="#/notifications"
+            onClick={() => setOpen(false)}
+          >
+            View all notifications
+          </a>
           {unreadCount > 0 && (
             <button
               type="button"
               className="notification-text-button notification-mark-all"
-              onClick={() => void markAsRead()}
+              disabled={loading || busy || !!error}
+              onClick={() => void markAsRead(null)}
             >
               Mark all as read
             </button>
@@ -112,7 +129,7 @@ export default function NotificationCenter() {
           {error && (
             <div className="notification-error" role="alert">
               <p>{error}</p>
-              <button type="button" onClick={() => void refresh()}>
+              <button type="button" disabled={loading || busy} onClick={() => void refresh()}>
                 Retry
               </button>
             </div>
@@ -140,6 +157,7 @@ export default function NotificationCenter() {
                       <button
                         type="button"
                         className="notification-read-button"
+                        disabled={loading || busy || !!error}
                         aria-label={`Mark ${notification.title} as read`}
                         onClick={() => void markAsRead([notification.id])}
                       >

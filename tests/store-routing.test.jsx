@@ -10,6 +10,7 @@ import { CurrencyContext } from '../src/currency/context'
 import { WalletContext } from '../src/wallet/context'
 import { OrdersContext } from '../src/orders/context'
 import { apiRequest } from '../src/api/client'
+import { consumeOAuthDestination, rememberOAuthDestination } from '../src/auth/oauth'
 
 vi.mock('../src/api/client', async (importOriginal) => ({
   ...(await importOriginal()),
@@ -40,6 +41,7 @@ vi.mock('../src/pages/ProductDetailPage/ProductDetailPage', () => ({
     </h1>
   ),
 }))
+vi.mock('../src/pages/NotificationsPage/NotificationsPage', () => ({ default: () => <h1>Notification page</h1> }))
 
 const gameId = '851241d0-1d80-4b71-b6ea-d7e7f5b5891a'
 const game = { id: gameId, title: 'Orbit', price: '20.00', currency: 'USD' }
@@ -144,7 +146,7 @@ describe('public catalog when the session service fails (#22)', () => {
     expect(await screen.findByRole('heading', { name: heading })).toBeInTheDocument()
   })
 
-  test.each(['account', 'wallet', 'orders', 'cart', 'wishlist'])(
+  test.each(['account', 'wallet', 'orders', 'cart', 'wishlist', 'notifications'])(
     'still gates private %s on an unresolved session',
     (route) => {
       setLocation('/#/' + route)
@@ -284,4 +286,29 @@ describe('cart return destination (#32)', () => {
       expect(window.location.hash).toBe('#/wishlist')
     },
   )
+})
+
+describe('notifications routing (#110)', () => {
+  test('guards direct links and returns to notifications after signing in', async () => {
+    setLocation('/#/notifications')
+    const user = userEvent.setup()
+    render(<Store />)
+    await screen.findByRole('button', { name: 'Complete sign in' })
+    expect(window.location.hash).toBe('#/login?next=notifications')
+    expect(screen.queryByRole('button', { name: /Notifications,/ })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Complete sign in' }))
+    expect(await screen.findByRole('heading', { name: 'Notification page' })).toBeInTheDocument()
+    expect(window.location.hash).toBe('#/notifications')
+  })
+  test('supports a signed-in direct link', async () => {
+    setLocation('/#/notifications')
+    render(<Store initialStatus="authenticated" />)
+    expect(await screen.findByRole('heading', { name: 'Notification page' })).toBeInTheDocument()
+  })
+  test.each(['/#/notifications', '/#/login?next=notifications'])('preserves the notification destination through OAuth from %s', (path) => {
+    setLocation(path)
+    rememberOAuthDestination()
+    expect(consumeOAuthDestination()).toBe('#/notifications')
+    expect(consumeOAuthDestination()).toBe('#/discover')
+  })
 })

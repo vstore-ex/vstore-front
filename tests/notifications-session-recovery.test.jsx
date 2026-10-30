@@ -39,11 +39,11 @@ beforeEach(() => {
       sessionRecovered = true
       return jsonResponse({ access_token: 'refreshed-access-token' })
     }
-    if (url.endsWith('/notifications?limit=20')) {
+    if (url.endsWith('/notifications/unread-count')) {
       if (accessExpired && options.headers.Authorization !== 'Bearer refreshed-access-token') {
         return jsonResponse({ detail: 'Expired access token' }, 401)
       }
-      return jsonResponse({ items: [], total: 0, unread_count: 0 })
+      return jsonResponse({ unread_count: 0 })
     }
     throw new Error(`Unexpected request: ${url}`)
   })
@@ -54,7 +54,7 @@ test('refreshes an expired socket session before reconnecting while the tab is h
   const visibility = Object.getOwnPropertyDescriptor(document, 'visibilityState')
   Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' })
   const { unmount } = render(
-    <AuthContext.Provider value={{ currentUser: { id: 7 } }}>
+    <AuthContext.Provider value={{ currentUser: { id: 7 }, isAuthenticated: true }}>
       <NotificationsProvider />
     </AuthContext.Provider>,
   )
@@ -62,9 +62,9 @@ test('refreshes an expired socket session before reconnecting while the tab is h
   try {
     await waitFor(() => expect(sockets).toHaveLength(1))
     await waitFor(() =>
-      expect(fetchMock.mock.calls.filter(([url]) => url.endsWith('/notifications?limit=20'))).toHaveLength(
-        1,
-      ),
+      expect(
+        fetchMock.mock.calls.filter(([url]) => url.endsWith('/notifications/unread-count')),
+      ).toHaveLength(1),
     )
     await act(async () => sockets[0].onopen())
     accessExpired = true
