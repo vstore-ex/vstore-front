@@ -7,7 +7,7 @@ function websocketUrl() {
   return url.toString()
 }
 
-export default function useMessageNotifications(refresh, enabled) {
+export default function useMessageNotifications(refresh, enabled, recoverSession = refresh) {
   const seenMessages = useRef(new Set())
   const mounted = useRef(false)
   const [toast, setToast] = useState(null)
@@ -29,6 +29,7 @@ export default function useMessageNotifications(refresh, enabled) {
     let active = true
     let socket = null
     let reconnectTimer = null
+    let recoveryController = null
     let reconnectDelay = 1000
     let connectedOnce = false
     seenMessages.current.clear()
@@ -104,7 +105,14 @@ export default function useMessageNotifications(refresh, enabled) {
       if (!active || reconnectTimer != null) return
       reconnectTimer = window.setTimeout(() => {
         reconnectTimer = null
-        connect()
+        recoveryController = new AbortController()
+        const controller = recoveryController
+        void recoverSession(controller.signal)
+          .catch(() => {})
+          .finally(() => {
+            if (recoveryController === controller) recoveryController = null
+            if (active && !controller.signal.aborted) connect()
+          })
       }, reconnectDelay)
       reconnectDelay = Math.min(reconnectDelay * 2, 30000)
     }
@@ -114,9 +122,10 @@ export default function useMessageNotifications(refresh, enabled) {
       active = false
       mounted.current = false
       if (reconnectTimer != null) window.clearTimeout(reconnectTimer)
+      recoveryController?.abort()
       socket?.close()
     }
-  }, [refresh, enabled])
+  }, [refresh, recoverSession, enabled])
 
   useEffect(() => {
     if (!toast) return

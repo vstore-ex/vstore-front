@@ -101,7 +101,8 @@ function NotificationSession({ owner, children }) {
   )
 
   const refresh = useCallback(() => load(queryRef.current), [load])
-  const messages = useMessageNotifications(refresh, owner != null)
+  const recoverSession = useCallback((signal) => getUnreadCount(signal), [])
+  const messages = useMessageNotifications(refresh, owner != null, recoverSession)
 
   useEffect(() => {
     // Opening the page already loads an authoritative count with the list.
