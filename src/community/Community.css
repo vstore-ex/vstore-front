@@ -1,0 +1,135 @@
+.game-community {
+  margin-top: 32px;
+}
+.community-switcher,
+.community-actions,
+.community-heading,
+.community-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.community-switcher {
+  margin: 24px 0;
+}
+.community-switcher [aria-pressed='true'] {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+.community-actions {
+  margin: 16px 0;
+}
+.community-heading {
+  justify-content: space-between;
+}
+.community-meta {
+  color: var(--color-text-muted);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.community-list,
+.community-comment-list {
+  display: grid;
+  gap: 16px;
+  padding: 0;
+  list-style: none;
+}
+.community-list--artwork {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+}
+.community-card,
+.community-comment {
+  min-width: 0;
+  padding: 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow-wrap: anywhere;
+}
+.community-open {
+  display: block;
+  width: 100%;
+  padding: 0;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.community-open span {
+  display: block;
+  padding: 10px 0;
+}
+.community-thumbnail {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+.community-editor {
+  margin: 20px 0;
+}
+.community-editor fieldset {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.community-editor input,
+.community-editor textarea {
+  width: 100%;
+}
+.community-editor small {
+  color: var(--color-text-muted);
+}
+.community-error {
+  color: var(--color-error);
+}
+.community-confirm {
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+.community-confirm button {
+  margin: 0 8px 8px 0;
+}
+.community-dialog.ui-dialog {
+  width: min(860px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 28px;
+  color: var(--color-text);
+  background: var(--color-surface-raised);
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+}
+.community-dialog > h2 {
+  margin-top: 20px;
+  padding-right: 24px;
+}
+.community-detail-image {
+  display: block;
+  width: 100%;
+  max-height: 65vh;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+}
+.community-comments {
+  margin-top: 32px;
+  border-top: 1px solid var(--color-border);
+  padding-top: 16px;
+}
+.community-comment .product-markdown > :first-child {
+  margin-top: 0;
+}
+@media (max-width: 680px) {
+  .community-dialog.ui-dialog {
+    padding: 16px;
+  }
+  .community-actions > button {
+    flex: 1 1 auto;
+  }
+}

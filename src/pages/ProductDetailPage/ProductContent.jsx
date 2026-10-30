@@ -28,10 +28,11 @@ const markdownComponents = {
   a: MarkdownLink,
   img: ({ src, alt }) => <MediaImage src={src} alt={alt} />,
 }
-export function ProductMarkdown({ children }) {
+export function ProductMarkdown({ children, allowImages = true }) {
   return (
     <div className="product-markdown">
       <Markdown
+        disallowedElements={allowImages ? undefined : ['img']}
         components={markdownComponents}
         urlTransform={(url, key) => (key === 'src' ? mediaUrl(url) : defaultUrlTransform(url))}
       >
