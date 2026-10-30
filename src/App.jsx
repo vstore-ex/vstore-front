@@ -1,5 +1,6 @@
 import UserProfilePage from './pages/UserProfilePage/UserProfilePage'
 import NewsPage from './pages/NewsPage/NewsPage'
+import NotificationsPage from './pages/NotificationsPage/NotificationsPage'
 import NewsDetailPage from './pages/NewsDetailPage/NewsDetailPage'
 import { useEffect, useRef, useState } from 'react'
 import Header from './components/Header/Header'
@@ -52,7 +53,11 @@ function parseRouteFromHash() {
     }
   }
 
-  if (['account', 'wallet', 'orders', 'cart', 'wishlist', 'support'].includes(parts[0])) {
+  if (
+    ['account', 'wallet', 'orders', 'cart', 'wishlist', 'support', 'notifications'].includes(
+      parts[0],
+    )
+  ) {
     const add = ['cart', 'wishlist'].includes(parts[0]) ? params.get('add')?.trim() : null
     return {
       view: parts[0],
@@ -117,7 +122,7 @@ function App() {
   useEffect(() => {
     if (status === 'loading' || status === 'banned' || status === 'error' || isLoggingOut) return
     if (
-      ['account', 'wallet', 'orders', 'cart', 'wishlist'].includes(currentView) &&
+      ['account', 'wallet', 'orders', 'cart', 'wishlist', 'notifications'].includes(currentView) &&
       !isAuthenticated
     ) {
       const route = parseRouteFromHash()
@@ -151,7 +156,9 @@ function App() {
     const route = parseRouteFromHash()
     if (route.view === 'login')
       navigateTo(
-        /^(?:account|wallet|orders|(?:wishlist|cart)(?:\?add=[^#&]+)?)$/.test(route.next)
+        /^(?:account|wallet|orders|notifications|(?:wishlist|cart)(?:\?add=[^#&]+)?)$/.test(
+          route.next,
+        )
           ? route.next
           : 'discover',
       )
@@ -285,7 +292,9 @@ function App() {
         <NewsPage />
       ) : currentView === 'newsDetail' ? (
         <NewsDetailPage key={selectedNewsId} id={selectedNewsId} />
-      ) : ['account', 'wallet', 'orders', 'cart', 'wishlist'].includes(currentView) && !user ? (
+      ) : ['account', 'wallet', 'orders', 'cart', 'wishlist', 'notifications'].includes(
+          currentView,
+        ) && !user ? (
         <p className="store-status" role="status">
           Please sign in to continue.
         </p>
@@ -305,6 +314,8 @@ function App() {
           isLoggingOut={isLoggingOut}
           focusWallet={currentView === 'wallet'}
         />
+      ) : currentView === 'notifications' ? (
+        <NotificationsPage />
       ) : currentView === 'cart' ? (
         <CartPage />
       ) : currentView === 'wishlist' ? (
