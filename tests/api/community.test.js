@@ -147,6 +147,27 @@ test('discussion/artwork/comment writes use the exact authenticated backend payl
   ).toBe(true)
 })
 
+test.each([true, false, undefined])(
+  'preserves the thread status %s on both public community resource types',
+  async (isClosed) => {
+    const topic = { ...discussion, is_closed: isClosed }
+    const art = { ...artwork, is_closed: isClosed }
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url) => {
+        if (url.endsWith('/community/discussions/1')) return jsonResponse(topic)
+        if (url.endsWith('/artworks/2')) return jsonResponse(art)
+        return jsonResponse(url.includes('/artworks/') ? [art] : [topic])
+      }),
+    )
+    const expected = isClosed ?? null
+    expect((await getCommunityItem('discussion', 1)).is_closed).toBe(expected)
+    expect((await getCommunityItem('artwork', 2)).is_closed).toBe(expected)
+    expect((await getGameDiscussions('game-a'))[0].is_closed).toBe(expected)
+    expect((await getGameArtworks('game-a'))[0].is_closed).toBe(expected)
+  },
+)
+
 test('uploads authenticated multipart file and normalizes the resulting media URL', async () => {
   vi.stubGlobal(
     'fetch',

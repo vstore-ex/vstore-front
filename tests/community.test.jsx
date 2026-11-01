@@ -304,13 +304,29 @@ test('closed-thread rejection makes comments read-only without claiming success'
   expect(screen.queryByText('Comment posted.')).not.toBeInTheDocument()
 })
 
-test('honors a closed status when returned by the backend', async () => {
+test.each([
+  ['discussion', 7],
+  ['discussion', null],
+  ['artwork', 7],
+  ['artwork', null],
+])('closed %s is immediately read-only for user %s', async (kind, initialUser) => {
   discussions = [discussion({ is_closed: true })]
-  const { user } = setup()
-  const dialog = await openDiscussion(user)
-  await within(dialog).findByText('Great tips!')
-  expect(screen.getByText('This thread is closed. Comments are read-only.')).toBeInTheDocument()
-  expect(screen.queryByRole('button', { name: 'Post comment' })).not.toBeInTheDocument()
+  artworks = [artwork({ is_closed: true })]
+  const { user } = setup({ initialUser })
+  const dialog = kind === 'artwork' ? await openArt(user) : await openDiscussion(user)
+  const region = within(dialog).getByRole('region', { name: 'Comments' })
+  await within(region).findByText(kind === 'artwork' ? 'Great picture!' : 'Great tips!')
+  expect(
+    within(region).getByText('This thread is closed. Comments are read-only.'),
+  ).toBeInTheDocument()
+  expect(within(region).queryByRole('form', { name: 'Add comment' })).not.toBeInTheDocument()
+  for (const name of ['Post comment', 'Edit comment', 'Delete comment', 'Sign in to comment']) {
+    expect(within(region).queryByRole('button', { name })).not.toBeInTheDocument()
+  }
+  await user.click(within(region).getByRole('button', { name: 'Refresh comments' }))
+  await within(region).findByText(kind === 'artwork' ? 'Great picture!' : 'Great tips!')
+  expect(within(region).queryByRole('form', { name: 'Add comment' })).not.toBeInTheDocument()
+  expect(writes()).toHaveLength(0)
 })
 
 test('comment pagination appends without duplicates', async () => {
