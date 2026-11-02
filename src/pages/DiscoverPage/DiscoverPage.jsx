@@ -18,13 +18,10 @@ function homeGame(game) {
   return { ...game, price: game.release_label || game.price }
 }
 
-function ProductSection({ title, games, onSelect, sale = false, game_overrides = {} }) {
+function ProductSection({ title, games, onSelect, game_overrides = {} }) {
   if (!games?.length) return null
   return (
-    <section
-      className={'product-section' + (sale ? ' product-section--sale' : '')}
-      aria-label={title}
-    >
+    <section className="product-section" aria-label={title}>
       {title && <h2>{title}</h2>}
       <div className="product-grid">
         {games.map((game) => {
@@ -34,7 +31,7 @@ function ProductSection({ title, games, onSelect, sale = false, game_overrides =
           return (
             <ProductCard
               key={game.id}
-              product={sale ? product : { ...product, discount: '' }}
+              product={product}
               onSelect={onSelect}
             />
           )
@@ -292,9 +289,14 @@ function DiscoverContent({ onProductSelect }) {
         {!filters.browse && (
           <>
             {data?.featured && <FeaturedGame game={data.featured} onSelect={onProductSelect} />}
-            <ProductSection {...sections[0]} onSelect={onProductSelect} />
+            {sections.map((section, index) => (
+              <ProductSection
+                key={section.id || index}
+                {...section}
+                onSelect={onProductSelect}
+              />
+            ))}
             <PromoGrid promos={data?.promos} />
-            <ProductSection {...sections[1]} sale onSelect={onProductSelect} />
             <DealStrip games={data?.deals} onSelect={onProductSelect} />
             <FreeGames
               games={data?.free_games}
@@ -305,9 +307,6 @@ function DiscoverContent({ onProductSelect }) {
             {columns.length > 0 && (
               <DiscoverShowcase columns={columns} onItemSelect={onProductSelect} />
             )}
-            {sections.slice(2).map((section, index) => (
-              <ProductSection key={section.id || index} {...section} onSelect={onProductSelect} />
-            ))}
           </>
         )}
         {showCatalog && (
