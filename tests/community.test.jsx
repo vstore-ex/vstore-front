@@ -53,8 +53,9 @@ beforeEach(() => {
   onSignIn = vi.fn()
   apiRequest.mockReset().mockImplementation(async (path, options = {}) => {
     const { method = 'GET', body } = options
-    if (method !== 'GET' && path !== '/media/upload' && writeError) throw writeError
-    if (path === '/media/upload') {
+    const artworkUpload = path.startsWith('/media/games/') && path.endsWith('/artworks')
+    if (method !== 'GET' && !artworkUpload && writeError) throw writeError
+    if (artworkUpload) {
       uploads++
       if (uploadError) throw uploadError
       return { url: '/media/upload.webp' }
@@ -452,7 +453,9 @@ test('account change aborts an upload and prevents a late artwork submission', a
   const pending = deferred(),
     server = apiRequest.getMockImplementation()
   apiRequest.mockImplementation((path, options) =>
-    path === '/media/upload' ? pending.promise : server(path, options),
+    path.startsWith('/media/games/') && path.endsWith('/artworks')
+      ? pending.promise
+      : server(path, options),
   )
   const { user } = setup()
   await user.click(screen.getByRole('button', { name: 'Artwork', exact: true }))
@@ -464,7 +467,9 @@ test('account change aborts an upload and prevents a late artwork submission', a
     new File(['image'], 'art.png', { type: 'image/png' }),
   )
   await user.click(within(form).getByRole('button', { name: 'Publish artwork' }))
-  const signal = apiRequest.mock.calls.find(([path]) => path === '/media/upload')[1].signal
+  const signal = apiRequest.mock.calls.find(
+    ([path]) => path.startsWith('/media/games/') && path.endsWith('/artworks'),
+  )[1].signal
   await user.click(screen.getByRole('button', { name: 'Switch account' }))
   expect(signal.aborted).toBe(true)
   await act(async () => pending.resolve({ url: '/media/late.webp' }))
