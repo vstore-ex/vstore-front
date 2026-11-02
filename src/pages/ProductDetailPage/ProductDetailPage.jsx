@@ -1,4 +1,5 @@
 import ProductNews from './ProductNews'
+import GameCommunity from '../../community/GameCommunity'
 import AchievementsPage from '../AchievementsPage/AchievementsPage'
 import WishlistButton from '../../components/Wishlist/WishlistButton'
 import AddToCartButton from '../../components/Cart/AddToCartButton'
@@ -112,6 +113,7 @@ function ProductDetails({ game, onViewAllAchievements, onSignIn }) {
         <ProductAchievements id={game.id} onViewAll={onViewAllAchievements} />
         <ProductNews id={game.id} />
         <ProductReviews onSignIn={onSignIn} id={game.id} isFree={game.is_free} />
+        <GameCommunity gameId={game.id} onSignIn={onSignIn} />
       </div>
     </div>
   )
