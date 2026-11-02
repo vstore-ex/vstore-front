@@ -97,6 +97,56 @@ test('a string is_free flag cannot turn a paid game into a free game', () => {
   })
 })
 
+test('a paid price cannot be presented as free and discounts require a paid original price', () => {
+  expect(
+    mapGame({ ...game, is_free: true, original_price: '25.00', price: '12.50' }),
+  ).toMatchObject({
+    price: '€12.50',
+    originalPrice: '€25.00',
+    discount: '-50%',
+    is_free: false,
+  })
+  expect(mapGame({ ...game, is_free: true, original_price: '25.00', price: '0.00' })).toMatchObject({
+    price: '€0.00',
+    originalPrice: '€25.00',
+    discount: '-100%',
+    is_free: false,
+  })
+})
+
+test('discover preserves tag-section configuration while mapping its games', async () => {
+  fetchMock.mockResolvedValue(
+    jsonResponse({
+      featured: null,
+      sections: [
+        {
+          id: 'tag-action',
+          title: 'Action games',
+          tag_id: 7,
+          game_ids: [],
+          limit: 8,
+          games: [{ ...game, id: 'tagged', tags: [{ id: 7, name: 'Action' }] }],
+        },
+      ],
+      promos: [],
+      deals: [],
+      free_games: [],
+      ranked_columns: [],
+      mobile_banner: null,
+    }),
+  )
+
+  const result = await getDiscover('', undefined, 'EUR')
+
+  expect(result.sections[0]).toMatchObject({
+    id: 'tag-action',
+    title: 'Action games',
+    tag_id: 7,
+    limit: 8,
+  })
+  expect(result.sections[0].games[0].id).toBe('tagged')
+})
+
 test.each([
   ['catalog', () => getGames('', undefined, 'EUR'), [{ ...game, price: false }]],
   ['detail', () => getGame('orbit', undefined, 'EUR'), { ...game, price: false }],
