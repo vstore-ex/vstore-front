@@ -4,6 +4,7 @@ import { MediaImage } from '../../components/Catalog/Media'
 import { mediaUrl } from '../../api/catalog'
 import { parseRequirements } from './requirements'
 import chevron from '../../assets/product-chevron-down.svg'
+import importedDescription from './importedDescription'
 
 function MarkdownLink({ href, children }) {
   let external = false
@@ -28,10 +29,11 @@ const markdownComponents = {
   a: MarkdownLink,
   img: ({ src, alt }) => <MediaImage src={src} alt={alt} />,
 }
-export function ProductMarkdown({ children, allowImages = true }) {
+export function ProductMarkdown({ children, allowImages = true, imported = false }) {
   return (
     <div className="product-markdown">
       <Markdown
+        remarkPlugins={imported ? [importedDescription] : undefined}
         disallowedElements={allowImages ? undefined : ['img']}
         components={markdownComponents}
         urlTransform={(url, key) => (key === 'src' ? mediaUrl(url) : defaultUrlTransform(url))}

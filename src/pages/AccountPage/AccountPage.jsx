@@ -20,7 +20,7 @@ export default function AccountPage(props) {
   return <AccountSession key={props.user.id} {...props} />
 }
 
-function AccountSession({ user, onUpdated, onLogoutAll, isLoggingOut, focusWallet }) {
+function AccountSession({ user, onUpdated, onLogoutAll, isLoggingOut, focusWallet, focusLibrary }) {
   const [values, setValues] = useState({
     full_name: user.fullName,
     email: user.email,
@@ -155,7 +155,7 @@ function AccountSession({ user, onUpdated, onLogoutAll, isLoggingOut, focusWalle
         <WalletSection focusWallet={focusWallet} />
         <CurrencySelector profile />
         <AccountAchievements resource={achievements} userId={user.id} />
-        <Library />
+        <Library focusLibrary={focusLibrary} />
         <FriendsSection />
         <section className="account-section">
           <h2>Profile settings</h2>
