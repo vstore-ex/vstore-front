@@ -1,0 +1,30 @@
+.not-found-page {
+  width: min(680px, calc(100% - 32px));
+  min-height: 55svh;
+  margin: auto;
+  padding: 64px 0;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.not-found-page__code {
+  color: var(--color-accent);
+  font-size: clamp(64px, 16vw, 112px);
+  font-weight: 800;
+  line-height: 1;
+  margin: 0 0 24px;
+}
+.not-found-page h1 {
+  font-size: clamp(28px, 6vw, 40px);
+  margin: 0 0 16px;
+}
+.not-found-page > p:not(.not-found-page__code) {
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+.not-found-page__actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 32px;
+}

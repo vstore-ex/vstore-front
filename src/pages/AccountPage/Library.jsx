@@ -6,7 +6,16 @@ import { useWallet } from '../../wallet/context'
 import { MediaImage } from '../../components/Catalog/Media'
 import { useAuth } from '../../auth/context'
 
-function LibrarySession() {
+function LibrarySession({ focusLibrary }) {
+  const heading = useRef(null)
+  useEffect(() => {
+    if (!focusLibrary) return
+    const frame = requestAnimationFrame(() => {
+      heading.current?.scrollIntoView({ block: 'start' })
+      heading.current?.focus({ preventScroll: true })
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [focusLibrary])
   const orders = useOrders()
   const { code, unavailable, refreshWallet } = useCurrency()
   const { loading: walletLoading, busy: walletBusy } = useWallet()
@@ -64,7 +73,9 @@ function LibrarySession() {
   )
   return (
     <section className="account-section user-library" aria-labelledby="library-title">
-      <h2 id="library-title">Your library</h2>
+      <h2 id="library-title" ref={heading} tabIndex={-1}>
+        Your library
+      </h2>
       {orders.loading && <p role="status">Loading library...</p>}
       {orders.error && (
         <div role="alert">
@@ -177,7 +188,7 @@ function LibrarySession() {
   )
 }
 
-export default function Library() {
+export default function Library({ focusLibrary = false }) {
   const { currentUser } = useAuth()
-  return currentUser ? <LibrarySession key={currentUser.id} /> : null
+  return currentUser ? <LibrarySession key={currentUser.id} focusLibrary={focusLibrary} /> : null
 }

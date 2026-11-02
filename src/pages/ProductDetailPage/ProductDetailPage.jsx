@@ -12,6 +12,7 @@ import ProductAchievements from './ProductAchievements'
 import ProductReviews from './ProductReviews'
 import '../../components/Catalog/Catalog.css'
 import './ProductDetailPage.css'
+import NotFoundPage from '../NotFoundPage/NotFoundPage'
 
 function ProductDetails({ game, onViewAllAchievements, onSignIn }) {
   const presentation = productPresentation(game)
@@ -26,7 +27,7 @@ function ProductDetails({ game, onViewAllAchievements, onSignIn }) {
               <h2>About this game</h2>
               {game.description_md ? (
                 <ExpandableContent className="product-about-content" variant="about">
-                  <ProductMarkdown>{game.description_md}</ProductMarkdown>
+                  <ProductMarkdown imported>{game.description_md}</ProductMarkdown>
                 </ExpandableContent>
               ) : (
                 <p className="product-empty">No description available yet.</p>
@@ -49,7 +50,9 @@ function ProductDetails({ game, onViewAllAchievements, onSignIn }) {
             />
             {presentation.summary && (
               <div className="product-sidebar__description">
-                <ProductMarkdown>{presentation.summary}</ProductMarkdown>
+                <ProductMarkdown imported allowImages={false}>
+                  {presentation.summary}
+                </ProductMarkdown>
               </div>
             )}
             <dl className="product-meta">
@@ -126,6 +129,13 @@ export default function ProductDetailPage({
   onSignIn,
 }) {
   const resource = useCatalogResource('game', String(id))
+  if (resource.error?.status === 404)
+    return (
+      <NotFoundPage
+        title="Game not found"
+        description="This game is unavailable or has been removed from the store."
+      />
+    )
   if (resource.loading || resource.error)
     return (
       <div className="product-detail-page">

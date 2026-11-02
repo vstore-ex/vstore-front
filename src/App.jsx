@@ -1,6 +1,7 @@
 import UserProfilePage from './pages/UserProfilePage/UserProfilePage'
 import NewsPage from './pages/NewsPage/NewsPage'
 import NotificationsPage from './pages/NotificationsPage/NotificationsPage'
+import NotFoundPage from './pages/NotFoundPage/NotFoundPage'
 import NewsDetailPage from './pages/NewsDetailPage/NewsDetailPage'
 import { useEffect, useRef, useState } from 'react'
 import Header from './components/Header/Header'
@@ -26,26 +27,27 @@ const defaultRoute = { view: 'discover', gameId: null }
 function parseRouteFromHash() {
   const { path, params } = readStoreLocation()
   const parts = path.split('/').filter(Boolean)
-  if (parts[0] === 'login')
+  if (parts[0] === 'login' && parts.length === 1)
     return {
       view: 'login',
       gameId: null,
       next: params.get('next') || 'discover',
     }
 
-  if (!parts.length || parts[0] === 'discover') {
+  if (!parts.length || (parts[0] === 'discover' && parts.length === 1)) {
     return defaultRoute
   }
 
-  if (parts[0] === 'users' && parts[1])
+  if (parts[0] === 'users' && parts[1] && parts.length === 2)
     return { view: 'userProfile', userId: parts[1], gameId: null }
 
-  if (parts[0] === 'news')
+  if (parts[0] === 'news' && parts.length <= 2)
     return { view: parts[1] ? 'newsDetail' : 'news', newsId: parts[1], gameId: null }
 
   if (
-    (parts[0] === 'games' || (parts[0] === 'products' && parts[2] === 'achievements')) &&
-    parts[1]
+    ['games', 'products'].includes(parts[0]) &&
+    parts[1] &&
+    (parts.length === 2 || (parts.length === 3 && parts[2] === 'achievements'))
   ) {
     return {
       view: parts[2] === 'achievements' ? 'achievements' : 'product',
@@ -54,9 +56,17 @@ function parseRouteFromHash() {
   }
 
   if (
-    ['account', 'wallet', 'orders', 'cart', 'wishlist', 'support', 'notifications'].includes(
-      parts[0],
-    )
+    parts.length === 1 &&
+    [
+      'account',
+      'library',
+      'wallet',
+      'orders',
+      'cart',
+      'wishlist',
+      'support',
+      'notifications',
+    ].includes(parts[0])
   ) {
     const add = ['cart', 'wishlist'].includes(parts[0]) ? params.get('add')?.trim() : null
     return {
@@ -66,7 +76,7 @@ function parseRouteFromHash() {
     }
   }
 
-  return defaultRoute
+  return { view: 'notFound', gameId: null }
 }
 
 function navigateTo(path) {
@@ -122,7 +132,9 @@ function App() {
   useEffect(() => {
     if (status === 'loading' || status === 'banned' || status === 'error' || isLoggingOut) return
     if (
-      ['account', 'wallet', 'orders', 'cart', 'wishlist', 'notifications'].includes(currentView) &&
+      ['account', 'library', 'wallet', 'orders', 'cart', 'wishlist', 'notifications'].includes(
+        currentView,
+      ) &&
       !isAuthenticated
     ) {
       const route = parseRouteFromHash()
@@ -132,7 +144,10 @@ function App() {
 
   useEffect(() => {
     const expired = () => {
-      if (isAuthenticated && !['news', 'newsDetail', 'userProfile'].includes(currentView))
+      if (
+        isAuthenticated &&
+        !['news', 'newsDetail', 'userProfile', 'notFound'].includes(currentView)
+      )
         navigateTo('login?next=' + currentView)
     }
     window.addEventListener('vstore:session-expired', expired)
@@ -156,7 +171,7 @@ function App() {
     const route = parseRouteFromHash()
     if (route.view === 'login')
       navigateTo(
-        /^(?:account|wallet|orders|notifications|(?:wishlist|cart)(?:\?add=[^#&]+)?)$/.test(
+        /^(?:account|library|wallet|orders|notifications|(?:wishlist|cart)(?:\?add=[^#&]+)?)$/.test(
           route.next,
         )
           ? route.next
@@ -217,7 +232,7 @@ function App() {
   }
   if (isOAuthCallback) return <OAuthCallbackPage />
   const publicNews = ['news', 'newsDetail'].includes(currentView)
-  const publicPage = publicNews || currentView === 'userProfile'
+  const publicPage = publicNews || ['userProfile', 'notFound'].includes(currentView)
   const publicCatalog = ['discover', 'product', 'achievements'].includes(currentView)
   if (!publicPage && status === 'loading')
     return (
@@ -282,7 +297,9 @@ function App() {
           )}
         </div>
       )}
-      {currentView === 'userProfile' ? (
+      {currentView === 'notFound' ? (
+        <NotFoundPage />
+      ) : currentView === 'userProfile' ? (
         <UserProfilePage
           key={selectedUserId}
           id={selectedUserId}
@@ -292,7 +309,7 @@ function App() {
         <NewsPage />
       ) : currentView === 'newsDetail' ? (
         <NewsDetailPage key={selectedNewsId} id={selectedNewsId} />
-      ) : ['account', 'wallet', 'orders', 'cart', 'wishlist', 'notifications'].includes(
+      ) : ['account', 'library', 'wallet', 'orders', 'cart', 'wishlist', 'notifications'].includes(
           currentView,
         ) && !user ? (
         <p className="store-status" role="status">
@@ -306,13 +323,14 @@ function App() {
           showAchievements={currentView === 'achievements'}
           onViewAllAchievements={() => navigateTo(`games/${selectedGameId}/achievements`)}
         />
-      ) : ['account', 'wallet', 'orders'].includes(currentView) ? (
+      ) : ['account', 'library', 'wallet', 'orders'].includes(currentView) ? (
         <AccountPage
           user={user}
           onUpdated={updateUser}
           onLogoutAll={() => signOut(true)}
           isLoggingOut={isLoggingOut}
           focusWallet={currentView === 'wallet'}
+          focusLibrary={currentView === 'library'}
         />
       ) : currentView === 'notifications' ? (
         <NotificationsPage />
