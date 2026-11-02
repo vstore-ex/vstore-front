@@ -41,7 +41,12 @@ vi.mock('../src/pages/ProductDetailPage/ProductDetailPage', () => ({
     </h1>
   ),
 }))
-vi.mock('../src/pages/NotificationsPage/NotificationsPage', () => ({ default: () => <h1>Notification page</h1> }))
+vi.mock('../src/pages/NotificationsPage/NotificationsPage', () => ({
+  default: () => <h1>Notification page</h1>,
+}))
+vi.mock('../src/pages/AccountPage/AccountPage', () => ({
+  default: ({ focusLibrary }) => <h1>{focusLibrary ? 'Your library' : 'Your account'}</h1>,
+}))
 
 const gameId = '851241d0-1d80-4b71-b6ea-d7e7f5b5891a'
 const game = { id: gameId, title: 'Orbit', price: '20.00', currency: 'USD' }
@@ -118,6 +123,63 @@ function Store({ initialStatus = 'anonymous' }) {
 const setLocation = (url) => window.history.replaceState(null, '', url)
 const catalogRequests = () => apiRequest.mock.calls.filter(([path]) => path.startsWith('/games/?'))
 const lastCatalogQuery = () => new URLSearchParams(catalogRequests().at(-1)?.[0].split('?')[1])
+
+describe('not-found and library navigation', () => {
+  test.each([
+    '/missing',
+    '/#/missing',
+    '/#/games',
+    '/#/games/1/typo',
+    '/#/news/1/extra',
+    '/#/account/extra',
+    '/#/discover/extra',
+  ])('shows 404 for %s without silently loading the catalog', async (url) => {
+    setLocation(url)
+    render(<Store />)
+    expect(await screen.findByRole('heading', { name: 'Page not found' })).toBeInTheDocument()
+    expect(screen.getByText('404')).toBeInTheDocument()
+    expect(catalogRequests()).toHaveLength(0)
+    await userEvent.setup().click(screen.getByRole('link', { name: 'Back to store' }))
+    await screen.findByText('Orbit', { selector: '.product-card__title' })
+  })
+  test.each(['loading', 'error'])('404 is public when auth is %s', async (initialStatus) => {
+    setLocation('/#/missing')
+    render(<Store initialStatus={initialStatus} />)
+    expect(await screen.findByRole('heading', { name: 'Page not found' })).toBeInTheDocument()
+  })
+  test.each(['/products/' + gameId, '/#/products/' + gameId, '/#/games/' + gameId])(
+    'preserves game links at %s',
+    async (url) => {
+      setLocation(url)
+      render(<Store />)
+      expect(await screen.findByRole('heading', { name: 'Product ' + gameId })).toBeInTheDocument()
+    },
+  )
+  test('keeps the public 404 page visible when a signed-in session expires', async () => {
+    setLocation('/#/missing-page')
+    render(<Store initialStatus="authenticated" />)
+    await screen.findByRole('heading', { name: 'Page not found' })
+    act(() => window.dispatchEvent(new Event('vstore:session-expired')))
+    expect(window.location.hash).toBe('#/missing-page')
+    expect(screen.getByRole('heading', { name: 'Page not found' })).toBeInTheDocument()
+  })
+  test('returns a guest to the library after sign-in', async () => {
+    setLocation('/#/library')
+    const user = userEvent.setup()
+    render(<Store />)
+    await user.click(await screen.findByRole('button', { name: 'Complete sign in' }))
+    expect(await screen.findByRole('heading', { name: 'Your library' })).toBeInTheDocument()
+    expect(window.location.hash).toBe('#/library')
+  })
+  test.each(['/#/library', '/#/login?next=library'])(
+    'preserves the library OAuth destination from %s',
+    (url) => {
+      setLocation(url)
+      rememberOAuthDestination()
+      expect(consumeOAuthDestination()).toBe('#/library')
+    },
+  )
+})
 
 describe('public catalog when the session service fails (#22)', () => {
   test('loads real catalog data and offers session recovery without blocking browsing', async () => {
@@ -305,10 +367,13 @@ describe('notifications routing (#110)', () => {
     render(<Store initialStatus="authenticated" />)
     expect(await screen.findByRole('heading', { name: 'Notification page' })).toBeInTheDocument()
   })
-  test.each(['/#/notifications', '/#/login?next=notifications'])('preserves the notification destination through OAuth from %s', (path) => {
-    setLocation(path)
-    rememberOAuthDestination()
-    expect(consumeOAuthDestination()).toBe('#/notifications')
-    expect(consumeOAuthDestination()).toBe('#/discover')
-  })
+  test.each(['/#/notifications', '/#/login?next=notifications'])(
+    'preserves the notification destination through OAuth from %s',
+    (path) => {
+      setLocation(path)
+      rememberOAuthDestination()
+      expect(consumeOAuthDestination()).toBe('#/notifications')
+      expect(consumeOAuthDestination()).toBe('#/discover')
+    },
+  )
 })

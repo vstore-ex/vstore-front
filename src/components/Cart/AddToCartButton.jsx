@@ -25,8 +25,11 @@ export default function AddToCartButton({ gameId, className = 'button button--se
   }
   if (owned)
     return (
-      <div className="add-to-cart-control">
-        <span>In your library</span> <a href="#/account">View library</a>
+      <div className="add-to-cart-control add-to-cart-control--owned">
+        <span>In your library</span>
+        <a className={className} href="#/library">
+          View library
+        </a>
       </div>
     )
   return (

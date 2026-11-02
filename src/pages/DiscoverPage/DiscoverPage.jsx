@@ -28,13 +28,7 @@ function ProductSection({ title, games, onSelect, game_overrides = {} }) {
           const product = homeGame(game)
           if (game_overrides[game.id]?.image_url)
             product.image = mediaUrl(game_overrides[game.id].image_url)
-          return (
-            <ProductCard
-              key={game.id}
-              product={product}
-              onSelect={onSelect}
-            />
-          )
+          return <ProductCard key={game.id} product={product} onSelect={onSelect} />
         })}
       </div>
     </section>
@@ -290,11 +284,7 @@ function DiscoverContent({ onProductSelect }) {
           <>
             {data?.featured && <FeaturedGame game={data.featured} onSelect={onProductSelect} />}
             {sections.map((section, index) => (
-              <ProductSection
-                key={section.id || index}
-                {...section}
-                onSelect={onProductSelect}
-              />
+              <ProductSection key={section.id || index} {...section} onSelect={onProductSelect} />
             ))}
             <PromoGrid promos={data?.promos} />
             <DealStrip games={data?.deals} onSelect={onProductSelect} />
