@@ -153,10 +153,10 @@ test('uploads authenticated multipart file and normalizes the resulting media UR
     vi.fn(async () => jsonResponse({ url: '/media/new.webp', filename: 'new.webp' })),
   )
   const file = new File(['image'], 'art.png', { type: 'image/png' })
-  const url = await uploadArtworkImage(file)
+  const url = await uploadArtworkImage(file, 'game-a')
   expect(url).toBe('http://localhost/media/new.webp')
   const [path, options] = fetch.mock.calls[0]
-  expect(path).toBe('/api/v1/media/upload')
+  expect(path).toBe('/api/v1/media/games/game-a/artworks')
   expect(options.body.get('file')).toBe(file)
   expect(options.headers['Content-Type']).toBeUndefined()
   expect(options.credentials).toBe('include')
@@ -168,7 +168,7 @@ test.each([
   new File([new Uint8Array(10 * 1024 * 1024 + 1)], 'large.png', { type: 'image/png' }),
 ])('rejects invalid artwork before upload %#', async (file) => {
   expect(() => validateArtworkFile(file)).toThrow()
-  await expect(uploadArtworkImage(file)).rejects.toThrow()
+  await expect(uploadArtworkImage(file, 'game-a')).rejects.toThrow()
   expect(fetch).not.toHaveBeenCalled()
 })
 
@@ -180,7 +180,7 @@ test.each([{}, { url: 'javascript:alert(1)' }, { url: 'data:image/svg+xml,x' }])
       vi.fn(async () => jsonResponse(result)),
     )
     await expect(
-      uploadArtworkImage(new File(['image'], 'art.png', { type: 'image/png' })),
+      uploadArtworkImage(new File(['image'], 'art.png', { type: 'image/png' }), 'game-a'),
     ).rejects.toThrow('could not be confirmed')
   },
 )

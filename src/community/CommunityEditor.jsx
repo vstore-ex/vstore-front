@@ -41,7 +41,7 @@ export default function CommunityEditor({ kind, gameId, item, onSaved, onCancel 
         image =
           upload.current?.file === file
             ? upload.current.url
-            : await uploadArtworkImage(file, signal)
+            : await uploadArtworkImage(file, gameId, signal)
         signal.throwIfAborted()
         upload.current = { file, url: image }
         setUploaded(file.name)

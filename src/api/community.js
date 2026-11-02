@@ -162,11 +162,12 @@ export function validateArtworkFile(file) {
   if (!file.size || file.size > 10 * 1024 * 1024)
     throw new Error('Choose an image between 1 byte and 10 MB.')
 }
-export async function uploadArtworkImage(file, signal) {
+export async function uploadArtworkImage(file, gameId, signal) {
   validateArtworkFile(file)
+  const path = '/media/games/' + gamePath(gameId) + '/artworks'
   const body = new FormData()
   body.append('file', file)
-  const result = await apiRequest('/media/upload', { method: 'POST', body, signal })
+  const result = await apiRequest(path, { method: 'POST', body, signal })
   const url = mediaUrl(result?.url)
   if (!url) throw new Error('The image upload could not be confirmed. Please try again.')
   return url
