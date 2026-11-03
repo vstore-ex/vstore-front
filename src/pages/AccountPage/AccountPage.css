@@ -120,6 +120,24 @@
   gap: 10px;
 }
 
+.password-settings > p {
+  max-width: 700px;
+  color: rgba(238, 238, 238, 0.78);
+  line-height: 1.5;
+}
+
+.password-settings__hint {
+  color: rgba(238, 238, 238, 0.72);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.password-settings__field {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
 .email-news-settings .email-news-setting__checkbox {
   flex: 0 0 18px;
   width: 18px;

@@ -41,7 +41,9 @@ vi.mock('../src/pages/ProductDetailPage/ProductDetailPage', () => ({
     </h1>
   ),
 }))
-vi.mock('../src/pages/NotificationsPage/NotificationsPage', () => ({ default: () => <h1>Notification page</h1> }))
+vi.mock('../src/pages/NotificationsPage/NotificationsPage', () => ({
+  default: () => <h1>Notification page</h1>,
+}))
 
 const gameId = '851241d0-1d80-4b71-b6ea-d7e7f5b5891a'
 const game = { id: gameId, title: 'Orbit', price: '20.00', currency: 'USD' }
@@ -163,6 +165,17 @@ describe('public catalog when the session service fails (#22)', () => {
     expect(screen.getByRole('heading', { name: 'Account blocked' })).toBeInTheDocument()
     expect(apiRequest).not.toHaveBeenCalled()
   })
+})
+
+test('password reset request route is public and links back to sign in', async () => {
+  setLocation('/#/forgot-password')
+  const user = userEvent.setup()
+  render(<Store />)
+
+  expect(screen.getByRole('heading', { name: 'Reset your password' })).toBeInTheDocument()
+  expect(apiRequest).not.toHaveBeenCalled()
+  await user.click(screen.getByRole('link', { name: 'Back to sign in' }))
+  expect(await screen.findByRole('button', { name: 'Complete sign in' })).toBeInTheDocument()
 })
 
 describe('catalog URL state (#22)', () => {
@@ -305,10 +318,13 @@ describe('notifications routing (#110)', () => {
     render(<Store initialStatus="authenticated" />)
     expect(await screen.findByRole('heading', { name: 'Notification page' })).toBeInTheDocument()
   })
-  test.each(['/#/notifications', '/#/login?next=notifications'])('preserves the notification destination through OAuth from %s', (path) => {
-    setLocation(path)
-    rememberOAuthDestination()
-    expect(consumeOAuthDestination()).toBe('#/notifications')
-    expect(consumeOAuthDestination()).toBe('#/discover')
-  })
+  test.each(['/#/notifications', '/#/login?next=notifications'])(
+    'preserves the notification destination through OAuth from %s',
+    (path) => {
+      setLocation(path)
+      rememberOAuthDestination()
+      expect(consumeOAuthDestination()).toBe('#/notifications')
+      expect(consumeOAuthDestination()).toBe('#/discover')
+    },
+  )
 })
