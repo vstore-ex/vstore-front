@@ -9,6 +9,7 @@ import EmailVerification from '../../auth/EmailVerification'
 import { rememberOAuthDestination } from '../../auth/oauth'
 import { useAuth } from '../../auth/context'
 import { validateLogin } from '../../utils/validation'
+import { passwordValidationError } from '../../utils/passwordValidation'
 import Dialog from '../../components/Dialog/Dialog'
 import chevronLeft from '../../assets/icon-chevron-left.svg'
 import authPanel from '../../assets/auth-panel.png'
@@ -37,9 +38,8 @@ function validateCreateAccount(form) {
     nextErrors.email = 'Enter a valid email.'
   }
 
-  if (form.password.length < 6) {
-    nextErrors.password = 'Password must be at least 6 characters.'
-  }
+  const passwordError = passwordValidationError(form.password)
+  if (passwordError) nextErrors.password = passwordError
 
   if (!form.acceptedTerms) {
     nextErrors.acceptedTerms = 'You must accept the terms.'
@@ -52,13 +52,21 @@ function validateCreateAccount(form) {
   return nextErrors
 }
 
-function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
+function RegisterPage({
+  initialMode = 'login',
+  initialNotice = '',
+  onClose,
+  onAuthenticated,
+  onForgotPassword,
+}) {
   const { login } = useAuth()
   const [mode, setMode] = useState(initialMode)
   const [loginForm, setLoginForm] = useState(initialLoginForm)
   const [registerForm, setRegisterForm] = useState(initialRegisterForm)
   const [errors, setErrors] = useState({})
-  const [status, setStatus] = useState({ type: '', message: '' })
+  const [status, setStatus] = useState(() =>
+    initialNotice ? { type: 'success', message: initialNotice } : { type: '', message: '' },
+  )
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isGoogleConnecting, setGoogleConnecting] = useState(false)
   const [verification, setVerification] = useState(null)
@@ -300,7 +308,13 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
                   onChange={updateField}
                   autoComplete={isRegister ? 'new-password' : 'current-password'}
                   aria-invalid={Boolean(errors.password)}
-                  aria-describedby={errors.password ? 'auth-password-error' : undefined}
+                  aria-describedby={
+                    [errors.password && 'auth-password-error', isRegister && 'auth-password-hint']
+                      .filter(Boolean)
+                      .join(' ') || undefined
+                  }
+                  minLength={isRegister ? 12 : undefined}
+                  maxLength={isRegister ? 72 : undefined}
                   disabled={isSubmitting}
                 />
                 {errors.password && (
@@ -308,7 +322,23 @@ function RegisterPage({ initialMode = 'login', onClose, onAuthenticated }) {
                     {errors.password}
                   </span>
                 )}
+                {isRegister && (
+                  <span id="auth-password-hint" className="auth-password-hint">
+                    Use at least 12 characters. Passwords are limited to 72 UTF-8 bytes.
+                  </span>
+                )}
               </div>
+
+              {!isRegister && onForgotPassword && (
+                <button
+                  className="auth-forgot-password"
+                  type="button"
+                  disabled={isSubmitting}
+                  onClick={onForgotPassword}
+                >
+                  Forgot your password?
+                </button>
+              )}
 
               {isRegister && (
                 <>

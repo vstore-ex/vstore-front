@@ -42,6 +42,26 @@ export async function resendVerification(email, signal) {
     throw new Error('Could not confirm the resend request. Please try again.')
   return data.message
 }
+export async function requestPasswordReset(email, signal) {
+  const data = await apiRequest('/auth/password/forgot', {
+    method: 'POST',
+    body: { email: email.trim() },
+    auth: false,
+    credentials: 'omit',
+    signal,
+  })
+  if (typeof data?.message !== 'string' || !data.message.trim()) {
+    throw new Error('Could not confirm the password reset request. Please try again.')
+  }
+  return data.message
+}
+export async function changePassword(payload, signal) {
+  return apiRequest('/auth/password/change', {
+    method: 'POST',
+    body: payload,
+    signal,
+  })
+}
 export function isUnverifiedLogin(error) {
   return error.status === 403 && /email not confirmed/i.test(error.message)
 }
@@ -105,6 +125,7 @@ export function registrationErrors(error) {
   if (error.status !== 400 && error.status !== 422) return {}
   if (/email/i.test(error.message)) return { email: error.message }
   if (/username/i.test(error.message)) return { username: error.message }
+  if (/password/i.test(error.message)) return { password: error.message }
   if (/already exists/i.test(error.message))
     return {
       username: 'Username or email already exists.',

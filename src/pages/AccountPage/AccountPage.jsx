@@ -14,13 +14,22 @@ import fallbackAvatar from '../../assets/avatar.webp'
 import EmailVerification from '../../auth/EmailVerification'
 import Library from './Library'
 import EmailNewsSettings from './EmailNewsSettings'
+import PasswordSettings from './PasswordSettings'
 import './AccountPage.css'
 
 export default function AccountPage(props) {
   return <AccountSession key={props.user.id} {...props} />
 }
 
-function AccountSession({ user, onUpdated, onLogoutAll, isLoggingOut, focusWallet, focusLibrary }) {
+function AccountSession({
+  user,
+  onUpdated,
+  onLogoutAll,
+  onPasswordChanged,
+  isLoggingOut,
+  focusWallet,
+  focusLibrary,
+}) {
   const [values, setValues] = useState({
     full_name: user.fullName,
     email: user.email,
@@ -241,6 +250,7 @@ function AccountSession({ user, onUpdated, onLogoutAll, isLoggingOut, focusWalle
             )}
           </form>
         </section>
+        <PasswordSettings onPasswordChanged={onPasswordChanged} />
         <EmailNewsSettings />
         <section className="account-section">
           <h2>Session settings</h2>

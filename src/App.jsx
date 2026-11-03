@@ -11,6 +11,7 @@ import CartPage from './pages/CartPage/CartPage'
 import DiscoverPage from './pages/DiscoverPage/DiscoverPage'
 import ProductDetailPage from './pages/ProductDetailPage/ProductDetailPage'
 import RegisterPage from './pages/RegisterPage/RegisterPage'
+import PasswordResetRequestPage from './pages/PasswordResetRequestPage/PasswordResetRequestPage'
 import SupportPage from './pages/SupportPage/SupportPage'
 import WishlistPage from './pages/WishlistPage/WishlistPage'
 import { useCart } from './cart/context'
@@ -33,6 +34,9 @@ function parseRouteFromHash() {
       gameId: null,
       next: params.get('next') || 'discover',
     }
+
+  if (parts[0] === 'forgot-password' && parts.length === 1)
+    return { view: 'forgotPassword', gameId: null }
 
   if (!parts.length || (parts[0] === 'discover' && parts.length === 1)) {
     return defaultRoute
@@ -93,6 +97,7 @@ function navigateTo(path) {
 function App() {
   const initialRoute = parseRouteFromHash()
   const [authMode, setAuthMode] = useState(null)
+  const [authNotice, setAuthNotice] = useState('')
   const {
     currentUser: user,
     isAuthenticated,
@@ -146,7 +151,7 @@ function App() {
     const expired = () => {
       if (
         isAuthenticated &&
-        !['news', 'newsDetail', 'userProfile', 'notFound'].includes(currentView)
+        !['news', 'newsDetail', 'userProfile', 'notFound', 'forgotPassword'].includes(currentView)
       )
         navigateTo('login?next=' + currentView)
     }
@@ -156,18 +161,21 @@ function App() {
 
   function openAuth(mode, action = null) {
     setPendingAction(action)
+    setAuthNotice('')
     setAuthMode(mode)
   }
 
   function closeAuth() {
     if (currentView === 'login' && !completedLogin.current) navigateTo('discover')
     completedLogin.current = false
+    setAuthNotice('')
     setAuthMode(null)
     setPendingAction(null)
   }
 
   async function handleAuthenticated() {
     completedLogin.current = true
+    setAuthNotice('')
     const route = parseRouteFromHash()
     if (route.view === 'login')
       navigateTo(
@@ -205,6 +213,19 @@ function App() {
     navigateTo('support')
   }
 
+  function openForgotPassword() {
+    setAuthMode(null)
+    setPendingAction(null)
+    navigateTo('forgot-password')
+  }
+
+  async function handlePasswordChanged() {
+    setAuthNotice('Password changed. Sign in with your new password.')
+    await signOut()
+    navigateTo('login?next=account')
+    setAuthMode('login')
+  }
+
   function openCartPage() {
     navigateTo('cart')
   }
@@ -232,7 +253,8 @@ function App() {
   }
   if (isOAuthCallback) return <OAuthCallbackPage />
   const publicNews = ['news', 'newsDetail'].includes(currentView)
-  const publicPage = publicNews || ['userProfile', 'notFound'].includes(currentView)
+  const publicPage =
+    publicNews || ['userProfile', 'notFound', 'forgotPassword'].includes(currentView)
   const publicCatalog = ['discover', 'product', 'achievements'].includes(currentView)
   if (!publicPage && status === 'loading')
     return (
@@ -309,6 +331,8 @@ function App() {
         <NewsPage />
       ) : currentView === 'newsDetail' ? (
         <NewsDetailPage key={selectedNewsId} id={selectedNewsId} />
+      ) : currentView === 'forgotPassword' ? (
+        <PasswordResetRequestPage />
       ) : ['account', 'library', 'wallet', 'orders', 'cart', 'wishlist', 'notifications'].includes(
           currentView,
         ) && !user ? (
@@ -327,6 +351,7 @@ function App() {
         <AccountPage
           user={user}
           onUpdated={updateUser}
+          onPasswordChanged={handlePasswordChanged}
           onLogoutAll={() => signOut(true)}
           isLoggingOut={isLoggingOut}
           focusWallet={currentView === 'wallet'}
@@ -347,8 +372,10 @@ function App() {
       {(authMode || currentView === 'login') && !isLoggingOut && (
         <RegisterPage
           initialMode={authMode || 'login'}
+          initialNotice={authNotice}
           onClose={closeAuth}
           onAuthenticated={handleAuthenticated}
+          onForgotPassword={openForgotPassword}
         />
       )}
     </main>

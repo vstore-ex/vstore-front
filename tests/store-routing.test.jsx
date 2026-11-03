@@ -227,6 +227,17 @@ describe('public catalog when the session service fails (#22)', () => {
   })
 })
 
+test('password reset request route is public and links back to sign in', async () => {
+  setLocation('/#/forgot-password')
+  const user = userEvent.setup()
+  render(<Store />)
+
+  expect(screen.getByRole('heading', { name: 'Reset your password' })).toBeInTheDocument()
+  expect(apiRequest).not.toHaveBeenCalled()
+  await user.click(screen.getByRole('link', { name: 'Back to sign in' }))
+  expect(await screen.findByRole('button', { name: 'Complete sign in' })).toBeInTheDocument()
+})
+
 describe('catalog URL state (#22)', () => {
   test('reads direct-path filters and keeps tag/pagination state across history navigation', async () => {
     games = Array.from({ length: 25 }, (_, i) => ({

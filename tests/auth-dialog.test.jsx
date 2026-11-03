@@ -13,13 +13,19 @@ vi.mock('../src/api/auth', async (original) => ({
   getGoogleAuthorizationUrl: vi.fn(),
   resendVerification: vi.fn(),
 }))
-let login, close, authenticated
+let login, close, authenticated, forgotPassword
 beforeEach(() => {
   login = vi.fn(async () => ({ data: { id: 7 }, message: 'Signed in successfully.' }))
   close = vi.fn()
   authenticated = vi.fn()
-  registerUser.mockReset().mockResolvedValue({ data: { email: 'reader@example.com', email_sent: true }, message: 'Confirm your email before signing in.' })
-  resendVerification.mockReset().mockResolvedValue('If an account needs verification, a confirmation email has been sent.')
+  forgotPassword = vi.fn()
+  registerUser.mockReset().mockResolvedValue({
+    data: { email: 'reader@example.com', email_sent: true },
+    message: 'Confirm your email before signing in.',
+  })
+  resendVerification
+    .mockReset()
+    .mockResolvedValue('If an account needs verification, a confirmation email has been sent.')
   getGoogleAuthorizationUrl.mockReset()
 })
 
@@ -32,6 +38,7 @@ function Auth({ mode = 'login' }) {
         <RegisterPage
           initialMode={mode}
           onAuthenticated={authenticated}
+          onForgotPassword={forgotPassword}
           onClose={() => {
             close()
             setOpen(false)
@@ -50,7 +57,7 @@ async function open(mode) {
 async function fillRegistration(user) {
   await user.type(screen.getByLabelText('PUT YOUR EMAIL HERE'), 'reader@example.com')
   await user.type(screen.getByLabelText('CREATE AN ACCOUNT NAME'), 'reader')
-  await user.type(screen.getByLabelText('CREATE A PASSWORD'), 'secret123')
+  await user.type(screen.getByLabelText('CREATE A PASSWORD'), 'longsecret1234')
   await user.click(screen.getByRole('checkbox', { name: /I am human/ }))
 }
 
@@ -63,6 +70,12 @@ test('opens a labelled native modal, focuses its first field and restores the op
   expect(close).toHaveBeenCalledTimes(1)
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Open sign in' })).toHaveFocus()
+})
+
+test('offers a password reset request from the login dialog', async () => {
+  const user = await open()
+  await user.click(screen.getByRole('button', { name: 'Forgot your password?' }))
+  expect(forgotPassword).toHaveBeenCalledOnce()
 })
 
 test('links login validation messages and focuses the first invalid field without moving focus during edits', async () => {
@@ -92,6 +105,23 @@ test('registration associates checkbox errors and follows the visual field order
   const human = screen.getByRole('checkbox', { name: /I am human/ })
   expect(human).toHaveAttribute('aria-invalid', 'true')
   expect(human).toHaveAccessibleDescription('Please confirm that you are human.')
+  expect(registerUser).not.toHaveBeenCalled()
+})
+
+test('registration enforces the server password length policy before submitting', async () => {
+  const user = await open('register')
+  await user.type(screen.getByLabelText('PUT YOUR EMAIL HERE'), 'reader@example.com')
+  await user.type(screen.getByLabelText('CREATE AN ACCOUNT NAME'), 'reader')
+  await user.type(screen.getByLabelText('CREATE A PASSWORD'), 'short123')
+  await user.click(screen.getByRole('checkbox', { name: /I am human/ }))
+
+  await user.click(screen.getByRole('button', { name: 'SIGN IN', exact: true }))
+
+  const password = screen.getByLabelText('CREATE A PASSWORD')
+  expect(password).toHaveFocus()
+  expect(password).toHaveAccessibleDescription(
+    'Password must be at least 12 characters. Use at least 12 characters. Passwords are limited to 72 UTF-8 bytes.',
+  )
   expect(registerUser).not.toHaveBeenCalled()
 })
 
@@ -180,13 +210,19 @@ test('failed signup delivery offers a recoverable resend with the generic backen
   await user.click(screen.getByRole('button', { name: 'Resend confirmation email' }))
   expect(await screen.findByRole('alert')).toHaveTextContent('Email service unavailable.')
   await user.click(screen.getByRole('button', { name: 'Resend confirmation email' }))
-  expect(await screen.findByRole('status')).toHaveTextContent('If an account needs verification, a confirmation email has been sent.')
+  expect(await screen.findByRole('status')).toHaveTextContent(
+    'If an account needs verification, a confirmation email has been sent.',
+  )
   expect(resendVerification.mock.calls[1][0]).toBe('reader@example.com')
   expect(registerUser).toHaveBeenCalledTimes(1)
 })
 
 test('unverified login opens email guidance and resend, keeping the account name for a later login', async () => {
-  login.mockRejectedValueOnce({ status: 403, message: 'Email not confirmed. Open the link we sent or request a new one at /api/v1/auth/resend-verification.' })
+  login.mockRejectedValueOnce({
+    status: 403,
+    message:
+      'Email not confirmed. Open the link we sent or request a new one at /api/v1/auth/resend-verification.',
+  })
   const user = await open()
   await user.type(screen.getByLabelText('SIGN IN WITH ACCOUNT NAME'), 'reader')
   await user.type(screen.getByLabelText('PASSWORD', { exact: true }), 'secret123')
@@ -236,6 +272,8 @@ test('resend rate limiting leaves a retry path and unrelated 403 errors stay on 
   await user.type(screen.getByLabelText('Email address for confirmation'), 'reader@example.com')
   resendVerification.mockRejectedValueOnce({ status: 429 })
   await user.click(screen.getByRole('button', { name: 'Resend confirmation email' }))
-  expect(await screen.findByRole('alert')).toHaveTextContent('Too many requests. Please try again later.')
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    'Too many requests. Please try again later.',
+  )
   expect(screen.getByRole('button', { name: 'Resend confirmation email' })).toBeEnabled()
 })
