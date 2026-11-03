@@ -41,11 +41,14 @@ export function mapGame(game) {
   // Main capsule (616x353): main_capsule -> header_capsule
   const mainCapsule = getBanner('main_capsule') || getBanner('header_capsule') || hero
 
-  const free = game.is_free === true
-  if (!free && (!isMoneyAmount(game.price) || Number(game.price) < 0))
-    throw new Error('The server returned an invalid game price.')
-  const price = free ? 0 : Number(game.price)
+  const priceAmount = isMoneyAmount(game.price) ? Number(game.price) : null
   const original = isMoneyAmount(game.original_price) ? Number(game.original_price) : null
+  const free =
+    game.is_free === true && (priceAmount === null || priceAmount === 0) && !(original > 0)
+  if (!free && (priceAmount === null || priceAmount < 0))
+    throw new Error('The server returned an invalid game price.')
+  const price = free ? 0 : priceAmount
+  const discounted = !free && original > 0 && original > price
   return {
     ...game,
     is_free: free,
@@ -63,8 +66,8 @@ export function mapGame(game) {
     mainCapsule: mediaUrl(mainCapsule),
     amount: price,
     price: free ? 'Free' : priceLabel(price, currency),
-    originalPrice: original > price ? priceLabel(original, currency) : '',
-    discount: original > price ? `-${Math.round((1 - price / original) * 100)}%` : '',
+    originalPrice: discounted ? priceLabel(original, currency) : '',
+    discount: discounted ? `-${Math.round((1 - price / original) * 100)}%` : '',
     tags: array(game.tags).filter((tag) => tag?.id != null),
     banners,
     media: array(game.media)

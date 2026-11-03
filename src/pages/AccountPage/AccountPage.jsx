@@ -28,6 +28,7 @@ function AccountSession({
   onPasswordChanged,
   isLoggingOut,
   focusWallet,
+  focusLibrary,
 }) {
   const [values, setValues] = useState({
     full_name: user.fullName,
@@ -163,7 +164,7 @@ function AccountSession({
         <WalletSection focusWallet={focusWallet} />
         <CurrencySelector profile />
         <AccountAchievements resource={achievements} userId={user.id} />
-        <Library />
+        <Library focusLibrary={focusLibrary} />
         <FriendsSection />
         <section className="account-section">
           <h2>Profile settings</h2>

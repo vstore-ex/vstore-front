@@ -332,7 +332,7 @@ describe('wishlist and authentication', () => {
     serverOrders = [{ id: 1, status: 'paid', items: [game] }]
     render(<Shop />)
     await ready()
-    expect(gameActions().getByRole('link', { name: 'View library' })).toBeInTheDocument()
+    expect(gameActions().getByRole('link', { name: 'View library' })).toHaveAttribute('href', '#/library')
     expect(gameActions().queryByRole('button')).not.toBeInTheDocument()
     expect(cartApi.addToCart).not.toHaveBeenCalled()
     expect(wishlistApi.addToWishlist).not.toHaveBeenCalled()

@@ -36,8 +36,13 @@ export default function WishlistButton({ gameId, className = 'button button--sec
   return (
     <div className="wishlist-control">
       <button
+        type="button"
         className={className}
-        disabled={wishlist.busy || wishlist.loading || (isAuthenticated && orders.loading)}
+        disabled={
+          wishlist.busy ||
+          wishlist.loading ||
+          (isAuthenticated && (orders.loading || !!orders.error))
+        }
         onClick={add}
       >
         {isAuthenticated && orders.loading ? 'Checking library...' : 'Wishlist'}
