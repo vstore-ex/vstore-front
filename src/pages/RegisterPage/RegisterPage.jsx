@@ -277,7 +277,7 @@ function RegisterPage({
               {
                 <div className="auth-field">
                   <label htmlFor="username">
-                    {isRegister ? 'CREATE AN ACCOUNT NAME' : 'SIGN IN WITH ACCOUNT NAME'}
+                    {isRegister ? 'CREATE AN ACCOUNT NAME' : 'USERNAME OR EMAIL'}
                   </label>
                   <input
                     ref={isRegister ? undefined : firstField}

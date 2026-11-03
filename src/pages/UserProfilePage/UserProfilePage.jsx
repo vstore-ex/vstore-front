@@ -87,6 +87,7 @@ export default function UserProfilePage({ id, onSignIn }) {
               <div className="public-profile-identity">
                 <span className="profile-role">{user.role_name || 'Member'}</span>
                 <h1>@{user.username}</h1>
+                <p className="profile-user-id">ID: {user.id}</p>
                 {user.full_name && <p>{user.full_name}</p>}
                 <ProfileDate value={user.created_at} prefix="Joined" />
                 {own ? (

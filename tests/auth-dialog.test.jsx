@@ -65,7 +65,7 @@ test('opens a labelled native modal, focuses its first field and restores the op
   await open()
   const dialog = screen.getByRole('dialog', { name: 'Log in' })
   expect(dialog.tagName).toBe('DIALOG')
-  expect(screen.getByLabelText('SIGN IN WITH ACCOUNT NAME')).toHaveFocus()
+  expect(screen.getByLabelText('USERNAME OR EMAIL')).toHaveFocus()
   fireEvent(dialog, new Event('cancel', { cancelable: true }))
   expect(close).toHaveBeenCalledTimes(1)
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
@@ -81,10 +81,10 @@ test('offers a password reset request from the login dialog', async () => {
 test('links login validation messages and focuses the first invalid field without moving focus during edits', async () => {
   const user = await open()
   await user.click(screen.getByRole('button', { name: 'SIGN IN', exact: true }))
-  const name = screen.getByLabelText('SIGN IN WITH ACCOUNT NAME')
+  const name = screen.getByLabelText('USERNAME OR EMAIL')
   const password = screen.getByLabelText('PASSWORD', { exact: true })
   expect(name).toHaveFocus()
-  expect(name).toHaveAccessibleDescription('Username must be at least 3 characters.')
+  expect(name).toHaveAccessibleDescription('Enter a username or email address.')
   expect(password).toHaveAccessibleDescription('Password is required.')
   expect(screen.getByRole('alert')).toHaveTextContent('Please fix the highlighted fields.')
   await user.type(name, 'reader')
@@ -144,12 +144,12 @@ test('focuses server field validation, then announces account creation and refoc
   expect(created).toHaveFocus()
   expect(screen.getByRole('dialog', { name: 'Confirm your email' })).toBeInTheDocument()
   await user.click(screen.getByRole('button', { name: 'Back to log in', exact: true }))
-  expect(screen.getByLabelText('SIGN IN WITH ACCOUNT NAME')).toHaveFocus()
+  expect(screen.getByLabelText('USERNAME OR EMAIL')).toHaveFocus()
 })
 
 test('prevents Escape and duplicate submits during login and permits closing after failure', async () => {
   const user = await open()
-  await user.type(screen.getByLabelText('SIGN IN WITH ACCOUNT NAME'), 'reader')
+  await user.type(screen.getByLabelText('USERNAME OR EMAIL'), 'reader')
   await user.type(screen.getByLabelText('PASSWORD', { exact: true }), 'secret123')
   const pending = deferred()
   login.mockReturnValueOnce(pending.promise)
@@ -170,12 +170,24 @@ test('prevents Escape and duplicate submits during login and permits closing aft
 
 test('successful login preserves the authentication callback and closes once', async () => {
   const user = await open()
-  await user.type(screen.getByLabelText('SIGN IN WITH ACCOUNT NAME'), 'reader')
+  await user.type(screen.getByLabelText('USERNAME OR EMAIL'), 'reader')
   await user.type(screen.getByLabelText('PASSWORD', { exact: true }), 'secret123')
   await user.click(screen.getByRole('button', { name: 'SIGN IN', exact: true }))
   expect(login).toHaveBeenCalledExactlyOnceWith({ username: 'reader', password: 'secret123' })
   expect(authenticated).toHaveBeenCalledExactlyOnceWith({ id: 7 })
   expect(close).toHaveBeenCalledTimes(1)
+})
+
+test('login accepts an email address in the username field', async () => {
+  const user = await open()
+  await user.type(screen.getByLabelText('USERNAME OR EMAIL'), 'reader@example.com')
+  await user.type(screen.getByLabelText('PASSWORD', { exact: true }), 'secret123')
+  await user.click(screen.getByRole('button', { name: 'SIGN IN', exact: true }))
+
+  expect(login).toHaveBeenCalledExactlyOnceWith({
+    username: 'reader@example.com',
+    password: 'secret123',
+  })
 })
 
 test('keeps the dialog usable after Google authorization fails', async () => {
@@ -224,7 +236,7 @@ test('unverified login opens email guidance and resend, keeping the account name
       'Email not confirmed. Open the link we sent or request a new one at /api/v1/auth/resend-verification.',
   })
   const user = await open()
-  await user.type(screen.getByLabelText('SIGN IN WITH ACCOUNT NAME'), 'reader')
+  await user.type(screen.getByLabelText('USERNAME OR EMAIL'), 'reader')
   await user.type(screen.getByLabelText('PASSWORD', { exact: true }), 'secret123')
   await user.click(screen.getByRole('button', { name: 'SIGN IN', exact: true }))
   expect(await screen.findByRole('heading', { name: 'Confirm your email' })).toHaveFocus()
@@ -235,7 +247,7 @@ test('unverified login opens email guidance and resend, keeping the account name
   expect(authenticated).not.toHaveBeenCalled()
   expect(close).not.toHaveBeenCalled()
   await user.click(screen.getByRole('button', { name: 'Back to log in' }))
-  expect(screen.getByLabelText('SIGN IN WITH ACCOUNT NAME')).toHaveValue('reader')
+  expect(screen.getByLabelText('USERNAME OR EMAIL')).toHaveValue('reader')
 })
 
 test('resend validates email, blocks duplicate requests and aborts when leaving the confirmation view', async () => {
@@ -263,7 +275,7 @@ test('resend validates email, blocks duplicate requests and aborts when leaving 
 test('resend rate limiting leaves a retry path and unrelated 403 errors stay on login', async () => {
   login.mockRejectedValueOnce({ status: 403, message: 'Sign-in is unavailable.' })
   const user = await open()
-  await user.type(screen.getByLabelText('SIGN IN WITH ACCOUNT NAME'), 'reader')
+  await user.type(screen.getByLabelText('USERNAME OR EMAIL'), 'reader')
   await user.type(screen.getByLabelText('PASSWORD', { exact: true }), 'secret123')
   await user.click(screen.getByRole('button', { name: 'SIGN IN', exact: true }))
   expect(await screen.findByRole('alert')).toHaveTextContent('Sign-in is unavailable.')

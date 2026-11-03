@@ -28,9 +28,12 @@ export function validateRegistration(form) {
 
 export function validateLogin(form) {
   const errors = {}
+  const identifier = form.username.trim()
 
-  if (form.username.trim().length < 3) {
-    errors.username = 'Username must be at least 3 characters.'
+  if (!identifier) {
+    errors.username = 'Enter a username or email address.'
+  } else if (identifier.length < 3) {
+    errors.username = 'Username or email must be at least 3 characters.'
   }
 
   if (!form.password) {
