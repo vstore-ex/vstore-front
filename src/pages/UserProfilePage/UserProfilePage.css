@@ -42,6 +42,10 @@
 .profile-role {
   color: #a5d985;
 }
+.public-profile-identity .profile-user-id {
+  margin: 8px 0;
+  font-size: 14px;
+}
 .user-profile-page button,
 .profile-edit,
 .profile-friend-menu summary {
