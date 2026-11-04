@@ -6,7 +6,6 @@ import {
   getUnreadCount,
   markNotificationsRead,
   notificationError,
-  notificationDestination,
 } from '../api/notifications'
 import { NotificationsContext } from './context'
 import useMessageNotifications from './useMessageNotifications'
@@ -193,14 +192,6 @@ function NotificationSession({ owner, children }) {
           <div>
             <strong>{messages.toast.title}</strong>
             <p>{messages.toast.message}</p>
-            {notificationDestination(messages.toast) && (
-              <a
-                href={notificationDestination(messages.toast).href}
-                onClick={messages.dismissToast}
-              >
-                Open conversation
-              </a>
-            )}
           </div>
           <button type="button" aria-label="Dismiss notification" onClick={messages.dismissToast}>
             ×

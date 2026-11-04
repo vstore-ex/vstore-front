@@ -1,7 +1,6 @@
 import UserProfilePage from './pages/UserProfilePage/UserProfilePage'
 import NewsPage from './pages/NewsPage/NewsPage'
 import NotificationsPage from './pages/NotificationsPage/NotificationsPage'
-import MessagesPage from './pages/MessagesPage/MessagesPage'
 import NotFoundPage from './pages/NotFoundPage/NotFoundPage'
 import NewsDetailPage from './pages/NewsDetailPage/NewsDetailPage'
 import { useEffect, useRef, useState } from 'react'
@@ -48,18 +47,6 @@ function parseRouteFromHash() {
 
   if (parts[0] === 'news' && parts.length <= 2)
     return { view: parts[1] ? 'newsDetail' : 'news', newsId: parts[1], gameId: null }
-
-  if (
-    parts[0] === 'messages' &&
-    (parts.length === 1 ||
-      (parts.length === 2 && /^[1-9]\d*$/.test(parts[1]) && Number.isSafeInteger(Number(parts[1]))))
-  )
-    return {
-      view: 'messages',
-      conversationId: parts[1] || null,
-      gameId: null,
-      next: parts.join('/'),
-    }
 
   if (
     ['games', 'products'].includes(parts[0]) &&
@@ -124,7 +111,6 @@ function App() {
   const [selectedGameId, setSelectedGameId] = useState(initialRoute.gameId)
   const [selectedUserId, setSelectedUserId] = useState(initialRoute.userId)
   const [selectedNewsId, setSelectedNewsId] = useState(initialRoute.newsId)
-  const [selectedConversationId, setSelectedConversationId] = useState(initialRoute.conversationId)
   const [currentView, setCurrentView] = useState(initialRoute.view)
   const [pendingAction, setPendingAction] = useState(null)
   const cart = useCart()
@@ -137,7 +123,6 @@ function App() {
       setCurrentView(route.view)
       setSelectedNewsId(route.newsId)
       setSelectedUserId(route.userId)
-      setSelectedConversationId(route.conversationId)
       window.scrollTo({ top: 0 })
     }
 
@@ -152,16 +137,9 @@ function App() {
   useEffect(() => {
     if (status === 'loading' || status === 'banned' || status === 'error' || isLoggingOut) return
     if (
-      [
-        'account',
-        'library',
-        'wallet',
-        'orders',
-        'cart',
-        'wishlist',
-        'notifications',
-        'messages',
-      ].includes(currentView) &&
+      ['account', 'library', 'wallet', 'orders', 'cart', 'wishlist', 'notifications'].includes(
+        currentView,
+      ) &&
       !isAuthenticated
     ) {
       const route = parseRouteFromHash()
@@ -175,7 +153,7 @@ function App() {
         isAuthenticated &&
         !['news', 'newsDetail', 'userProfile', 'notFound', 'forgotPassword'].includes(currentView)
       )
-        navigateTo('login?next=' + encodeURIComponent(parseRouteFromHash().next || currentView))
+        navigateTo('login?next=' + currentView)
     }
     window.addEventListener('vstore:session-expired', expired)
     return () => window.removeEventListener('vstore:session-expired', expired)
@@ -201,7 +179,7 @@ function App() {
     const route = parseRouteFromHash()
     if (route.view === 'login')
       navigateTo(
-        /^(?:account|library|wallet|orders|notifications|messages(?:\/[1-9]\d*)?|(?:wishlist|cart)(?:\?add=[^#&]+)?)$/.test(
+        /^(?:account|library|wallet|orders|notifications|(?:wishlist|cart)(?:\?add=[^#&]+)?)$/.test(
           route.next,
         )
           ? route.next
@@ -355,16 +333,9 @@ function App() {
         <NewsDetailPage key={selectedNewsId} id={selectedNewsId} />
       ) : currentView === 'forgotPassword' ? (
         <PasswordResetRequestPage />
-      ) : [
-          'account',
-          'library',
-          'wallet',
-          'orders',
-          'cart',
-          'wishlist',
-          'notifications',
-          'messages',
-        ].includes(currentView) && !user ? (
+      ) : ['account', 'library', 'wallet', 'orders', 'cart', 'wishlist', 'notifications'].includes(
+          currentView,
+        ) && !user ? (
         <p className="store-status" role="status">
           Please sign in to continue.
         </p>
@@ -388,8 +359,6 @@ function App() {
         />
       ) : currentView === 'notifications' ? (
         <NotificationsPage />
-      ) : currentView === 'messages' ? (
-        <MessagesPage conversationId={selectedConversationId} />
       ) : currentView === 'cart' ? (
         <CartPage />
       ) : currentView === 'wishlist' ? (
