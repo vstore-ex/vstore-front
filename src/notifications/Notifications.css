@@ -2,10 +2,6 @@
   position: relative;
   flex: 0 0 auto;
 }
-.message-toast a {
-  color: var(--color-accent);
-}
-
 .notification-button svg {
   width: 22px;
   height: 22px;
@@ -151,6 +147,23 @@
   overflow-wrap: anywhere;
 }
 
+.notification-item__message-link {
+  display: block;
+  border-radius: 2px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.notification-item__message-link:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--color-accent);
+}
+
+.notification-item__message-link:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
 .notification-item__copy time {
   color: #8f9baa;
   font-size: 11px;
@@ -161,13 +174,23 @@
   margin-top: 2px;
 }
 
-.message-toast {
+.message-toast-stack {
   position: fixed;
   z-index: 1000;
   right: 20px;
   bottom: 20px;
   display: flex;
+  max-height: calc(100vh - 40px);
+  flex-direction: column;
+  gap: 12px;
   width: min(360px, calc(100vw - 32px));
+  overflow-y: auto;
+  pointer-events: none;
+}
+.message-toast {
+  display: flex;
+  flex: 0 0 auto;
+  width: 100%;
   align-items: flex-start;
   justify-content: space-between;
   gap: 14px;
@@ -178,6 +201,7 @@
   background: #202b38;
   box-shadow: 0 10px 28px rgb(0 0 0 / 38%);
   color: #e5e7eb;
+  pointer-events: auto;
 }
 
 .message-toast strong {
@@ -188,6 +212,22 @@
   margin: 5px 0 0;
   color: #c6d4df;
   font-size: 13px;
+}
+
+.message-toast__message-link {
+  display: block;
+  border-radius: 2px;
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+.message-toast__message-link:hover {
+  text-decoration: underline;
+}
+
+.message-toast__message-link:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
 }
 
 .message-toast button {
@@ -208,9 +248,10 @@
     max-height: calc(100vh - 100px);
   }
 
-  .message-toast {
+  .message-toast-stack {
     right: 16px;
     bottom: 16px;
+    max-height: calc(100vh - 32px);
   }
 }
 
@@ -296,6 +337,25 @@
 .notification-body a {
   display: block;
   width: fit-content;
+  margin-top: 12px;
+  color: var(--color-accent);
+}
+.notification-body .notification-message-link {
+  width: auto;
+  margin-top: 0;
+  color: inherit;
+  text-decoration: none;
+}
+.notification-message-link:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--color-accent);
+}
+.notification-message-link:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+.notification-message-link span {
+  display: block;
   margin-top: 12px;
   color: var(--color-accent);
 }

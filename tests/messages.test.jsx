@@ -11,7 +11,7 @@ import { deferred } from './helpers'
 import { conversation, message, incomingEvent } from './message-fixtures'
 
 vi.mock('../src/api/client', async (original) => ({ ...(await original()), apiRequest: vi.fn() }))
-let conversations, records, sockets, requests, failures, intercept, unexpected, owner
+let conversations, records, notices, sockets, requests, failures, intercept, unexpected, owner
 class Socket {
   constructor() {
     sockets.push(this)
@@ -22,6 +22,16 @@ class Socket {
   }
 }
 const clone = (value) => JSON.parse(JSON.stringify(value))
+const notice = (id, senderId, type = 'new_message', isRead = false) => ({
+  id: String(id),
+  user_id: owner,
+  title: 'New message',
+  message: 'A friend sent a message.',
+  type,
+  is_read: isRead,
+  created_at: '2026-11-04T10:00:00Z',
+  data: { sender_id: senderId, conversation_id: 12, message_id: Number(id) },
+})
 beforeEach(() => {
   owner = 7
   conversations = [
@@ -39,6 +49,7 @@ beforeEach(() => {
       }),
     ],
   }
+  notices = []
   sockets = []
   requests = []
   failures = {}
@@ -65,8 +76,31 @@ beforeEach(() => {
       if (value !== undefined) return value
     }
     if (failures[kind]) throw failures[kind]
-    if (path === '/notifications/unread-count') return { unread_count: 0 }
-    if (path.startsWith('/notifications?')) return { items: [], unread_count: 0, total: 0 }
+    if (path === '/notifications/unread-count')
+      return { unread_count: notices.filter((item) => !item.is_read).length }
+    if (path.startsWith('/notifications?')) {
+      const limit = Number(url.searchParams.get('limit'))
+      const offset = Number(url.searchParams.get('offset'))
+      const unreadOnly = url.searchParams.get('unread_only') === 'true'
+      const items = unreadOnly ? notices.filter((item) => !item.is_read) : notices
+      return clone({
+        items: items.slice(offset, offset + limit),
+        total: notices.length,
+        unread_count: notices.filter((item) => !item.is_read).length,
+      })
+    }
+    if (path === '/notifications/read') {
+      const ids = options.body.notification_ids
+      let marked = 0
+      notices = notices.map((item) => {
+        if (!item.is_read && (ids === null || ids.includes(item.id))) {
+          marked++
+          return { ...item, is_read: true }
+        }
+        return item
+      })
+      return { marked_count: marked }
+    }
     if (path === '/messages/conversations' && options.method === 'POST')
       return clone(conversations.find((item) => item.other_user.id === options.body.recipient_id))
     if (path.startsWith('/messages/conversations?')) {
@@ -172,6 +206,22 @@ test('loads private history, marks incoming messages read and updates the inbox'
   await waitFor(() => expect(reads()).toHaveLength(1))
   await waitFor(() => expect(screen.queryByLabelText('1 unread messages')).toBeNull())
   expect(sockets).toHaveLength(1)
+})
+test('entering a conversation clears only unread message notifications from its friend', async () => {
+  notices = [
+    notice(1, 8),
+    notice(2, 8),
+    notice(3, 9),
+    notice(4, 8, 'friend_request'),
+    notice(5, 8, 'new_message', true),
+  ]
+  await setup()
+  await screen.findByRole('heading', { name: 'Conversation with @alex' })
+  await waitFor(() => expect(notices.filter((item) => !item.is_read)).toHaveLength(2))
+  expect(notices.filter((item) => !item.is_read).map((item) => item.id)).toEqual(['3', '4'])
+  const reads = requests.filter((item) => item.path === '/notifications/read')
+  expect(reads).toHaveLength(1)
+  expect(reads[0].body).toEqual({ notification_ids: ['1', '2'] })
 })
 test('loads older messages using before_id and does not duplicate messages', async () => {
   records[12] = Array.from({ length: 61 }, (_, i) => message(i + 1))

@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import { useEffect } from 'react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, expect, test, vi } from 'vitest'
@@ -104,6 +104,61 @@ test('loads notifications and shows new message events from the authenticated so
   expect(notificationsApi.getNotifications.mock.calls).toHaveLength(requests)
 })
 
+test('stacks distinct friend message notifications and dismisses them independently', async () => {
+  const alex = {
+    id: 'notice-alex',
+    user_id: 7,
+    type: 'new_message',
+    title: 'New message',
+    message: 'New message from alex',
+    data: { message_id: 41, conversation_id: 12, sender_id: 8 },
+    is_read: false,
+    created_at: '2026-11-04T10:00:00Z',
+  }
+  const sam = {
+    ...alex,
+    id: 'notice-sam',
+    message: 'New message from sam',
+    data: { message_id: 42, conversation_id: 14, sender_id: 9 },
+  }
+  notificationsApi.getNotifications
+    .mockResolvedValueOnce(emptyNotifications)
+    .mockResolvedValueOnce({ items: [alex], total: 1, unread_count: 1 })
+    .mockResolvedValueOnce({ items: [sam, alex], total: 2, unread_count: 2 })
+
+  const user = userEvent.setup()
+  render(<AuthenticatedProvider />)
+  await waitFor(() => expect(sockets).toHaveLength(1))
+  await act(async () =>
+    sockets[0].onmessage({
+      data: JSON.stringify({
+        type: 'new_message',
+        data: { message_id: 41, conversation_id: 12, sender_id: 8 },
+      }),
+    }),
+  )
+  await screen.findByText('New message from alex')
+  await act(async () =>
+    sockets[0].onmessage({
+      data: JSON.stringify({
+        type: 'new_message',
+        data: { message_id: 42, conversation_id: 14, sender_id: 9 },
+      }),
+    }),
+  )
+
+  expect(await screen.findByText('New message from sam')).toBeInTheDocument()
+  const dismissButtons = screen.getAllByRole('button', { name: 'Dismiss notification' })
+  expect(dismissButtons).toHaveLength(2)
+  expect(screen.getAllByRole('link', { name: 'Open conversation' })[0]).toHaveAttribute(
+    'href',
+    '#/messages/12',
+  )
+  await user.click(dismissButtons[0])
+  expect(screen.queryByText('New message from alex')).not.toBeInTheDocument()
+  expect(screen.getByText('New message from sam')).toBeInTheDocument()
+})
+
 test('marks selected notifications as read and refreshes the unread count', async () => {
   const user = userEvent.setup()
   notificationsApi.getNotifications
@@ -113,7 +168,7 @@ test('marks selected notifications as read and refreshes the unread count', asyn
       unread_count: 1,
     })
     .mockResolvedValueOnce({
-      items: [{ id: 'notice-1', user_id: 7, is_read: true }],
+      items: [],
       total: 1,
       unread_count: 0,
     })
@@ -135,8 +190,10 @@ test('shows the notification list and marks it all as read', async () => {
         notifications: [
           {
             id: 'notice-1',
+            type: 'new_message',
             title: 'New message',
             message: 'New message from alex',
+            data: { conversation_id: 12 },
             created_at: '2026-10-27T10:00:00Z',
             is_read: false,
           },
@@ -157,6 +214,10 @@ test('shows the notification list and marks it all as read', async () => {
   await user.click(screen.getByRole('button', { name: 'Notifications, 1 unread' }))
   const panel = screen.getByRole('dialog', { name: 'Notifications' })
   expect(panel).toHaveTextContent('New message from alex')
+  expect(within(panel).getByRole('link', { name: /New message from alex/ })).toHaveAttribute(
+    'href',
+    '#/messages/12',
+  )
   await user.click(screen.getByRole('button', { name: 'Mark all as read' }))
   expect(markAsRead).toHaveBeenCalledWith(null)
   expect(screen.getByRole('link', { name: 'View all notifications' })).toHaveAttribute('href', '#/notifications')

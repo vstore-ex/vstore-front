@@ -72,8 +72,9 @@ test('loads badge on sign-in, fetches on opening the page and renders the list i
   expect(listRequests()).toHaveLength(0)
   await user.click(screen.getByRole('button', { name: 'Toggle notification page' }))
   await screen.findByRole('heading', { name: 'Update 1' })
-  expect(within(card(2)).getByText('Read', { exact: true })).toBeInTheDocument()
+  expect(screen.queryByRole('heading', { name: 'Update 2' })).not.toBeInTheDocument()
   expect(within(card(1)).getByText('Unread', { exact: true })).toBeInTheDocument()
+  expect(screen.getByRole('checkbox', { name: 'Unread only' })).toBeChecked()
   expect(within(card(1)).getByRole('checkbox')).not.toBeChecked()
   expect(screen.getByRole('button', { name: 'Mark selected as read' })).toBeDisabled()
   expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled()
@@ -90,7 +91,7 @@ test('loading/empty/retry states do not invent a zero unread count on failure', 
   expect(screen.getByRole('button', { name: /unread count unavailable/ })).toBeInTheDocument()
   apiRequest.mockResolvedValue({ items: [], total: 0, unread_count: 0 })
   await user.click(screen.getByRole('button', { name: 'Retry notifications' }))
-  expect(await screen.findByText('No notifications yet.')).toBeInTheDocument()
+  expect(await screen.findByText('No unread notifications.')).toBeInTheDocument()
   expect(badge(0)).toBeInTheDocument()
 })
 
@@ -106,7 +107,8 @@ test('selected and all read actions refresh both list and count with explicit pa
   expect(readRequests()[0][1].body).toEqual({ notification_ids: ['1'] })
   await act(async () => pendingMutation.resolve())
   await waitFor(() => expect(badge(1)).toBeInTheDocument())
-  expect(within(card(1)).getByText('Read', { exact: true })).toBeInTheDocument()
+  expect(screen.queryByRole('heading', { name: 'Update 1' })).not.toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Update 3' })).toBeInTheDocument()
   await user.click(screen.getByRole('button', { name: 'Mark all as read' }))
   await waitFor(() => expect(badge(0)).toBeInTheDocument())
   expect(readRequests()[1][1].body).toEqual({ notification_ids: null })
@@ -124,6 +126,7 @@ test('deletes an item and refreshes count and list', async () => {
 test('unread pagination uses unread_count rather than total and returns to page 1 after filtering', async () => {
   records = Array.from({ length: 42 }, (_, index) => notice(index + 1, { is_read: index >= 21 }))
   const { user } = setup()
+  await user.click(await screen.findByRole('checkbox', { name: 'Unread only' }))
   await screen.findByText('Page 1 of 3')
   await user.click(screen.getByRole('button', { name: 'Next' }))
   await screen.findByText('Page 2 of 3')
@@ -143,9 +146,12 @@ test('unread pagination uses unread_count rather than total and returns to page 
 test('unread filter responds immediately while loading and restores the prior filter on failure', async () => {
   const { user } = setup()
   await screen.findByRole('heading', { name: 'Update 1' })
+  const filter = screen.getByRole('checkbox', { name: 'Unread only' })
+  expect(filter).toBeChecked()
+  await user.click(filter)
+  await screen.findByRole('heading', { name: 'Update 2' })
   const pending = deferred()
   apiRequest.mockImplementation(() => pending.promise)
-  const filter = screen.getByRole('checkbox', { name: 'Unread only' })
   await user.click(filter)
   expect(filter).toBeChecked()
   expect(filter).toBeDisabled()
@@ -216,7 +222,8 @@ test('confirmed write with failed reconciliation asks for refresh without preten
   failure = null
   await user.click(screen.getByRole('button', { name: 'Retry notifications' }))
   await waitFor(() => expect(badge(0)).toBeInTheDocument())
-  expect(within(card(1)).getByText('Read', { exact: true })).toBeInTheDocument()
+  expect(screen.queryByRole('heading', { name: 'Update 1' })).not.toBeInTheDocument()
+  expect(screen.getByText('No unread notifications.')).toBeInTheDocument()
   expect(readRequests()).toHaveLength(1)
 })
 
@@ -314,4 +321,19 @@ test('renders untrusted text literally and only constructs known local links', a
   expect(screen.queryByRole('img')).not.toBeInTheDocument()
   expect(screen.getByRole('link', { name: 'View profile' })).toHaveAttribute('href', '#/users/8')
   expect(document.querySelector('a[href^="https://evil"]')).toBeNull()
+})
+
+test('message notification cards link directly to their conversation', async () => {
+  records = [
+    notice(12, {
+      title: 'New message',
+      message: 'New message from alex',
+      type: 'new_message',
+      data: { conversation_id: 12, sender_id: 8 },
+    }),
+  ]
+  setup()
+  const link = await screen.findByRole('link', { name: /Open conversation/ })
+  expect(link).toHaveAttribute('href', '#/messages/12')
+  expect(within(link).getByRole('heading', { name: 'New message' })).toBeInTheDocument()
 })

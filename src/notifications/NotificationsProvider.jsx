@@ -4,6 +4,7 @@ import {
   deleteNotification,
   getNotifications,
   getUnreadCount,
+  markMessageNotificationsReadFromSender,
   markNotificationsRead,
   notificationError,
   notificationDestination,
@@ -12,7 +13,7 @@ import { NotificationsContext } from './context'
 import useMessageNotifications from './useMessageNotifications'
 import './Notifications.css'
 
-const initialQuery = { limit: 20, offset: 0, unread_only: false }
+const initialQuery = { limit: 20, offset: 0, unread_only: true }
 
 function NotificationSession({ owner, children }) {
   const [count, setCount] = useState(null)
@@ -31,17 +32,21 @@ function NotificationSession({ owner, children }) {
   const countRequest = useRef(null)
   const listRequest = useRef(null)
   const mutation = useRef(null)
+  const friendClearRequests = useRef(new Map())
   const locked = useRef(false)
   const queryRef = useRef(initialQuery)
 
   // Layout cleanup also prevents late results from a previous account being committed.
   useLayoutEffect(() => {
     active.current = true
+    const requests = friendClearRequests.current
     return () => {
       active.current = false
       countRequest.current?.abort()
       listRequest.current?.abort()
       mutation.current?.abort()
+      for (const request of requests.values()) request.controller.abort()
+      requests.clear()
     }
   }, [])
 
@@ -104,6 +109,48 @@ function NotificationSession({ owner, children }) {
   const refresh = useCallback(() => load(queryRef.current), [load])
   const recoverSession = useCallback((signal) => getUnreadCount(signal), [])
   const messages = useMessageNotifications(refresh, owner != null, recoverSession)
+  const dismissMessageToastsFrom = messages.dismissMessageToastsFrom
+  const clearMessageNotificationsFrom = useCallback(
+    (senderId) => {
+      if (owner == null || !active.current || !Number.isSafeInteger(senderId) || senderId < 1)
+        return Promise.resolve(0)
+      dismissMessageToastsFrom(senderId)
+      const existing = friendClearRequests.current.get(senderId)
+      if (existing) {
+        existing.rerun = true
+        return existing.promise
+      }
+
+      const request = { controller: new AbortController(), rerun: false, promise: null }
+      friendClearRequests.current.set(senderId, request)
+      request.promise = Promise.resolve()
+        .then(async () => {
+          let marked = 0
+          do {
+            request.rerun = false
+            const count = await markMessageNotificationsReadFromSender(
+              senderId,
+              request.controller.signal,
+            )
+            if (request.controller.signal.aborted || !active.current) return marked
+            marked += count
+            if (count) await load(queryRef.current, request.controller.signal, true)
+          } while (request.rerun && active.current && !request.controller.signal.aborted)
+          return marked
+        })
+        .catch((error) => {
+          if (!request.controller.signal.aborted && active.current)
+            setCountError(notificationError(error))
+          return 0
+        })
+        .finally(() => {
+          if (friendClearRequests.current.get(senderId) === request)
+            friendClearRequests.current.delete(senderId)
+        })
+      return request.promise
+    },
+    [dismissMessageToastsFrom, load, owner],
+  )
 
   useEffect(() => {
     // Opening the page already loads an authoritative count with the list.
@@ -184,28 +231,53 @@ function NotificationSession({ owner, children }) {
         error: list.error || actionError,
         refresh,
         markAsRead: (ids = null) => mutate('read', ids),
+        clearMessageNotificationsFrom,
         ...messages,
       }}
     >
       {children}
-      {messages.toast && (
-        <aside className="message-toast" role="status" aria-live="polite">
-          <div>
-            <strong>{messages.toast.title}</strong>
-            <p>{messages.toast.message}</p>
-            {notificationDestination(messages.toast) && (
-              <a
-                href={notificationDestination(messages.toast).href}
-                onClick={messages.dismissToast}
-              >
-                Open conversation
-              </a>
-            )}
-          </div>
-          <button type="button" aria-label="Dismiss notification" onClick={messages.dismissToast}>
-            ×
-          </button>
-        </aside>
+      {messages.toasts.length > 0 && (
+        <div
+          className="message-toast-stack"
+          role="region"
+          aria-label="New message notifications"
+          aria-live="polite"
+          aria-relevant="additions"
+        >
+          {messages.toasts.map((toast) => {
+            const destination = notificationDestination(toast)
+            return (
+              <aside className="message-toast" key={toast.toastId}>
+                <div>
+                  {destination && (
+                    <a
+                      className="message-toast__message-link"
+                      href={destination.href}
+                      aria-label={destination.label}
+                      onClick={() => messages.dismissToast(toast.toastId)}
+                    >
+                      <strong>{toast.title}</strong>
+                      <p>{toast.message}</p>
+                    </a>
+                  )}
+                  {!destination && (
+                    <>
+                      <strong>{toast.title}</strong>
+                      <p>{toast.message}</p>
+                    </>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  aria-label="Dismiss notification"
+                  onClick={() => messages.dismissToast(toast.toastId)}
+                >
+                  ×
+                </button>
+              </aside>
+            )
+          })}
+        </div>
       )}
     </NotificationsContext.Provider>
   )
