@@ -3,6 +3,9 @@ import { API_BASE_URL } from '../api/client'
 import { isMessageId } from '../api/messages'
 import { readStoreLocation } from '../utils/location'
 
+const MAX_TOASTS = 5
+const TOAST_DURATION = 7000
+
 function websocketUrl() {
   const url = new URL(`${API_BASE_URL}/messages/ws`, window.location.origin)
   url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
@@ -13,7 +16,10 @@ export default function useMessageNotifications(refresh, enabled, recoverSession
   const seenMessages = useRef(new Set())
   const mounted = useRef(false)
   const listeners = useRef(new Set())
-  const [toast, setToast] = useState(null)
+  const toastItems = useRef([])
+  const toastTimers = useRef(new Map())
+  const desktopNotifications = useRef(new Map())
+  const [toasts, setToasts] = useState([])
   const [messageConnection, setMessageConnection] = useState(() =>
     typeof window.WebSocket === 'function' ? 'connecting' : 'unavailable',
   )
@@ -31,7 +37,56 @@ export default function useMessageNotifications(refresh, enabled, recoverSession
     return permission
   }, [])
 
-  const dismissToast = useCallback(() => setToast(null), [])
+  const dismissToast = useCallback((toastId) => {
+    const dismissed =
+      toastId == null
+        ? toastItems.current
+        : toastItems.current.filter((item) => item.toastId === toastId)
+    for (const item of dismissed) {
+      const timer = toastTimers.current.get(item.toastId)
+      if (timer != null) window.clearTimeout(timer)
+      toastTimers.current.delete(item.toastId)
+    }
+    const next =
+      toastId == null ? [] : toastItems.current.filter((item) => item.toastId !== toastId)
+    toastItems.current = next
+    setToasts(next)
+  }, [])
+  const dismissMessageToastsFrom = useCallback(
+    (senderId) => {
+      for (const item of toastItems.current) {
+        if (item.type === 'new_message' && item.data?.sender_id === senderId)
+          dismissToast(item.toastId)
+      }
+      for (const [notification, id] of desktopNotifications.current) {
+        if (id === senderId) notification.close()
+      }
+    },
+    [dismissToast],
+  )
+  const pushToast = useCallback(
+    (notification) => {
+      const toastId = String(
+        notification.id ?? notification.data?.message_id ?? notification.created_at,
+      )
+      if (toastItems.current.some((item) => item.toastId === toastId)) return
+      const toast = { ...notification, toastId }
+      const next = [...toastItems.current, toast]
+      while (next.length > MAX_TOASTS) {
+        const removed = next.shift()
+        const timer = toastTimers.current.get(removed.toastId)
+        if (timer != null) window.clearTimeout(timer)
+        toastTimers.current.delete(removed.toastId)
+      }
+      toastItems.current = next
+      setToasts(next)
+      toastTimers.current.set(
+        toastId,
+        window.setTimeout(() => dismissToast(toastId), TOAST_DURATION),
+      )
+    },
+    [dismissToast],
+  )
 
   useEffect(() => {
     if (!enabled) return
@@ -42,7 +97,7 @@ export default function useMessageNotifications(refresh, enabled, recoverSession
     let recoveryController = null
     let reconnectDelay = 1000
     let connectedOnce = false
-    const desktopNotifications = new Set()
+    const nativeNotifications = desktopNotifications.current
     seenMessages.current.clear()
     const publish = (event) => {
       if (active) for (const listener of listeners.current) listener(event)
@@ -117,8 +172,8 @@ export default function useMessageNotifications(refresh, enabled, recoverSession
                 body: incoming.message,
                 tag: `vstore-message-${key}`,
               })
-              desktopNotifications.add(nativeNotification)
-              nativeNotification.onclose = () => desktopNotifications.delete(nativeNotification)
+              nativeNotifications.set(nativeNotification, payload.data.sender_id)
+              nativeNotification.onclose = () => nativeNotifications.delete(nativeNotification)
               nativeNotification.onclick = () => {
                 if (!active) return
                 window.location.hash = '#/messages/' + payload.data.conversation_id
@@ -129,7 +184,7 @@ export default function useMessageNotifications(refresh, enabled, recoverSession
             return
           }
           if (readStoreLocation().path === 'messages/' + payload.data.conversation_id) return
-          setToast(incoming)
+          pushToast(incoming)
         }
 
         currentSocket.onclose = () => {
@@ -178,20 +233,26 @@ export default function useMessageNotifications(refresh, enabled, recoverSession
       if (reconnectTimer != null) window.clearTimeout(reconnectTimer)
       recoveryController?.abort()
       socket?.close()
-      for (const notification of desktopNotifications) notification.close()
+      for (const notification of nativeNotifications.keys()) notification.close()
+      nativeNotifications.clear()
     }
-  }, [refresh, recoverSession, enabled])
+  }, [refresh, recoverSession, enabled, pushToast])
 
-  useEffect(() => {
-    if (!toast) return
-    const timer = window.setTimeout(() => setToast(null), 7000)
-    return () => window.clearTimeout(timer)
-  }, [toast])
+  useEffect(
+    () => () => {
+      for (const timer of toastTimers.current.values()) window.clearTimeout(timer)
+      toastTimers.current.clear()
+      toastItems.current = []
+    },
+    [],
+  )
   return {
-    toast: enabled ? toast : null,
+    toast: enabled ? toasts.at(-1) || null : null,
+    toasts: enabled ? toasts : [],
     desktopPermission,
     requestDesktopPermission,
     dismissToast,
+    dismissMessageToastsFrom,
     subscribeMessages,
     messageConnection: enabled ? messageConnection : 'unavailable',
   }

@@ -28,7 +28,7 @@ export default function useConversation(id, owner, onInboxUpdate) {
   const current = useRef(initial)
   const active = useRef(false)
   const requests = useRef({ load: null, older: null, send: null, read: null })
-  const { subscribeMessages } = useNotifications()
+  const { subscribeMessages, clearMessageNotificationsFrom } = useNotifications()
   const update = useCallback((change) => {
     if (!active.current) return
     current.current = change(current.current)
@@ -153,6 +153,10 @@ export default function useConversation(id, owner, onInboxUpdate) {
   useEffect(() => {
     void refresh()
   }, [refresh])
+  useEffect(() => {
+    const senderId = state.conversation?.other_user.id
+    if (senderId) void clearMessageNotificationsFrom(senderId)
+  }, [clearMessageNotificationsFrom, state.conversation?.other_user.id])
   useEffect(
     () =>
       subscribeMessages((event) => {
@@ -160,10 +164,16 @@ export default function useConversation(id, owner, onInboxUpdate) {
           (event.type === 'new_message' && event.data.conversation_id === Number(id)) ||
           event.type === 'resume' ||
           (event.type === 'connected' && event.reconnected)
-        )
+        ) {
           void refresh()
+          if (
+            event.type === 'new_message' &&
+            event.data.sender_id === current.current.conversation?.other_user.id
+          )
+            void clearMessageNotificationsFrom(event.data.sender_id)
+        }
       }),
-    [id, refresh, subscribeMessages],
+    [clearMessageNotificationsFrom, id, refresh, subscribeMessages],
   )
 
   async function older() {

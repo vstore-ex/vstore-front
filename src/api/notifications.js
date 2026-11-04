@@ -81,6 +81,30 @@ export async function markNotificationsRead(ids, signal) {
   return result.marked_count
 }
 
+export async function markMessageNotificationsReadFromSender(senderId, signal) {
+  if (!Number.isSafeInteger(senderId) || senderId < 1)
+    throw new Error('Invalid message notification sender ID.')
+
+  const ids = []
+  const limit = 100
+  const firstPage = await getNotifications({ limit, offset: 0 }, signal)
+  const total = firstPage.total
+  for (let offset = 0; offset < total; offset += limit) {
+    const page = offset === 0 ? firstPage : await getNotifications({ limit, offset }, signal)
+    ids.push(
+      ...page.items
+        .filter(
+          (item) =>
+            !item.is_read && item.type === 'new_message' && item.data.sender_id === senderId,
+        )
+        .map((item) => item.id),
+    )
+    if (page.items.length < limit) break
+  }
+
+  return ids.length ? markNotificationsRead(ids, signal) : 0
+}
+
 export function deleteNotification(id, signal) {
   if (!isId(id)) throw new Error('Invalid notification ID.')
   return apiRequest('/notifications/' + encodeURIComponent(id), { method: 'DELETE', signal })

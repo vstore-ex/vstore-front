@@ -1,5 +1,5 @@
 import { expect, test, vi } from 'vitest'
-import { deleteNotification, getNotifications, getUnreadCount, markNotificationsRead, notificationDestination } from '../../src/api/notifications'
+import { deleteNotification, getNotifications, getUnreadCount, markMessageNotificationsReadFromSender, markNotificationsRead, notificationDestination } from '../../src/api/notifications'
 import { jsonResponse } from '../helpers'
 
 const item = { id: 'notice-1', user_id: 7, title: 'Hello', message: 'An update', is_read: false, created_at: '2026-10-29T10:00:00Z', type: 'friend_request', data: { sender_id: 8 } }
@@ -27,6 +27,41 @@ test('selected reads deduplicate IDs; only explicit null marks all; deletion enc
   expect(fetch.mock.calls[0][1].method).toBe('POST')
   expect(fetch.mock.calls[2][0]).toBe('/api/v1/notifications/notice%2F1')
   expect(fetch.mock.calls[2][1].method).toBe('DELETE')
+})
+
+test('marks unread message notifications from one sender across notification pages', async () => {
+  const firstPage = Array.from({ length: 100 }, (_, index) => ({
+    ...item,
+    id: `notice-${index}`,
+    type: index === 0 ? 'new_message' : 'friend_request',
+    data: { sender_id: 8 },
+  }))
+  const secondPage = [
+    { ...item, id: 'notice-100', type: 'new_message', data: { sender_id: 8 } },
+    { ...item, id: 'notice-101', type: 'new_message', data: { sender_id: 9 } },
+  ]
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (url, options) => {
+      if (options.method === 'POST') return jsonResponse({ marked_count: 2 })
+      const offset = Number(new URL(url, 'http://localhost').searchParams.get('offset'))
+      return jsonResponse({
+        items: offset ? secondPage : firstPage,
+        total: 102,
+        unread_count: 102,
+      })
+    }),
+  )
+
+  expect(await markMessageNotificationsReadFromSender(8)).toBe(2)
+  expect(fetch.mock.calls.map(([url]) => url)).toEqual([
+    '/api/v1/notifications?limit=100&offset=0&unread_only=false',
+    '/api/v1/notifications?limit=100&offset=100&unread_only=false',
+    '/api/v1/notifications/read',
+  ])
+  expect(JSON.parse(fetch.mock.calls[2][1].body)).toEqual({
+    notification_ids: ['notice-0', 'notice-100'],
+  })
 })
 
 test.each([[], undefined, [''], [null]])('rejects unsafe selection %j without accidentally marking all', async (ids) => {
