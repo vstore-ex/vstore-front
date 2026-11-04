@@ -13,6 +13,8 @@ export const EMPTY_NOTIFICATIONS = {
   markAsRead: async () => {},
   requestDesktopPermission: async () => 'unsupported',
   dismissToast: noop,
+  subscribeMessages: () => noop,
+  messageConnection: 'unavailable',
 }
 
 export const NotificationsContext = createContext(EMPTY_NOTIFICATIONS)

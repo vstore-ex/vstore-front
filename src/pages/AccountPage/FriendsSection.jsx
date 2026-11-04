@@ -1,4 +1,5 @@
 import UserLink from '../../components/User/UserLink'
+import StartConversationButton from '../../messages/StartConversationButton'
 import { useState } from 'react'
 import { useAuth } from '../../auth/context'
 import useFriends from '../../hooks/useFriends'
@@ -202,6 +203,9 @@ function FriendsPanel({ user }) {
                 }
               />
               <div className="friend-actions">
+                {tab === 'friends' && !group.loading && !group.error && (
+                  <StartConversationButton userId={item.id} />
+                )}
                 {tab === 'friends' ? (
                   confirm === item.id ? (
                     <div role="group" aria-label="Confirm removal">

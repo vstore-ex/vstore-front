@@ -111,7 +111,7 @@ function Header({
 
   return (
     <header
-      className="store-header"
+      className={'store-header' + (isAuthenticated ? ' store-header--signed-in' : '')}
       aria-label="Store navigation"
       onFocusCapture={(event) => {
         focusedControl.current = event.target
@@ -155,7 +155,7 @@ function Header({
       >
         <div className="header-left">
           <nav className="primary-nav" aria-label="Primary navigation">
-            {navItems.map((item) => (
+            {(isAuthenticated ? [...navItems, 'Messages'] : navItems).map((item) => (
               <a
                 className={`primary-nav__link${
                   activeView === item.toLowerCase() ? ' primary-nav__link--active' : ''
