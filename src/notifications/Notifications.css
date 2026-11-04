@@ -2,9 +2,6 @@
   position: relative;
   flex: 0 0 auto;
 }
-.message-toast a {
-  color: var(--color-accent);
-}
 
 .notification-button svg {
   width: 22px;

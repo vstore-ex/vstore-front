@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import useFriends from '../../hooks/useFriends'
 import addFriendIcon from '../../assets/account/icon-add-friend.svg'
-import StartConversationButton from '../../messages/StartConversationButton'
 export default function ProfileFriendAction({ userId, profileId }) {
   const state = useFriends(userId)
   const [confirm, setConfirm] = useState(false)
@@ -91,7 +90,6 @@ export default function ProfileFriendAction({ userId, profileId }) {
         </button>
       )}
       {state.error && <p role="alert">{state.error}</p>}
-      {friend && !loading && !unavailable && <StartConversationButton userId={profileId} />}
       {state.message && <p role="status">{state.message}</p>}
     </div>
   )

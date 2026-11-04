@@ -44,9 +44,6 @@ vi.mock('../src/pages/ProductDetailPage/ProductDetailPage', () => ({
 vi.mock('../src/pages/NotificationsPage/NotificationsPage', () => ({
   default: () => <h1>Notification page</h1>,
 }))
-vi.mock('../src/pages/MessagesPage/MessagesPage', () => ({
-  default: ({ conversationId }) => <h1>Messages {conversationId || 'inbox'}</h1>,
-}))
 vi.mock('../src/pages/AccountPage/AccountPage', () => ({
   default: ({ focusLibrary }) => <h1>{focusLibrary ? 'Your library' : 'Your account'}</h1>,
 }))
@@ -390,48 +387,4 @@ describe('notifications routing (#110)', () => {
       expect(consumeOAuthDestination()).toBe('#/discover')
     },
   )
-})
-
-describe('private message routes', () => {
-  test.each(['/#/messages/12', '/messages/12', '/#/messages'])(
-    'guards %s and restores the destination after sign-in',
-    async (path) => {
-      setLocation(path)
-      const user = userEvent.setup()
-      render(<Store />)
-      await user.click(await screen.findByRole('button', { name: 'Complete sign in' }))
-      expect(
-        await screen.findByRole('heading', {
-          name: path.endsWith('/12') ? 'Messages 12' : 'Messages inbox',
-        }),
-      ).toBeInTheDocument()
-      expect(screen.getByRole('link', { name: 'Messages', exact: true })).toHaveAttribute(
-        'href',
-        '#/messages',
-      )
-    },
-  )
-  test.each(['/#/messages/12', '/#/login?next=messages%2F12'])(
-    'preserves a conversation through OAuth from %s',
-    (path) => {
-      setLocation(path)
-      rememberOAuthDestination()
-      expect(consumeOAuthDestination()).toBe('#/messages/12')
-    },
-  )
-  test.each(['/#/messages/nope', '/#/messages/0', '/#/messages/12/other'])(
-    'invalid message route %s shows 404',
-    async (path) => {
-      setLocation(path)
-      render(<Store />)
-      expect(await screen.findByRole('heading', { name: 'Page not found' })).toBeInTheDocument()
-    },
-  )
-  test('session expiry preserves the active conversation destination', async () => {
-    setLocation('/#/messages/12')
-    render(<Store initialStatus="authenticated" />)
-    await screen.findByRole('heading', { name: 'Messages 12' })
-    act(() => window.dispatchEvent(new Event('vstore:session-expired')))
-    await waitFor(() => expect(window.location.hash).toBe('#/login?next=messages%2F12'))
-  })
 })

@@ -90,7 +90,7 @@ test('loads notifications and shows new message events from the authenticated so
 
   await act(async () => {
     await sockets[0].onmessage({
-      data: JSON.stringify({ type: 'new_message', data: { message_id: 41, conversation_id: 12, sender_id: 8, created_at: '2026-11-03T10:00:00Z' } }),
+      data: JSON.stringify({ type: 'new_message', data: { message_id: 41 } }),
     })
   })
 
@@ -99,7 +99,7 @@ test('loads notifications and shows new message events from the authenticated so
   expect(screen.getByLabelText('Notification count')).toHaveTextContent('1')
   const requests = notificationsApi.getNotifications.mock.calls.length
   await act(async () => {
-    await sockets[0].onmessage({ data: JSON.stringify({ type: 'new_message', data: { message_id: 41, conversation_id: 12, sender_id: 8, created_at: '2026-11-03T10:00:00Z' } }) })
+    await sockets[0].onmessage({ data: JSON.stringify({ type: 'new_message', data: { message_id: 41 } }) })
   })
   expect(notificationsApi.getNotifications.mock.calls).toHaveLength(requests)
 })

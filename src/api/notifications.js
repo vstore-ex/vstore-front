@@ -88,12 +88,6 @@ export function deleteNotification(id, signal) {
 
 export function notificationDestination(item) {
   const data = item.data || {}
-  if (
-    item.type === 'new_message' &&
-    Number.isSafeInteger(data.conversation_id) &&
-    data.conversation_id > 0
-  )
-    return { href: '#/messages/' + data.conversation_id, label: 'Open conversation' }
   const userId =
     item.type === 'friend_request'
       ? data.sender_id
