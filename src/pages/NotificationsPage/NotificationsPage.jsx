@@ -98,6 +98,7 @@ function NotificationList() {
         <ul className="notifications-list" aria-label="Notifications" aria-busy={disabled}>
           {data.items.map((item) => {
             const destination = notificationDestination(item)
+            const messageDestination = item.type === 'new_message' ? destination : null
             return (
               <li
                 key={item.id}
@@ -105,12 +106,24 @@ function NotificationList() {
               >
                 <div className="notification-body">
                   <span className="notification-status">{item.is_read ? 'Read' : 'Unread'}</span>
-                  <h2>{item.title}</h2>
-                  <p>{item.message}</p>
+                  {messageDestination ? (
+                    <a className="notification-message-link" href={messageDestination.href}>
+                      <h2>{item.title}</h2>
+                      <p>{item.message}</p>
+                      <span>{messageDestination.label}</span>
+                    </a>
+                  ) : (
+                    <>
+                      <h2>{item.title}</h2>
+                      <p>{item.message}</p>
+                    </>
+                  )}
                   <time dateTime={item.created_at}>
                     {new Date(item.created_at).toLocaleString()}
                   </time>
-                  {destination && <a href={destination.href}>{destination.label}</a>}
+                  {destination && !messageDestination && (
+                    <a href={destination.href}>{destination.label}</a>
+                  )}
                 </div>
                 <div className="notification-actions">
                   {!item.is_read && (

@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import { useEffect } from 'react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, expect, test, vi } from 'vitest'
@@ -150,6 +150,10 @@ test('stacks distinct friend message notifications and dismisses them independen
   expect(await screen.findByText('New message from sam')).toBeInTheDocument()
   const dismissButtons = screen.getAllByRole('button', { name: 'Dismiss notification' })
   expect(dismissButtons).toHaveLength(2)
+  expect(screen.getAllByRole('link', { name: 'Open conversation' })[0]).toHaveAttribute(
+    'href',
+    '#/messages/12',
+  )
   await user.click(dismissButtons[0])
   expect(screen.queryByText('New message from alex')).not.toBeInTheDocument()
   expect(screen.getByText('New message from sam')).toBeInTheDocument()
@@ -186,8 +190,10 @@ test('shows the notification list and marks it all as read', async () => {
         notifications: [
           {
             id: 'notice-1',
+            type: 'new_message',
             title: 'New message',
             message: 'New message from alex',
+            data: { conversation_id: 12 },
             created_at: '2026-10-27T10:00:00Z',
             is_read: false,
           },
@@ -208,6 +214,10 @@ test('shows the notification list and marks it all as read', async () => {
   await user.click(screen.getByRole('button', { name: 'Notifications, 1 unread' }))
   const panel = screen.getByRole('dialog', { name: 'Notifications' })
   expect(panel).toHaveTextContent('New message from alex')
+  expect(within(panel).getByRole('link', { name: /New message from alex/ })).toHaveAttribute(
+    'href',
+    '#/messages/12',
+  )
   await user.click(screen.getByRole('button', { name: 'Mark all as read' }))
   expect(markAsRead).toHaveBeenCalledWith(null)
   expect(screen.getByRole('link', { name: 'View all notifications' })).toHaveAttribute('href', '#/notifications')

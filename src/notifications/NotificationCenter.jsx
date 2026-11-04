@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
+import { notificationDestination } from '../api/notifications'
 import { useNotifications } from './context'
 import './Notifications.css'
 
@@ -140,33 +141,50 @@ export default function NotificationCenter() {
             </p>
           ) : notifications.length ? (
             <ul className="notification-list">
-              {notifications.map((notification) => (
-                <li
-                  className={`notification-item${notification.is_read ? '' : ' notification-item--unread'}`}
-                  key={notification.id}
-                >
-                  <article>
-                    <div className="notification-item__copy">
-                      <strong>{notification.title}</strong>
-                      <p>{notification.message}</p>
-                      <time dateTime={notification.created_at}>
-                        {formatCreatedAt(notification.created_at)}
-                      </time>
-                    </div>
-                    {!notification.is_read && (
-                      <button
-                        type="button"
-                        className="notification-read-button"
-                        disabled={loading || busy || !!error}
-                        aria-label={`Mark ${notification.title} as read`}
-                        onClick={() => void markAsRead([notification.id])}
-                      >
-                        Mark read
-                      </button>
-                    )}
-                  </article>
-                </li>
-              ))}
+              {notifications.map((notification) => {
+                const destination =
+                  notification.type === 'new_message' ? notificationDestination(notification) : null
+                return (
+                  <li
+                    className={`notification-item${notification.is_read ? '' : ' notification-item--unread'}`}
+                    key={notification.id}
+                  >
+                    <article>
+                      <div className="notification-item__copy">
+                        {destination ? (
+                          <a
+                            className="notification-item__message-link"
+                            href={destination.href}
+                            onClick={() => setOpen(false)}
+                          >
+                            <strong>{notification.title}</strong>
+                            <p>{notification.message}</p>
+                          </a>
+                        ) : (
+                          <>
+                            <strong>{notification.title}</strong>
+                            <p>{notification.message}</p>
+                          </>
+                        )}
+                        <time dateTime={notification.created_at}>
+                          {formatCreatedAt(notification.created_at)}
+                        </time>
+                      </div>
+                      {!notification.is_read && (
+                        <button
+                          type="button"
+                          className="notification-read-button"
+                          disabled={loading || busy || !!error}
+                          aria-label={`Mark ${notification.title} as read`}
+                          onClick={() => void markAsRead([notification.id])}
+                        >
+                          Mark read
+                        </button>
+                      )}
+                    </article>
+                  </li>
+                )
+              })}
             </ul>
           ) : (
             !error && <p className="notification-empty">You're all caught up.</p>

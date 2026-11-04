@@ -322,3 +322,18 @@ test('renders untrusted text literally and only constructs known local links', a
   expect(screen.getByRole('link', { name: 'View profile' })).toHaveAttribute('href', '#/users/8')
   expect(document.querySelector('a[href^="https://evil"]')).toBeNull()
 })
+
+test('message notification cards link directly to their conversation', async () => {
+  records = [
+    notice(12, {
+      title: 'New message',
+      message: 'New message from alex',
+      type: 'new_message',
+      data: { conversation_id: 12, sender_id: 8 },
+    }),
+  ]
+  setup()
+  const link = await screen.findByRole('link', { name: /Open conversation/ })
+  expect(link).toHaveAttribute('href', '#/messages/12')
+  expect(within(link).getByRole('heading', { name: 'New message' })).toBeInTheDocument()
+})

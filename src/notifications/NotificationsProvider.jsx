@@ -249,12 +249,22 @@ function NotificationSession({ owner, children }) {
             return (
               <aside className="message-toast" key={toast.toastId}>
                 <div>
-                  <strong>{toast.title}</strong>
-                  <p>{toast.message}</p>
                   {destination && (
-                    <a href={destination.href} onClick={() => messages.dismissToast(toast.toastId)}>
-                      Open conversation
+                    <a
+                      className="message-toast__message-link"
+                      href={destination.href}
+                      aria-label={destination.label}
+                      onClick={() => messages.dismissToast(toast.toastId)}
+                    >
+                      <strong>{toast.title}</strong>
+                      <p>{toast.message}</p>
                     </a>
+                  )}
+                  {!destination && (
+                    <>
+                      <strong>{toast.title}</strong>
+                      <p>{toast.message}</p>
+                    </>
                   )}
                 </div>
                 <button

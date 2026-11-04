@@ -2,10 +2,6 @@
   position: relative;
   flex: 0 0 auto;
 }
-.message-toast a {
-  color: var(--color-accent);
-}
-
 .notification-button svg {
   width: 22px;
   height: 22px;
@@ -151,6 +147,23 @@
   overflow-wrap: anywhere;
 }
 
+.notification-item__message-link {
+  display: block;
+  border-radius: 2px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.notification-item__message-link:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--color-accent);
+}
+
+.notification-item__message-link:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
 .notification-item__copy time {
   color: #8f9baa;
   font-size: 11px;
@@ -201,10 +214,20 @@
   font-size: 13px;
 }
 
-.message-toast a {
-  display: inline-block;
-  margin-top: 8px;
+.message-toast__message-link {
+  display: block;
+  border-radius: 2px;
   color: var(--color-accent);
+  text-decoration: none;
+}
+
+.message-toast__message-link:hover {
+  text-decoration: underline;
+}
+
+.message-toast__message-link:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
 }
 
 .message-toast button {
@@ -314,6 +337,25 @@
 .notification-body a {
   display: block;
   width: fit-content;
+  margin-top: 12px;
+  color: var(--color-accent);
+}
+.notification-body .notification-message-link {
+  width: auto;
+  margin-top: 0;
+  color: inherit;
+  text-decoration: none;
+}
+.notification-message-link:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--color-accent);
+}
+.notification-message-link:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+.notification-message-link span {
+  display: block;
   margin-top: 12px;
   color: var(--color-accent);
 }
