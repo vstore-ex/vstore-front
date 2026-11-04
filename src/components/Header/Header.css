@@ -327,3 +327,16 @@
     justify-content: space-between;
   }
 }
+@media (min-width: 1201px) and (max-width: 1500px) {
+  .store-header--signed-in {
+    flex-wrap: wrap;
+    gap: 14px;
+    padding: 16px 24px;
+  }
+  .store-header--signed-in .header-left {
+    order: 3;
+    width: 100%;
+    margin-left: 0;
+    justify-content: space-between;
+  }
+}
