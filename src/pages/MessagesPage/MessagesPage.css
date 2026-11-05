@@ -246,6 +246,14 @@
   color: var(--color-error);
   margin-block: var(--space-3);
 }
+.message-file-warning {
+  margin-block: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--color-warning);
+  border-radius: var(--radius-md);
+  color: var(--color-warning);
+  background: rgb(255 211 147 / 8%);
+}
 .messages-visually-hidden {
   position: absolute;
   width: 1px;
