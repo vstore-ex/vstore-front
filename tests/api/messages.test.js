@@ -3,8 +3,10 @@ import {
   getConversations,
   getConversation,
   getMessages,
+  getMessageAttachment,
   openConversation,
   sendMessage,
+  messageFilesError,
   markConversationRead,
   mergeMessages,
 } from '../../src/api/messages'
@@ -77,6 +79,71 @@ test.each(['', '   ', 'x'.repeat(4001)])(
     expect(fetch).not.toHaveBeenCalled()
   },
 )
+test('sends image attachments as authenticated multipart data and downloads only validated private URLs', async () => {
+  const file = new File(['image bytes'], 'art.png', { type: 'image/png' })
+  const sentMessage = message(9, {
+    content: null,
+    attachments: [
+      {
+        id: 3,
+        content_type: 'image/webp',
+        size_bytes: 11,
+        download_url: '/api/v1/messages/conversations/12/attachments/3',
+      },
+    ],
+  })
+  localStorage.setItem('vstore:token', 'message-test-token')
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (url) =>
+      url.endsWith('/attachments/3')
+        ? new Response(new Blob(['private image'], { type: 'image/webp' }), {
+            headers: { 'Content-Type': 'image/webp' },
+          })
+        : jsonResponse(sentMessage),
+    ),
+  )
+  const result = await sendMessage(12, '  ', undefined, [file])
+  const request = fetch.mock.calls[0]
+  expect(request[0]).toBe('/api/v1/messages/conversations/12/messages')
+  expect(request[1].body).toBeInstanceOf(FormData)
+  expect(request[1].body.get('content')).toBeNull()
+  expect(request[1].body.getAll('files')).toHaveLength(1)
+  expect(request[1].body.get('files').name).toBe('art.png')
+  expect(request[1].headers).toMatchObject({ Authorization: 'Bearer message-test-token' })
+  expect(request[1].headers['Content-Type']).toBeUndefined()
+  expect(result.attachments).toHaveLength(1)
+
+  const blob = await getMessageAttachment(12, result.attachments[0])
+  expect(blob.type).toBe('image/webp')
+  expect(fetch.mock.calls[1][0]).toBe('/api/v1/messages/conversations/12/attachments/3')
+  expect(fetch.mock.calls[1][1].headers).toMatchObject({
+    Authorization: 'Bearer message-test-token',
+  })
+  await expect(
+    getMessageAttachment(12, {
+      ...result.attachments[0],
+      download_url: 'https://cdn.example/private.webp',
+    }),
+  ).rejects.toThrow('Could not read')
+  expect(fetch).toHaveBeenCalledTimes(2)
+})
+test('validates attachment count, MIME type, and backend size limits', () => {
+  const image = (size, type = 'image/png') =>
+    new File([new Uint8Array(size)], 'image.png', { type })
+  expect(messageFilesError([image(1)])).toBe('')
+  expect(messageFilesError([image(1, 'text/plain')])).toBe('Only image files can be attached.')
+  expect(messageFilesError([image(0)])).toBe('Images cannot be empty.')
+  expect(messageFilesError([image(5 * 1024 * 1024 + 1)])).toBe(
+    'Each image must be 5 MiB or smaller.',
+  )
+  expect(messageFilesError(Array.from({ length: 4 }, () => image(4 * 1024 * 1024)))).toBe(
+    'All images together must be 15 MiB or smaller.',
+  )
+  expect(messageFilesError(Array.from({ length: 6 }, () => image(1)))).toBe(
+    'Attach up to 5 images.',
+  )
+})
 test.each([
   { items: [message(1, { conversation_id: 99 })], next_before_id: null },
   { items: [message(1)], next_before_id: 3 },

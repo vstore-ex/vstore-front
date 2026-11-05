@@ -88,7 +88,16 @@ export async function waitForRefresh() {
 
 export async function apiRequest(
   path,
-  { body, headers, signal, timeout = 20000, auth = true, credentials = 'include', ...options } = {},
+  {
+    body,
+    headers,
+    signal,
+    timeout = 20000,
+    auth = true,
+    credentials = 'include',
+    responseType = 'json',
+    ...options
+  } = {},
 ) {
   const version = generation
   const refreshVersion = refreshed
@@ -130,6 +139,7 @@ export async function apiRequest(
       throw new ApiError('Your session has ended. Please sign in again.', 401)
     response = await request()
   }
+  if (response.ok && responseType === 'blob') return response.blob()
   const raw = await response.text()
   let data
   try {

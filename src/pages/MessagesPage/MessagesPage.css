@@ -188,9 +188,39 @@
   flex-wrap: wrap;
   font-size: 14px;
 }
-.message-attachment-note {
-  font-size: 14px;
-  color: var(--color-text-muted);
+.message-attachments,
+.message-selected-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+.message-selected-images {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 0;
+}
+.message-image,
+.message-selected-image img {
+  display: block;
+  max-width: min(100%, 420px);
+  max-height: 420px;
+  border-radius: var(--radius-md);
+  object-fit: contain;
+}
+.message-selected-image {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  max-width: 100%;
+}
+.message-selected-image span {
+  overflow-wrap: anywhere;
+}
+.message-attachment-error {
+  color: var(--color-error);
+  display: grid;
+  gap: var(--space-2);
 }
 .message-composer {
   margin-top: var(--space-5);
