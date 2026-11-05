@@ -216,13 +216,6 @@
   color: var(--color-accent) !important;
 }
 
-.support-contact {
-  margin-top: 58px;
-  display: grid;
-  justify-items: center;
-  text-align: center;
-}
-
 .support-requests {
   margin-top: 70px;
   padding: clamp(20px, 4vw, 40px);
@@ -499,41 +492,6 @@
   border: 0;
 }
 
-.support-contact h2 {
-  margin: 0;
-  color: var(--color-text);
-  font-size: 40px;
-  font-weight: 900;
-  line-height: normal;
-}
-
-.support-contact a {
-  width: 402px;
-  max-width: 100%;
-  min-height: 88px;
-  margin-top: 35px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 7px;
-  padding: 20px;
-  color: var(--color-surface);
-  background: var(--color-accent);
-  font-size: 25px;
-  font-weight: 700;
-  line-height: normal;
-  text-decoration: none;
-  transition:
-    transform 160ms ease,
-    filter 160ms ease;
-}
-
-.support-contact a:hover,
-.support-contact a:focus-visible {
-  transform: translateY(-1px);
-  filter: brightness(1.06);
-}
-
 @media (max-width: 760px) {
   .support-page {
     min-height: 0;
@@ -581,29 +539,11 @@
     margin-top: 44px;
   }
 
-  .support-contact {
-    margin-top: 42px;
-  }
-
   .support-requests {
     margin-top: 48px;
   }
 
   .support-ticket__meta {
     flex-wrap: wrap;
-  }
-
-  .support-contact h2 {
-    font-size: 32px;
-  }
-
-  .support-contact a {
-    width: 100%;
-    min-height: 72px;
-    margin-top: 26px;
-    padding-inline: 16px;
-    font-size: 20px;
-    text-align: center;
-    white-space: normal;
   }
 }

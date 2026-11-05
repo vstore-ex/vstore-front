@@ -542,11 +542,6 @@ function SupportPage() {
             </a>
           </section>
         )}
-
-        <section className="support-contact" aria-label="Contact support by email">
-          <h2>Have another question?</h2>
-          <a href="mailto:support@vstore.local">Contact us by email</a>
-        </section>
       </div>
     </div>
   )
