@@ -1,11 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../../auth/context'
 import { useNotifications } from '../../notifications/context'
-import { messagePreview } from '../../api/messages'
+import {
+  getMessageAttachment,
+  messageError,
+  messageFilesError,
+  messagePreview,
+} from '../../api/messages'
 import useInbox from '../../messages/useInbox'
 import useConversation from '../../messages/useConversation'
 import fallbackAvatar from '../../assets/avatar.webp'
 import './MessagesPage.css'
+
+let nextImageDraftId = 0
 
 function Avatar({ user }) {
   return (
@@ -44,9 +51,74 @@ function ErrorNotice({ error, retry, label }) {
     </div>
   ) : null
 }
-function Conversation({ id, owner, draft, changeDraft, onInboxUpdate }) {
+function MessageImage({ attachment, conversationId, index }) {
+  const [imageUrl, setImageUrl] = useState('')
+  const [error, setError] = useState('')
+  const [attempt, setAttempt] = useState(0)
+  useEffect(() => {
+    const controller = new AbortController()
+    let active = true
+    let objectUrl = ''
+    getMessageAttachment(conversationId, attachment, controller.signal)
+      .then((blob) => {
+        if (!active) return
+        objectUrl = URL.createObjectURL(blob)
+        setImageUrl(objectUrl)
+      })
+      .catch((reason) => {
+        if (active && !controller.signal.aborted) setError(messageError(reason))
+      })
+    return () => {
+      active = false
+      controller.abort()
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
+  }, [attachment, attempt, conversationId])
+  if (error)
+    return (
+      <div className="message-attachment-error" role="group" aria-label="Private image">
+        <p role="alert">Could not load private image: {error}</p>
+        <button
+          type="button"
+          className="button button--secondary"
+          onClick={() => {
+            setError('')
+            setAttempt((value) => value + 1)
+          }}
+        >
+          Retry image
+        </button>
+      </div>
+    )
+  return imageUrl ? (
+    <img className="message-image" src={imageUrl} alt={`Private message image ${index + 1}`} />
+  ) : (
+    <p className="messages-visually-hidden" role="status">
+      Loading private image {index + 1}...
+    </p>
+  )
+}
+function SelectedImage({ entry, remove, disabled }) {
+  return (
+    <li className="message-selected-image">
+      <img src={entry.previewUrl} alt={`Preview of ${entry.file.name}`} />
+      <span>{entry.file.name}</span>
+      <button
+        type="button"
+        className="button button--secondary"
+        aria-label={`Remove ${entry.file.name}`}
+        disabled={disabled}
+        onClick={remove}
+      >
+        Remove
+      </button>
+    </li>
+  )
+}
+function Conversation({ id, owner, draft, files, changeDraft, changeFiles, onInboxUpdate }) {
   const state = useConversation(id, owner, onInboxUpdate)
   const [notice, setNotice] = useState('')
+  const [attachmentError, setAttachmentError] = useState('')
   const heading = useRef(null)
   const viewport = useRef(null)
   const nearBottom = useRef(true)
@@ -65,8 +137,14 @@ function Conversation({ id, owner, draft, changeDraft, onInboxUpdate }) {
   async function send(event) {
     event.preventDefault()
     setNotice('')
-    if (await state.send(draft)) {
+    if (
+      await state.send(
+        draft,
+        files.map((entry) => entry.file),
+      )
+    ) {
       changeDraft('')
+      changeFiles([])
       nearBottom.current = true
       if (viewport.current) viewport.current.scrollTop = viewport.current.scrollHeight
       setNotice('Message sent.')
@@ -164,10 +242,16 @@ function Conversation({ id, owner, draft, changeDraft, onInboxUpdate }) {
                   </div>
                   {item.content && <p>{item.content}</p>}
                   {!!item.attachments.length && (
-                    <p className="message-attachment-note">
-                      {item.attachments.length} image attachment(s). Image viewing will be available
-                      in a future update.
-                    </p>
+                    <div className="message-attachments" aria-label="Message attachments">
+                      {item.attachments.map((attachment, index) => (
+                        <MessageImage
+                          key={attachment.id}
+                          attachment={attachment}
+                          conversationId={id}
+                          index={index}
+                        />
+                      ))}
+                    </div>
                   )}
                 </li>
               ))}
@@ -213,6 +297,58 @@ function Conversation({ id, owner, draft, changeDraft, onInboxUpdate }) {
             setNotice('')
           }}
         />
+        <label htmlFor="message-images">Attach images</label>
+        <input
+          id="message-images"
+          type="file"
+          accept="image/*"
+          multiple
+          aria-describedby="message-attachments-help"
+          disabled={state.sending || !state.conversation?.can_send}
+          onChange={(event) => {
+            const selected = Array.from(event.target.files || [])
+            event.target.value = ''
+            if (!selected.length) return
+            const nextFiles = [...files.map((entry) => entry.file), ...selected]
+            const error = messageFilesError(nextFiles)
+            if (error) {
+              setAttachmentError(error)
+              return
+            }
+            changeFiles([
+              ...files,
+              ...selected.map((file) => ({
+                file,
+                previewUrl: URL.createObjectURL(file),
+                key: ++nextImageDraftId,
+              })),
+            ])
+            setAttachmentError('')
+          }}
+        />
+        <p id="message-attachments-help">
+          Up to 5 images, 5 MiB each and 15 MiB total. You can also send images without text.
+        </p>
+        {files.length > 0 && (
+          <ul className="message-selected-images" aria-label="Selected images">
+            {files.map((file, index) => (
+              <SelectedImage
+                key={file.key}
+                entry={file}
+                disabled={state.sending}
+                remove={() => {
+                  changeFiles(files.filter((_, fileIndex) => fileIndex !== index))
+                  setAttachmentError('')
+                }}
+              />
+            ))}
+          </ul>
+        )}
+        {attachmentError && (
+          <p className="messages-error" role="alert">
+            {attachmentError}
+          </p>
+        )}
         <div className="message-composer-actions">
           <span id="message-length">{draft.length} / 4000 characters</span>
           <button
@@ -223,7 +359,7 @@ function Conversation({ id, owner, draft, changeDraft, onInboxUpdate }) {
               state.loading ||
               !!state.error ||
               !state.conversation?.can_send ||
-              !draft.trim() ||
+              (!draft.trim() && !files.length) ||
               draft.length > 4000
             }
           >
@@ -246,6 +382,24 @@ function MessagesSession({ conversationId, owner }) {
   const inbox = useInbox()
   const { messageConnection } = useNotifications()
   const [drafts, setDrafts] = useState({})
+  const [imageDrafts, setImageDrafts] = useState({})
+  const imageDraftsRef = useRef(imageDrafts)
+  useEffect(
+    () => () => {
+      Object.values(imageDraftsRef.current)
+        .flat()
+        .forEach((entry) => URL.revokeObjectURL(entry.previewUrl))
+    },
+    [],
+  )
+  function changeImageDraft(id, next) {
+    const retained = new Set(next.map((entry) => entry.previewUrl))
+    for (const entry of imageDrafts[id] || [])
+      if (!retained.has(entry.previewUrl)) URL.revokeObjectURL(entry.previewUrl)
+    const updated = { ...imageDrafts, [id]: next }
+    imageDraftsRef.current = updated
+    setImageDrafts(updated)
+  }
   return (
     <div className="messages-page">
       <header className="messages-heading">
@@ -349,7 +503,9 @@ function MessagesSession({ conversationId, owner }) {
             id={conversationId}
             owner={owner}
             draft={drafts[conversationId] || ''}
+            files={imageDrafts[conversationId] || []}
             changeDraft={(value) => setDrafts((old) => ({ ...old, [conversationId]: value }))}
+            changeFiles={(value) => changeImageDraft(conversationId, value)}
             onInboxUpdate={inbox.load}
           />
         ) : (

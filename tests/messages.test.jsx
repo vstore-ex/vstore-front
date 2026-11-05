@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { act, render, screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { AuthContext } from '../src/auth/context'
@@ -12,6 +12,9 @@ import { conversation, message, incomingEvent } from './message-fixtures'
 
 vi.mock('../src/api/client', async (original) => ({ ...(await original()), apiRequest: vi.fn() }))
 let conversations, records, notices, sockets, requests, failures, intercept, unexpected, owner
+const originalCreateObjectURL = URL.createObjectURL
+const originalRevokeObjectURL = URL.revokeObjectURL
+let objectUrlId = 0
 class Socket {
   constructor() {
     sockets.push(this)
@@ -55,6 +58,9 @@ beforeEach(() => {
   failures = {}
   unexpected = []
   intercept = null
+  objectUrlId = 0
+  URL.createObjectURL = vi.fn(() => `blob:private-image-${++objectUrlId}`)
+  URL.revokeObjectURL = vi.fn()
   vi.stubGlobal('WebSocket', Socket)
   vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible')
   apiRequest.mockReset().mockImplementation(async (path, options = {}) => {
@@ -62,20 +68,23 @@ beforeEach(() => {
     const url = new URL(path, 'http://localhost')
     const kind = url.pathname.endsWith('/read')
       ? 'read'
-      : url.pathname.endsWith('/messages')
-        ? options.method === 'POST'
-          ? 'send'
-          : 'messages'
-        : path.startsWith('/messages/conversations')
+      : /\/attachments\/\d+$/.test(url.pathname)
+        ? 'attachment'
+        : url.pathname.endsWith('/messages')
           ? options.method === 'POST'
-            ? 'open'
-            : 'inbox'
-          : 'notifications'
+            ? 'send'
+            : 'messages'
+          : path.startsWith('/messages/conversations')
+            ? options.method === 'POST'
+              ? 'open'
+              : 'inbox'
+            : 'notifications'
     if (intercept) {
       const value = intercept(path, options, kind)
       if (value !== undefined) return value
     }
     if (failures[kind]) throw failures[kind]
+    if (kind === 'attachment') return new Blob(['private image'], { type: 'image/webp' })
     if (path === '/notifications/unread-count')
       return { unread_count: notices.filter((item) => !item.is_read).length }
     if (path.startsWith('/notifications?')) {
@@ -134,6 +143,9 @@ beforeEach(() => {
         return { marked_count: count }
       }
       if (options.method === 'POST') {
+        const multipart = options.body instanceof FormData
+        const content = multipart ? options.body.get('content') : options.body.content
+        const files = multipart ? options.body.getAll('files') : []
         const item = message(
           Math.max(
             0,
@@ -143,8 +155,14 @@ beforeEach(() => {
           ) + 1,
           {
             conversation_id: id,
-            content: options.body.content,
+            content,
             sender: { id: owner, username: 'reader' },
+            attachments: files.map((file, index) => ({
+              id: 100 + index,
+              content_type: 'image/webp',
+              size_bytes: file.size,
+              download_url: `/api/v1/messages/conversations/${id}/attachments/${100 + index}`,
+            })),
           },
         )
         list.push(item)
@@ -160,7 +178,13 @@ beforeEach(() => {
     throw new Error('Unexpected API request: ' + path)
   })
 })
-afterEach(() => expect(unexpected).toEqual([]))
+afterEach(() => {
+  expect(unexpected).toEqual([])
+  if (originalCreateObjectURL) URL.createObjectURL = originalCreateObjectURL
+  else delete URL.createObjectURL
+  if (originalRevokeObjectURL) URL.revokeObjectURL = originalRevokeObjectURL
+  else delete URL.revokeObjectURL
+})
 function Harness({ initialUser = 7, initialConversation = '12' }) {
   const [user, setUser] = useState(initialUser)
   const [id, setId] = useState(initialConversation)
@@ -269,6 +293,91 @@ test('preserves an unsent draft on failure and sends plain text once on explicit
   expect(document.querySelector('script')).toBeNull()
   expect(records[12].filter((item) => item.content === text)).toHaveLength(1)
 })
+test('sends image-only messages as multipart, displays protected images, and supports removal', async () => {
+  const { user } = await setup()
+  const file = new File(['image-bytes'], 'art.png', { type: 'image/png' })
+  const removable = new File(['other-image'], 'remove.png', { type: 'image/png' })
+  await screen.findByRole('heading', { name: 'Conversation with @alex' })
+  await user.upload(screen.getByLabelText('Attach images'), [file, removable])
+  expect(screen.getByRole('img', { name: 'Preview of art.png' })).toBeInTheDocument()
+  expect(screen.getByRole('img', { name: 'Preview of remove.png' })).toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'Remove remove.png' }))
+  expect(screen.queryByRole('img', { name: 'Preview of remove.png' })).toBeNull()
+  const send = screen.getByRole('button', { name: 'Send message' })
+  expect(send).toBeEnabled()
+  const upload = requests.find(
+    (request) => request.method === 'POST' && request.path.endsWith('/messages'),
+  )
+  expect(upload).toBeUndefined()
+  await user.click(send)
+  expect(await screen.findByText('Message sent.')).toBeInTheDocument()
+  const multipart = requests.find(
+    (request) => request.method === 'POST' && request.path.endsWith('/messages'),
+  )
+  expect(multipart.body).toBeInstanceOf(FormData)
+  expect(multipart.body.get('content')).toBeNull()
+  expect(multipart.body.getAll('files')).toHaveLength(1)
+  const privateImage = await screen.findByRole('img', { name: 'Private message image 1' })
+  expect(privateImage.getAttribute('src')).toMatch(/^blob:private-image-/)
+  expect(privateImage.getAttribute('src')).not.toContain('/api/v1/messages/')
+  expect(requests.some((request) => request.path.endsWith('/attachments/100'))).toBe(true)
+  expect(await screen.findByText('Image attachment')).toBeInTheDocument()
+})
+test('preserves text and selected images after a failed send and retries explicitly', async () => {
+  const { user } = await setup()
+  const file = new File(['image-bytes'], 'retry.png', { type: 'image/png' })
+  const input = await screen.findByRole('textbox', { name: 'Your message' })
+  await waitFor(() => expect(input).toBeEnabled())
+  await user.type(input, 'Keep this caption')
+  await user.upload(screen.getByLabelText('Attach images'), file)
+  failures.send = new Error('Upload rejected by server')
+  await user.click(screen.getByRole('button', { name: 'Send message' }))
+  expect(await screen.findByText('Upload rejected by server')).toBeInTheDocument()
+  expect(input).toHaveValue('Keep this caption')
+  expect(screen.getByRole('img', { name: 'Preview of retry.png' })).toBeInTheDocument()
+  failures.send = null
+  await user.click(screen.getByRole('button', { name: 'Send message' }))
+  expect(await screen.findByText('Message sent.')).toBeInTheDocument()
+  expect(input).toHaveValue('')
+  await waitFor(() =>
+    expect(screen.queryByRole('img', { name: 'Preview of retry.png' })).toBeNull(),
+  )
+  expect(
+    requests.filter((request) => request.method === 'POST' && request.path.endsWith('/messages')),
+  ).toHaveLength(2)
+})
+test('rejects invalid image types and retries failed protected image loading', async () => {
+  records[12] = [
+    message(1, {
+      content: null,
+      attachments: [
+        {
+          id: 42,
+          content_type: 'image/webp',
+          size_bytes: 8,
+          download_url: '/api/v1/messages/conversations/12/attachments/42',
+        },
+      ],
+    }),
+  ]
+  failures.attachment = new Error('Attachment temporarily unavailable')
+  const { user } = await setup()
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    'Could not load private image: Attachment temporarily unavailable',
+  )
+  failures.attachment = null
+  await user.click(screen.getByRole('button', { name: 'Retry image' }))
+  expect(await screen.findByRole('img', { name: 'Private message image 1' })).toBeInTheDocument()
+  const valid = new File(['image-bytes'], 'keep.png', { type: 'image/png' })
+  await user.upload(screen.getByLabelText('Attach images'), valid)
+  const invalid = new File(['not-image'], 'notes.txt', { type: 'text/plain' })
+  fireEvent.change(screen.getByLabelText('Attach images'), { target: { files: [invalid] } })
+  expect(await screen.findByRole('alert')).toHaveTextContent('Only image files can be attached.')
+  expect(screen.getByRole('img', { name: 'Preview of keep.png' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Send message' })).toBeEnabled()
+  await user.click(screen.getByRole('button', { name: 'Remove keep.png' }))
+  expect(screen.getByRole('button', { name: 'Send message' })).toBeDisabled()
+})
 test('locks sending while pending and limits the draft to 4000 characters', async () => {
   const { user } = await setup()
   const input = screen.getByRole('textbox', { name: 'Your message' })
@@ -293,11 +402,17 @@ test('keeps per-conversation drafts in memory, without copying them to another c
   const input = screen.getByRole('textbox', { name: 'Your message' })
   await waitFor(() => expect(input).toBeEnabled())
   await user.type(input, 'Private draft for Alex')
+  const image = new File(['image-bytes'], 'draft.png', { type: 'image/png' })
+  await user.upload(screen.getByLabelText('Attach images'), image)
+  const preview = screen.getByRole('img', { name: 'Preview of draft.png' })
+  const imageUrl = preview.getAttribute('src')
   await user.click(screen.getByRole('button', { name: 'Other conversation' }))
   expect(await screen.findByRole('heading', { name: 'Conversation with @sam' })).toBeInTheDocument()
   expect(screen.getByRole('textbox')).toHaveValue('')
+  expect(screen.queryByRole('img', { name: 'Preview of draft.png' })).toBeNull()
   await user.click(screen.getByRole('button', { name: 'First conversation' }))
   expect(screen.getByRole('textbox')).toHaveValue('Private draft for Alex')
+  expect(screen.getByRole('img', { name: 'Preview of draft.png' })).toHaveAttribute('src', imageUrl)
   expect(localStorage.length).toBe(0)
 })
 test('respects read-only conversations and handles rejected friendship on opening', async () => {

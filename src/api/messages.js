@@ -1,6 +1,9 @@
 import { apiRequest, ApiError, mediaUrl } from './client'
 
 export const isMessageId = (value) => Number.isSafeInteger(value) && value > 0
+export const MAX_MESSAGE_IMAGES = 5
+export const MAX_MESSAGE_IMAGE_BYTES = 5 * 1024 * 1024
+export const MAX_MESSAGE_IMAGES_BYTES = 15 * 1024 * 1024
 function id(value) {
   const parsed = typeof value === 'string' && /^[1-9]\d*$/.test(value) ? Number(value) : value
   if (!isMessageId(parsed)) throw new Error('Invalid conversation or user ID.')
@@ -12,6 +15,18 @@ function unreadable() {
 function person(value) {
   if (!isMessageId(value?.id) || typeof value.username !== 'string') unreadable()
   return { ...value, avatar: mediaUrl(value.avatar) }
+}
+function attachment(value, conversationId) {
+  const expectedUrl = `/api/v1/messages/conversations/${conversationId}/attachments/${value?.id}`
+  if (
+    !isMessageId(value?.id) ||
+    value.content_type !== 'image/webp' ||
+    !Number.isSafeInteger(value.size_bytes) ||
+    value.size_bytes <= 0 ||
+    value.download_url !== expectedUrl
+  )
+    unreadable()
+  return value
 }
 function conversation(value) {
   if (
@@ -37,10 +52,15 @@ function message(value, conversationId) {
     (value.content != null && typeof value.content !== 'string') ||
     typeof value.created_at !== 'string' ||
     !Number.isFinite(Date.parse(value.created_at)) ||
-    (value.attachments != null && !Array.isArray(value.attachments))
+    (value.attachments != null &&
+      (!Array.isArray(value.attachments) || value.attachments.length > MAX_MESSAGE_IMAGES))
   )
     unreadable()
-  return { ...value, sender: person(value.sender), attachments: value.attachments || [] }
+  return {
+    ...value,
+    sender: person(value.sender),
+    attachments: (value.attachments || []).map((item) => attachment(item, conversationId)),
+  }
 }
 export async function getConversations({ skip = 0, limit = 20 } = {}, signal) {
   if (
@@ -98,18 +118,52 @@ export async function getMessages(conversationId, { before_id, limit = 50 } = {}
     unreadable()
   return { items, next_before_id: cursor }
 }
-export async function sendMessage(conversationId, content, signal) {
+export function messageFilesError(files) {
+  if (!files.length) return ''
+  if (files.length > MAX_MESSAGE_IMAGES) return 'Attach up to 5 images.'
+  if (files.some((file) => !file.type?.startsWith('image/')))
+    return 'Only image files can be attached.'
+  if (files.some((file) => !file.size)) return 'Images cannot be empty.'
+  if (files.some((file) => file.size > MAX_MESSAGE_IMAGE_BYTES))
+    return 'Each image must be 5 MiB or smaller.'
+  if (files.reduce((total, file) => total + file.size, 0) > MAX_MESSAGE_IMAGES_BYTES)
+    return 'All images together must be 15 MiB or smaller.'
+  return ''
+}
+export async function sendMessage(conversationId, content, signal, files = []) {
   const target = id(conversationId)
-  if (typeof content !== 'string' || !content.trim() || content.length > 4000)
+  const text = typeof content === 'string' ? content.trim() : ''
+  const uploads = Array.from(files || [])
+  const filesError = messageFilesError(uploads)
+  if (filesError) throw new Error(filesError)
+  if ((!text && !uploads.length) || (typeof content === 'string' && content.length > 4000))
     throw new Error('Enter a message between 1 and 4000 characters.')
+  let body = { content: text }
+  if (uploads.length) {
+    body = new FormData()
+    if (text) body.append('content', text)
+    for (const file of uploads) body.append('files', file, file.name)
+  }
   return message(
     await apiRequest(`/messages/conversations/${target}/messages`, {
       method: 'POST',
-      body: { content: content.trim() },
+      body,
       signal,
     }),
     target,
   )
+}
+export async function getMessageAttachment(conversationId, item, signal) {
+  const target = id(conversationId)
+  const attachmentId = id(item?.id)
+  const expectedUrl = `/api/v1/messages/conversations/${target}/attachments/${attachmentId}`
+  if (item?.download_url !== expectedUrl || item?.content_type !== 'image/webp') unreadable()
+  const blob = await apiRequest(`/messages/conversations/${target}/attachments/${attachmentId}`, {
+    signal,
+    responseType: 'blob',
+  })
+  if (!blob || blob.type !== 'image/webp') unreadable()
+  return blob
 }
 export async function markConversationRead(conversationId, signal) {
   const result = await apiRequest(`/messages/conversations/${id(conversationId)}/read`, {

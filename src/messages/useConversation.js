@@ -197,20 +197,21 @@ export default function useConversation(id, owner, onInboxUpdate) {
       if (!controller.signal.aborted) update((old) => ({ ...old, olderLoading: false }))
     }
   }
-  async function send(content) {
+  async function send(content, files = []) {
     if (
       !active.current ||
       requests.current.send ||
       !current.current.conversation?.can_send ||
       current.current.loading ||
-      current.current.error
+      current.current.error ||
+      (!content.trim() && !files.length)
     )
       return false
     const controller = new AbortController()
     requests.current.send = controller
     update((old) => ({ ...old, sending: true, sendError: '' }))
     try {
-      const item = await sendMessage(id, content, controller.signal)
+      const item = await sendMessage(id, content, controller.signal, files)
       if (controller.signal.aborted || !active.current) return false
       if (item.sender.id !== owner)
         throw new Error('Could not confirm the sender. Refresh before retrying.')
