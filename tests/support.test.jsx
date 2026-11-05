@@ -3,12 +3,20 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, expect, test, vi } from 'vitest'
 import { AuthContext } from '../src/auth/context'
 import SupportPage from '../src/pages/SupportPage/SupportPage'
-import { createSupportTicket, getMySupportTickets, getSupportArticles } from '../src/api/support'
+import {
+  createSupportTicket,
+  getMySupportTickets,
+  getSupportArticles,
+  getSupportTicketDetails,
+  sendSupportTicketMessage,
+} from '../src/api/support'
 
 vi.mock('../src/api/support', () => ({
   createSupportTicket: vi.fn(),
   getMySupportTickets: vi.fn(),
   getSupportArticles: vi.fn(),
+  getSupportTicketDetails: vi.fn(),
+  sendSupportTicketMessage: vi.fn(),
   supportError: (error) => error.message,
 }))
 
@@ -27,6 +35,8 @@ const ticket = (id, subject, extra = {}) => ({
   message: 'Initial support request details.',
   status: 'open',
   priority: 'medium',
+  message_count: 1,
+  last_message_at: '2026-11-05T10:00:00Z',
   created_at: '2026-11-05T10:00:00Z',
   updated_at: '2026-11-05T10:00:00Z',
   ...extra,
@@ -34,10 +44,12 @@ const ticket = (id, subject, extra = {}) => ({
 
 let records
 let requests
+let threadMessages
 
 beforeEach(() => {
   records = Array.from({ length: 9 }, (_, index) => article(index + 1))
   requests = [ticket(4, 'Payment issue')]
+  threadMessages = new Map()
   getSupportArticles.mockReset().mockImplementation(async ({ page, pageSize, q }) => {
     const filtered = records.filter((item) =>
       `${item.title} ${item.content_md} ${item.category}`.toLowerCase().includes(q.toLowerCase()),
@@ -54,6 +66,51 @@ beforeEach(() => {
   getMySupportTickets
     .mockReset()
     .mockImplementation(async (ownerId) => requests.filter((item) => item.user_id === ownerId))
+  getSupportTicketDetails.mockReset().mockImplementation(async (ticketId, ownerId) => {
+    const current = requests.find((item) => item.id === ticketId) || ticket(ticketId, 'New request')
+    return {
+      ...current,
+      messages: threadMessages.get(ticketId) || [
+        {
+          id: ticketId,
+          ticket_id: ticketId,
+          sender_id: ownerId,
+          sender_username: 'reader',
+          sender_role: 'customer',
+          body: current.message,
+          created_at: current.created_at,
+        },
+      ],
+      events:
+        ticketId === 4
+          ? [
+              {
+                id: 30,
+                ticket_id: 4,
+                actor_id: 1,
+                actor_username: 'admin',
+                event_type: 'status_changed',
+                old_value: 'open',
+                new_value: 'waiting_for_customer',
+                created_at: '2026-11-05T10:05:00Z',
+              },
+            ]
+          : [],
+    }
+  })
+  sendSupportTicketMessage.mockReset().mockImplementation(async (ticketId, body) => {
+    const posted = {
+      id: 20,
+      ticket_id: ticketId,
+      sender_id: 7,
+      sender_username: 'reader',
+      sender_role: 'customer',
+      body,
+      created_at: '2026-11-05T10:05:00Z',
+    }
+    threadMessages.set(ticketId, [...(threadMessages.get(ticketId) || []), posted])
+    return posted
+  })
   createSupportTicket.mockReset().mockImplementation(async (value, ownerId) => {
     const created = ticket(10, value.subject, { ...value, user_id: ownerId })
     requests = [created, ...requests]
@@ -128,6 +185,43 @@ test('loads private request history and submits a ticket with the backend contra
   expect(await screen.findByRole('heading', { name: 'Cannot pay' })).toBeInTheDocument()
   expect(screen.getByRole('textbox', { name: 'Subject' })).toHaveValue('')
   expect(screen.getByRole('textbox', { name: 'Describe your issue' })).toHaveValue('')
+})
+
+test('opens a private ticket thread and submits replies', async () => {
+  const { user } = setup()
+  await screen.findByRole('heading', { name: 'Payment issue' })
+  await user.click(screen.getByRole('button', { name: 'Open conversation (1)' }))
+  expect(
+    await screen.findByRole('heading', { name: 'Conversation for request #4' }),
+  ).toBeInTheDocument()
+  expect(getSupportTicketDetails).toHaveBeenCalledWith(4, 7, expect.any(AbortSignal))
+  expect(screen.getByText('Initial support request details.')).toBeInTheDocument()
+  expect(screen.getByText('Status changed from open to waiting for customer')).toBeInTheDocument()
+  const reply = screen.getByRole('textbox', { name: 'Your reply' })
+  await user.type(reply, 'I have a new detail.')
+  await user.click(screen.getByRole('button', { name: 'Send reply' }))
+  expect(await screen.findByText('Reply sent.')).toBeInTheDocument()
+  expect(await screen.findByText('I have a new detail.')).toBeInTheDocument()
+  expect(sendSupportTicketMessage).toHaveBeenCalledWith(
+    4,
+    'I have a new detail.',
+    expect.any(AbortSignal),
+  )
+})
+
+test('preserves a failed reply draft and allows an explicit retry', async () => {
+  sendSupportTicketMessage.mockRejectedValueOnce(new Error('Reply could not be sent.'))
+  const { user } = setup()
+  await screen.findByRole('heading', { name: 'Payment issue' })
+  await user.click(screen.getByRole('button', { name: 'Open conversation (1)' }))
+  const reply = await screen.findByRole('textbox', { name: 'Your reply' })
+  await user.type(reply, 'I attached more details.')
+  await user.click(screen.getByRole('button', { name: 'Send reply' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('Reply could not be sent.')
+  expect(reply).toHaveValue('I attached more details.')
+  await user.click(screen.getByRole('button', { name: 'Send reply' }))
+  expect(await screen.findByText('Reply sent.')).toBeInTheDocument()
+  expect(await screen.findByText('I attached more details.')).toBeInTheDocument()
 })
 
 test('preserves ticket drafts when the backend rejects a request', async () => {

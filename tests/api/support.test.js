@@ -1,5 +1,12 @@
 import { expect, test, vi } from 'vitest'
-import { createSupportTicket, getMySupportTickets, getSupportArticles } from '../../src/api/support'
+import {
+  createSupportTicket,
+  getMySupportTickets,
+  getSupportArticles,
+  getSupportTicketDetails,
+  getSupportTicketMessages,
+  sendSupportTicketMessage,
+} from '../../src/api/support'
 import { jsonResponse } from '../helpers'
 
 const article = {
@@ -17,8 +24,19 @@ const ticket = {
   message: 'The payment did not go through.',
   status: 'open',
   priority: 'high',
+  message_count: 1,
+  last_message_at: '2026-11-05T10:00:00Z',
   created_at: '2026-11-05T10:00:00Z',
   updated_at: '2026-11-05T10:00:00Z',
+}
+const reply = {
+  id: 21,
+  ticket_id: 9,
+  sender_id: 1,
+  sender_username: 'admin_test',
+  sender_role: 'staff',
+  body: 'We are reviewing it.',
+  created_at: '2026-11-05T10:05:00Z',
 }
 
 test('loads public support articles with backend search and pagination', async () => {
@@ -74,6 +92,62 @@ test('loads and creates only the signed-in user’s support tickets', async () =
     message: 'No response',
     priority: 'high',
   })
+})
+
+test('loads and posts validated ticket conversation messages', async () => {
+  localStorage.setItem('vstore:token', 'support-token')
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (_url, options) =>
+      jsonResponse(options.method === 'POST' ? { ...reply, body: 'A response from me.' } : [reply]),
+    ),
+  )
+  const controller = new AbortController()
+
+  expect(await getSupportTicketMessages(9, controller.signal)).toEqual([reply])
+  expect(await sendSupportTicketMessage(9, ' A response from me. ', controller.signal)).toEqual({
+    ...reply,
+    body: 'A response from me.',
+  })
+  expect(fetch.mock.calls[0][0]).toBe('/api/v1/tickets/9/messages')
+  expect(fetch.mock.calls[1][0]).toBe('/api/v1/tickets/9/messages')
+  expect(fetch.mock.calls[1][1]).toMatchObject({
+    method: 'POST',
+    headers: { Authorization: 'Bearer support-token' },
+    signal: controller.signal,
+  })
+  expect(JSON.parse(fetch.mock.calls[1][1].body)).toEqual({ body: 'A response from me.' })
+  await expect(sendSupportTicketMessage('9/10', 'unsafe')).rejects.toThrow(
+    'Invalid support request ID',
+  )
+})
+
+test('loads only the signed-in user’s ticket history and status events', async () => {
+  localStorage.setItem('vstore:token', 'support-token')
+  const event = {
+    id: 31,
+    ticket_id: 9,
+    actor_id: 1,
+    actor_username: 'admin_test',
+    event_type: 'status_changed',
+    old_value: 'open',
+    new_value: 'waiting_for_customer',
+    created_at: '2026-11-05T10:05:00Z',
+  }
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async () => jsonResponse({ ...ticket, messages: [reply], events: [event] })),
+  )
+
+  const result = await getSupportTicketDetails(9, 7)
+  expect(result.messages).toEqual([reply])
+  expect(result.events).toEqual([event])
+  expect(fetch.mock.calls[0][0]).toBe('/api/v1/tickets/9')
+  expect(fetch.mock.calls[0][1].headers).toMatchObject({
+    Authorization: 'Bearer support-token',
+  })
+  await expect(getSupportTicketDetails(9, 8)).rejects.toThrow('Could not read support data')
+  expect(fetch).toHaveBeenCalledTimes(2)
 })
 
 test.each([{ page: 0 }, { pageSize: 101 }, { q: 'x'.repeat(201) }])(

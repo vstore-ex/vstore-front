@@ -6,6 +6,8 @@ import {
   createSupportTicket,
   getMySupportTickets,
   getSupportArticles,
+  getSupportTicketDetails,
+  sendSupportTicketMessage,
   supportError,
 } from '../../api/support'
 import chevronRight from '../../assets/icon-chevron-right.svg'
@@ -40,8 +42,9 @@ function SupportArticle({ item, isOpen, onToggle }) {
   )
 }
 
-function SupportTicket({ item }) {
-  const date = new Date(item.created_at)
+function SupportTicket({ item, selected, onOpen }) {
+  const lastActivity = item.last_message_at || item.updated_at
+  const date = new Date(lastActivity)
   return (
     <article className="support-ticket">
       <header className="support-ticket__heading">
@@ -51,14 +54,181 @@ function SupportTicket({ item }) {
         </div>
         <div className="support-ticket__meta">
           <span className={`support-ticket__status support-ticket__status--${item.status}`}>
-            {item.status}
+            {item.status.replaceAll('_', ' ')}
           </span>
           <span>Priority: {item.priority}</span>
         </div>
       </header>
-      <p className="support-ticket__message">{item.message}</p>
-      <time dateTime={item.created_at}>{date.toLocaleString()}</time>
+      {!selected && <p className="support-ticket__message">{item.message}</p>}
+      <div className="support-ticket__footer">
+        <time dateTime={lastActivity}>{date.toLocaleString()}</time>
+        <button
+          className="button button--secondary"
+          type="button"
+          aria-expanded={selected}
+          onClick={onOpen}
+        >
+          {selected ? 'Hide conversation' : `Open conversation (${item.message_count})`}
+        </button>
+      </div>
     </article>
+  )
+}
+
+function supportEventText(item) {
+  if (item.event_type === 'status_changed')
+    return `Status changed from ${item.old_value?.replaceAll('_', ' ') || 'new'} to ${item.new_value?.replaceAll('_', ' ')}`
+  if (item.event_type === 'priority_changed')
+    return `Priority changed from ${item.old_value} to ${item.new_value}`
+  return 'Support agent assignment changed'
+}
+
+function SupportTicketConversation({ ticket, ownerId, onUpdated }) {
+  const [detail, setDetail] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
+  const [reload, setReload] = useState(0)
+  const [draft, setDraft] = useState('')
+  const [sending, setSending] = useState(false)
+  const [sendError, setSendError] = useState('')
+  const [notice, setNotice] = useState('')
+  const sendRequest = useRef(null)
+  const inputId = `support-reply-${ticket.id}`
+
+  useEffect(() => {
+    const controller = new AbortController()
+    getSupportTicketDetails(ticket.id, ownerId, controller.signal)
+      .then((result) => {
+        if (!controller.signal.aborted) setDetail(result)
+      })
+      .catch((error) => {
+        if (!controller.signal.aborted) setLoadError(supportError(error))
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false)
+      })
+    return () => controller.abort()
+  }, [ownerId, ticket.id, reload])
+
+  useEffect(() => () => sendRequest.current?.abort(), [])
+
+  async function submit(event) {
+    event.preventDefault()
+    setSendError('')
+    setNotice('')
+    const controller = new AbortController()
+    sendRequest.current = controller
+    setSending(true)
+    try {
+      await sendSupportTicketMessage(ticket.id, draft, controller.signal)
+      if (controller.signal.aborted) return
+      setDraft('')
+      setNotice('Reply sent.')
+      setLoading(true)
+      setReload((value) => value + 1)
+      onUpdated()
+    } catch (error) {
+      if (!controller.signal.aborted) setSendError(supportError(error))
+    } finally {
+      if (sendRequest.current === controller) sendRequest.current = null
+      if (!controller.signal.aborted) setSending(false)
+    }
+  }
+
+  return (
+    <section
+      className="support-ticket-conversation"
+      aria-labelledby={`support-thread-${ticket.id}`}
+    >
+      <h4 id={`support-thread-${ticket.id}`}>Conversation for request #{ticket.id}</h4>
+      {loading && <p role="status">Loading conversation...</p>}
+      {loadError && (
+        <div className="support-error" role="alert">
+          <p>{loadError}</p>
+          <button
+            className="button button--secondary"
+            type="button"
+            onClick={() => {
+              setLoading(true)
+              setLoadError('')
+              setReload((value) => value + 1)
+            }}
+          >
+            Retry conversation
+          </button>
+        </div>
+      )}
+      {!loading && !loadError && detail && (
+        <>
+          <ol className="support-message-list" aria-label="Support conversation" aria-live="polite">
+            {detail.messages.map((item) => (
+              <li
+                className={`support-message${item.sender_role === 'staff' ? ' support-message--staff' : ''}`}
+                key={item.id}
+              >
+                <div className="support-message__heading">
+                  <strong>{item.sender_role === 'staff' ? 'Support team' : 'You'}</strong>
+                  <time dateTime={item.created_at}>
+                    {new Date(item.created_at).toLocaleString()}
+                  </time>
+                </div>
+                <p>{item.body}</p>
+              </li>
+            ))}
+          </ol>
+          {detail.events.length > 0 && (
+            <section className="support-request-events" aria-label="Request status history">
+              <h5>Request history</h5>
+              <ol>
+                {detail.events.map((item) => (
+                  <li key={item.id}>
+                    <span>{supportEventText(item)}</span>
+                    <small>
+                      {item.actor_username || 'System'} ·{' '}
+                      {new Date(item.created_at).toLocaleString()}
+                    </small>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
+        </>
+      )}
+      {(detail?.status || ticket.status) === 'closed' ? (
+        <p className="support-request-empty">This request is closed and cannot receive replies.</p>
+      ) : (
+        <form className="support-reply-form" onSubmit={submit}>
+          <label htmlFor={inputId}>Your reply</label>
+          <textarea
+            id={inputId}
+            rows={4}
+            maxLength={10000}
+            required
+            value={draft}
+            disabled={sending}
+            onChange={(event) => setDraft(event.target.value)}
+          />
+          <span className="support-field-count">{draft.length} / 10000 characters</span>
+          {sendError && (
+            <p className="support-error" role="alert">
+              {sendError}
+            </p>
+          )}
+          {notice && (
+            <p className="support-notice" role="status">
+              {notice}
+            </p>
+          )}
+          <button
+            className="button button--accent"
+            type="submit"
+            disabled={sending || !draft.trim() || !!loadError}
+          >
+            {sending ? 'Sending reply...' : 'Send reply'}
+          </button>
+        </form>
+      )}
+    </section>
   )
 }
 
@@ -73,6 +243,7 @@ function SupportRequests({ ownerId }) {
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState('')
   const [notice, setNotice] = useState('')
+  const [selectedTicketId, setSelectedTicketId] = useState(null)
   const sendRequest = useRef(null)
 
   useEffect(() => {
@@ -112,6 +283,7 @@ function SupportRequests({ ownerId }) {
       setMessage('')
       setPriority('medium')
       setNotice('Your support request was submitted.')
+      setSelectedTicketId(created.id)
     } catch (error) {
       if (!controller.signal.aborted) setSendError(supportError(error))
     } finally {
@@ -217,10 +389,28 @@ function SupportRequests({ ownerId }) {
           <ul className="support-ticket-list" aria-label="Your support request history">
             {tickets.map((item) => (
               <li key={item.id}>
-                <SupportTicket item={item} />
+                <SupportTicket
+                  item={item}
+                  selected={selectedTicketId === item.id}
+                  onOpen={() =>
+                    setSelectedTicketId((current) => (current === item.id ? null : item.id))
+                  }
+                />
               </li>
             ))}
           </ul>
+        )}
+        {tickets.some((item) => item.id === selectedTicketId) && (
+          <SupportTicketConversation
+            key={selectedTicketId}
+            ticket={tickets.find((item) => item.id === selectedTicketId)}
+            ownerId={ownerId}
+            onUpdated={() => {
+              setLoading(true)
+              setLoadError('')
+              setReload((value) => value + 1)
+            }}
+          />
         )}
       </div>
     </section>

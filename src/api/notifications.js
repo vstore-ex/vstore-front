@@ -118,6 +118,18 @@ export function notificationDestination(item) {
     data.conversation_id > 0
   )
     return { href: '#/messages/' + data.conversation_id, label: 'Open conversation' }
+  if (
+    [
+      'support_ticket_assigned',
+      'support_ticket_created',
+      'support_ticket_message',
+      'support_ticket_reply',
+      'support_ticket_status_changed',
+    ].includes(item.type) &&
+    Number.isSafeInteger(data.ticket_id) &&
+    data.ticket_id > 0
+  )
+    return { href: '#/support', label: 'Open support request' }
   const userId =
     item.type === 'friend_request'
       ? data.sender_id
