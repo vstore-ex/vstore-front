@@ -378,6 +378,34 @@ test('rejects invalid image types and retries failed protected image loading', a
   await user.click(screen.getByRole('button', { name: 'Remove keep.png' }))
   expect(screen.getByRole('button', { name: 'Send message' })).toBeDisabled()
 })
+test.each([
+  [
+    'a single oversized image',
+    [['large.png', 5 * 1024 * 1024 + 1]],
+    'Each image must be 5 MiB or smaller.',
+  ],
+  [
+    'the combined image size',
+    Array.from({ length: 4 }, (_, index) => [`part-${index}.png`, 4 * 1024 * 1024]),
+    'All images together must be 15 MiB or smaller.',
+  ],
+])('shows a size warning only after %s exceeds its limit', async (_name, inputs, warning) => {
+  await setup()
+  await screen.findByRole('heading', { name: 'Conversation with @alex' })
+  expect(
+    screen.getByText('Attach up to 5 images. You can also send images without text.'),
+  ).toBeInTheDocument()
+  expect(screen.queryByText(/5 MiB each|15 MiB total/)).toBeNull()
+  const files = inputs.map(
+    ([name, size]) => new File([new Uint8Array(size)], name, { type: 'image/png' }),
+  )
+  fireEvent.change(screen.getByLabelText('Attach images'), { target: { files } })
+  const alert = await screen.findByRole('alert')
+  expect(alert).toHaveTextContent(warning)
+  expect(alert).toHaveClass('message-file-warning')
+  expect(screen.queryByRole('img', { name: /Preview of/ })).toBeNull()
+  expect(screen.getByRole('button', { name: 'Send message' })).toBeDisabled()
+})
 test('locks sending while pending and limits the draft to 4000 characters', async () => {
   const { user } = await setup()
   const input = screen.getByRole('textbox', { name: 'Your message' })

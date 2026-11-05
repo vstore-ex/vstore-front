@@ -327,7 +327,7 @@ function Conversation({ id, owner, draft, files, changeDraft, changeFiles, onInb
           }}
         />
         <p id="message-attachments-help">
-          Up to 5 images, 5 MiB each and 15 MiB total. You can also send images without text.
+          Attach up to 5 images. You can also send images without text.
         </p>
         {files.length > 0 && (
           <ul className="message-selected-images" aria-label="Selected images">
@@ -345,7 +345,7 @@ function Conversation({ id, owner, draft, files, changeDraft, changeFiles, onInb
           </ul>
         )}
         {attachmentError && (
-          <p className="messages-error" role="alert">
+          <p className="message-file-warning" role="alert">
             {attachmentError}
           </p>
         )}
