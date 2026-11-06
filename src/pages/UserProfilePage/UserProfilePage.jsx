@@ -4,6 +4,7 @@ import ResourceStatus from '../../components/Catalog/ResourceStatus'
 import { MediaImage } from '../../components/Catalog/Media'
 import fallbackAvatar from '../../assets/avatar.webp'
 import ProfileFriendAction from './ProfileFriendAction'
+import ProfileBlockAction from './ProfileBlockAction'
 import './UserProfilePage.css'
 function ProfileDate({ value, prefix }) {
   const date = new Date(value)
@@ -95,11 +96,18 @@ export default function UserProfilePage({ id, onSignIn }) {
                     Edit profile
                   </a>
                 ) : isAuthenticated && currentUser?.id != null && status === 'authenticated' ? (
-                  <ProfileFriendAction
-                    key={currentUser.id + ':' + user.id}
-                    userId={currentUser.id}
-                    profileId={user.id}
-                  />
+                  <>
+                    <ProfileFriendAction
+                      key={currentUser.id + ':' + user.id}
+                      userId={currentUser.id}
+                      profileId={user.id}
+                    />
+                    <ProfileBlockAction
+                      key={'block:' + currentUser.id + ':' + user.id}
+                      profileId={user.id}
+                      initiallyBlocked={user.is_blocked_by_viewer}
+                    />
+                  </>
                 ) : status === 'loading' ? (
                   <p role="status">Loading account...</p>
                 ) : (
