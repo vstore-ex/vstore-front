@@ -1,5 +1,4 @@
 import ProductNews from './ProductNews'
-import GameCommunity from '../../community/GameCommunity'
 import AchievementsPage from '../AchievementsPage/AchievementsPage'
 import WishlistButton from '../../components/Wishlist/WishlistButton'
 import AddToCartButton from '../../components/Cart/AddToCartButton'
@@ -35,7 +34,7 @@ function ProductDetails({ game, onViewAllAchievements, onSignIn }) {
         </nav>
         <div className="product-title-row">
           <h1>{game.title}</h1>
-          <a className="product-hub-link" href={`#/games/${game.id}`} onClick={scrollToCommunity}>
+          <a className="product-hub-link" href={`#/games/${game.id}/community`}>
             Community Hub
           </a>
         </div>
@@ -155,20 +154,16 @@ function ProductDetails({ game, onViewAllAchievements, onSignIn }) {
         </div>
         <ProductNews id={game.id} />
         <ProductReviews onSignIn={onSignIn} id={game.id} isFree={game.is_free} />
-        <div id="product-community">
-          <GameCommunity gameId={game.id} onSignIn={onSignIn} />
-        </div>
+        <section className="detail-section product-community-teaser" aria-label="Community">
+          <h2>Community</h2>
+          <p>Discussions, artwork, reviews and news from players of {game.title}.</p>
+          <a className="product-hub-link" href={`#/games/${game.id}/community`}>
+            Visit the Community Hub
+          </a>
+        </section>
       </div>
     </div>
   )
-}
-
-function scrollToCommunity(event) {
-  // Hash routing owns the URL, so scroll to the in-page community section directly.
-  const target = document.getElementById('product-community')
-  if (!target) return
-  event.preventDefault()
-  target.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
 export default function ProductDetailPage({

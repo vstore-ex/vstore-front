@@ -1,0 +1,279 @@
+/* Steam-style Community Hub. Colors come from tokens.css. */
+
+.community-hub {
+  --hub-width: min(1680px, calc(100% - 2 * clamp(16px, 3vw, 56px)));
+
+  min-height: 70vh;
+  color: var(--color-text);
+  background: var(--color-surface);
+  overflow-wrap: anywhere;
+}
+.community-hub__inner {
+  width: var(--hub-width);
+  margin: 0 auto;
+  padding: 0 0 var(--space-12);
+}
+
+/* Hero: blurred library hero behind the header capsule and title. */
+.hub-hero {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-page);
+}
+.hub-hero__backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.35;
+  filter: blur(2px);
+  transform: scale(1.03);
+}
+.hub-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(transparent 30%, var(--color-surface));
+}
+.hub-hero__inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: clamp(184px, 18vw, 292px) minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--space-5);
+  width: var(--hub-width);
+  margin: 0 auto;
+  padding: clamp(48px, 7vw, 120px) 0 var(--space-5);
+}
+.hub-hero__capsule {
+  display: block;
+  width: 100%;
+  aspect-ratio: 460 / 215;
+  object-fit: cover;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 50%);
+}
+.hub-hero__text {
+  min-width: 0;
+}
+.hub-hero__eyebrow {
+  margin: 0 0 4px;
+  color: var(--color-accent);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.hub-hero h1 {
+  margin: 0;
+  font-size: clamp(26px, 2.6vw, 40px);
+  line-height: 1.15;
+}
+.hub-hero__studio {
+  margin: 6px 0 0;
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+.hub-hero__store {
+  padding: 8px 16px;
+  border-radius: 2px;
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* Tabs. */
+.hub-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  border-bottom: 1px solid var(--color-border);
+}
+.community-hub .hub-tabs button {
+  min-width: 0;
+  min-height: 42px;
+  padding: 8px 18px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  color: var(--color-text-muted);
+  background: transparent;
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+}
+.community-hub .hub-tabs button:hover {
+  color: var(--color-text);
+  filter: none;
+}
+.community-hub .hub-tabs button[aria-selected='true'] {
+  border-bottom-color: var(--color-accent);
+  color: var(--color-text);
+}
+
+.hub-panel {
+  padding-top: var(--space-5);
+}
+.hub-panel__title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.hub-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: var(--space-8) 0 var(--space-3);
+}
+.hub-section-heading h2 {
+  margin: 0;
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* All tab: masonry-style tile wall. */
+.hub-wall {
+  columns: 4 260px;
+  column-gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.hub-tile {
+  display: inline-block;
+  width: 100%;
+  margin: 0 0 12px;
+  break-inside: avoid;
+  background: var(--color-surface-raised);
+}
+.community-hub .hub-tile__open {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  min-height: 0;
+  padding: 0 0 var(--space-2);
+  border: 0;
+  border-radius: 0;
+  color: var(--color-text);
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.community-hub .hub-tile__open:hover {
+  background: var(--color-control);
+  filter: none;
+}
+.hub-tile__image {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 120px;
+  object-fit: cover;
+}
+.hub-tile__label {
+  margin: var(--space-3) var(--space-3) 0;
+  color: var(--color-accent);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.hub-tile__title {
+  padding: 0 var(--space-3);
+  font-size: 15px;
+  font-weight: 600;
+}
+.hub-tile--artwork .hub-tile__title {
+  padding-top: 4px;
+}
+.hub-tile__excerpt {
+  padding: 0 var(--space-3);
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.hub-tile .community-meta {
+  margin: 0;
+  padding: 0 var(--space-3) var(--space-3);
+  font-size: 12px;
+}
+
+.hub-empty {
+  padding: var(--space-8);
+  background: var(--color-surface-raised);
+  text-align: center;
+}
+.hub-empty div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+/* Discussions tab: Steam forum rows. */
+.hub-panel--discussions .community-list {
+  display: grid;
+  gap: 2px;
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.hub-panel--discussions .community-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-4);
+  padding: 10px 14px;
+  background: var(--color-surface-raised);
+}
+.hub-panel--discussions .community-card .community-meta {
+  margin: 0;
+}
+
+/* Artwork tab: image grid. */
+.hub-panel--artwork .community-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.hub-panel--artwork .community-card {
+  background: var(--color-surface-raised);
+}
+.hub-panel--artwork .community-card .community-meta {
+  margin: 0;
+  padding: 0 10px 10px;
+}
+
+.hub-reviews.product-detail-page {
+  min-height: 0;
+  background: none;
+}
+.hub-reviews .product-reviews {
+  margin-top: 0;
+}
+
+@media (max-width: 760px) {
+  .hub-hero__inner {
+    grid-template-columns: 120px minmax(0, 1fr);
+  }
+  .hub-hero__store {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+  .hub-panel--discussions .community-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

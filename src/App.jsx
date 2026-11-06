@@ -19,6 +19,7 @@ import { useCart } from './cart/context'
 import { useWishlist } from './wishlist/context'
 import { useAuth } from './auth/context'
 import OAuthCallbackPage from './pages/OAuthCallbackPage/OAuthCallbackPage'
+import CommunityHubPage from './pages/CommunityHubPage/CommunityHubPage'
 import { isOAuthCallback } from './auth/oauth'
 import { readStoreLocation } from './utils/location'
 import { pageTitle } from './hooks/useDocumentTitle'
@@ -82,10 +83,15 @@ function parseRouteFromHash() {
   if (
     ['games', 'products'].includes(parts[0]) &&
     parts[1] &&
-    (parts.length === 2 || (parts.length === 3 && parts[2] === 'achievements'))
+    (parts.length === 2 || (parts.length === 3 && ['achievements', 'community'].includes(parts[2])))
   ) {
     return {
-      view: parts[2] === 'achievements' ? 'achievements' : 'product',
+      view:
+        parts[2] === 'achievements'
+          ? 'achievements'
+          : parts[2] === 'community'
+            ? 'community'
+            : 'product',
       gameId: parts[1],
     }
   }
@@ -299,7 +305,7 @@ function App() {
   const publicNews = ['news', 'newsDetail'].includes(currentView)
   const publicPage =
     publicNews || ['userProfile', 'notFound', 'forgotPassword'].includes(currentView)
-  const publicCatalog = ['discover', 'product', 'achievements'].includes(currentView)
+  const publicCatalog = ['discover', 'product', 'achievements', 'community'].includes(currentView)
   if (!publicPage && status === 'loading')
     return (
       <main className="store-page">
@@ -391,6 +397,12 @@ function App() {
         <p className="store-status" role="status">
           Please sign in to continue.
         </p>
+      ) : currentView === 'community' ? (
+        <CommunityHubPage
+          key={selectedGameId}
+          id={selectedGameId}
+          onSignIn={() => openAuth('login')}
+        />
       ) : ['product', 'achievements'].includes(currentView) ? (
         <ProductDetailPage
           key={selectedGameId}
