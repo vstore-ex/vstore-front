@@ -13,6 +13,8 @@
 html {
   background: var(--color-page);
   scrollbar-gutter: stable;
+  /* Anchor jumps and scrollIntoView stop below the pinned store header. */
+  scroll-padding-top: calc(var(--store-header-height, 64px) + 8px);
 }
 
 /* Keep the page still while any shared modal is open, including nested dialogs. */

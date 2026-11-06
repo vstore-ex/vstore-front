@@ -37,6 +37,7 @@ function Header({
   const readQuery = () => readStoreLocation().params.get('q') || ''
   const [query, setQuery] = useState(readQuery)
   const [menuOpen, setMenuOpen] = useState(false)
+  const headerRef = useRef(null)
   const menuId = useId()
   const menuButton = useRef(null)
   const menu = useRef(null)
@@ -110,8 +111,26 @@ function Header({
     }
   }
 
+  useEffect(() => {
+    // Publish the pinned header's height so sticky sidebars and anchor scrolling clear it.
+    const node = headerRef.current
+    if (!node) return
+    const root = document.documentElement
+    const publish = () =>
+      root.style.setProperty('--store-header-height', Math.round(node.offsetHeight) + 'px')
+    publish()
+    if (typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(publish)
+    observer.observe(node)
+    return () => {
+      observer.disconnect()
+      root.style.removeProperty('--store-header-height')
+    }
+  }, [])
+
   return (
     <header
+      ref={headerRef}
       className={'store-header' + (isAuthenticated ? ' store-header--signed-in' : '')}
       aria-label="Store navigation"
       onFocusCapture={(event) => {
