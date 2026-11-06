@@ -9,6 +9,7 @@ import {
 import useInbox from '../../messages/useInbox'
 import useConversation from '../../messages/useConversation'
 import fallbackAvatar from '../../assets/avatar.webp'
+import ImageViewer from '../../components/ImageViewer'
 import './MessagesPage.css'
 
 const MAX_LENGTH = 4000
@@ -148,7 +149,7 @@ function ErrorNotice({ error, retry, label, compact = false }) {
     </div>
   ) : null
 }
-function MessageImage({ attachment, conversationId, index }) {
+function MessageImage({ attachment, conversationId, index, onView }) {
   const [imageUrl, setImageUrl] = useState('')
   const [error, setError] = useState('')
   const [attempt, setAttempt] = useState(0)
@@ -188,9 +189,15 @@ function MessageImage({ attachment, conversationId, index }) {
       </div>
     )
   return imageUrl ? (
-    <a className="message-image-link" href={imageUrl} target="_blank" rel="noreferrer">
+    <button
+      type="button"
+      className="message-image-link"
+      onClick={() => onView(index)}
+      aria-label={`Open image ${index + 1}`}
+      title="Open image"
+    >
       <img className="message-image" src={imageUrl} alt={`Private message image ${index + 1}`} />
-    </a>
+    </button>
   ) : (
     <div className="message-image-placeholder">
       <span className="messages-visually-hidden" role="status">
@@ -199,10 +206,77 @@ function MessageImage({ attachment, conversationId, index }) {
     </div>
   )
 }
+function MessageVideo({ attachment, conversationId }) {
+  const [videoUrl, setVideoUrl] = useState('')
+  const [error, setError] = useState('')
+  const [attempt, setAttempt] = useState(0)
+  useEffect(() => {
+    const controller = new AbortController()
+    let active = true
+    let objectUrl = ''
+    getMessageAttachment(conversationId, attachment, controller.signal)
+      .then((blob) => {
+        if (!active) return
+        objectUrl = URL.createObjectURL(blob)
+        setVideoUrl(objectUrl)
+      })
+      .catch((reason) => {
+        if (active && !controller.signal.aborted) setError(messageError(reason))
+      })
+    return () => {
+      active = false
+      controller.abort()
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
+  }, [attachment, attempt, conversationId])
+  if (error)
+    return (
+      <div className="message-attachment-error" role="group" aria-label="Private video">
+        <p role="alert">Could not load private video: {error}</p>
+        <button
+          type="button"
+          className="messages-text-button"
+          onClick={() => {
+            setError('')
+            setAttempt((value) => value + 1)
+          }}
+        >
+          Retry video
+        </button>
+      </div>
+    )
+  return videoUrl ? (
+    <video className="message-video" src={videoUrl} controls preload="metadata" />
+  ) : (
+    <div className="message-image-placeholder">
+      <span className="messages-visually-hidden" role="status">
+        Loading private video...
+      </span>
+    </div>
+  )
+}
 function SelectedImage({ entry, remove, disabled }) {
   return (
     <li className="message-selected-image">
       <img src={entry.previewUrl} alt={`Preview of ${entry.file.name}`} />
+      <button
+        type="button"
+        className="message-selected-remove"
+        aria-label={`Remove ${entry.file.name}`}
+        title={`Remove ${entry.file.name}`}
+        disabled={disabled}
+        onClick={remove}
+      >
+        <Icon name="close" />
+      </button>
+    </li>
+  )
+}
+
+function SelectedVideo({ entry, remove, disabled }) {
+  return (
+    <li className="message-selected-image message-selected-video">
+      <video src={entry.previewUrl} muted preload="metadata" />
       <button
         type="button"
         className="message-selected-remove"
@@ -260,6 +334,7 @@ function Conversation({
   const [editing, setEditing] = useState(null)
   const [atBottom, setAtBottom] = useState(true)
   const [dragging, setDragging] = useState(false)
+  const [viewer, setViewer] = useState(null)
   const heading = useRef(null)
   const viewport = useRef(null)
   const textarea = useRef(null)
@@ -584,14 +659,31 @@ function Conversation({
                                 }
                                 aria-label="Message attachments"
                               >
-                                {item.attachments.map((attachment, index) => (
-                                  <MessageImage
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                    conversationId={id}
-                                    index={index}
-                                  />
-                                ))}
+                                {item.attachments.map((attachment) => {
+                                  if (attachment.content_type !== 'image/webp')
+                                    return (
+                                      <MessageVideo
+                                        key={attachment.id}
+                                        attachment={attachment}
+                                        conversationId={id}
+                                      />
+                                    )
+                                  const images = item.attachments.filter(
+                                    (part) => part.content_type === 'image/webp',
+                                  )
+                                  const imageIndex = images.indexOf(attachment)
+                                  return (
+                                    <MessageImage
+                                      key={attachment.id}
+                                      attachment={attachment}
+                                      conversationId={id}
+                                      index={imageIndex}
+                                      onView={(viewIndex) =>
+                                        setViewer({ images, index: viewIndex })
+                                      }
+                                    />
+                                  )
+                                })}
                               </div>
                             )}
                           </>
@@ -683,26 +775,41 @@ function Conversation({
           dragDepth.current = 0
           setDragging(false)
           if (!canWrite) return
-          const images = Array.from(event.dataTransfer?.files || []).filter((file) =>
-            file.type.startsWith('image/'),
+          const dropped = Array.from(event.dataTransfer?.files || []).filter(
+            (file) =>
+              file.type.startsWith('image/') ||
+              file.type === 'video/mp4' ||
+              file.type === 'video/webm',
           )
-          if (!images.length) return
-          addFiles(images)
+          if (!dropped.length) return
+          addFiles(dropped)
         }}
       >
         {files.length > 0 && (
-          <ul className="message-selected-images" aria-label="Selected images">
-            {files.map((file, index) => (
-              <SelectedImage
-                key={file.key}
-                entry={file}
-                disabled={state.sending}
-                remove={() => {
-                  changeFiles(files.filter((_, fileIndex) => fileIndex !== index))
-                  setAttachmentError('')
-                }}
-              />
-            ))}
+          <ul className="message-selected-images" aria-label="Selected attachments">
+            {files.map((file, index) =>
+              file.file.type.startsWith('video/') ? (
+                <SelectedVideo
+                  key={file.key}
+                  entry={file}
+                  disabled={state.sending}
+                  remove={() => {
+                    changeFiles(files.filter((_, fileIndex) => fileIndex !== index))
+                    setAttachmentError('')
+                  }}
+                />
+              ) : (
+                <SelectedImage
+                  key={file.key}
+                  entry={file}
+                  disabled={state.sending}
+                  remove={() => {
+                    changeFiles(files.filter((_, fileIndex) => fileIndex !== index))
+                    setAttachmentError('')
+                  }}
+                />
+              ),
+            )}
           </ul>
         )}
         {attachmentError && (
@@ -715,7 +822,7 @@ function Conversation({
             id="message-images"
             className="messages-visually-hidden"
             type="file"
-            accept="image/*"
+            accept="image/*,video/mp4,video/webm"
             multiple
             aria-describedby="message-attachments-help"
             disabled={!canWrite}
@@ -729,10 +836,10 @@ function Conversation({
           <label
             htmlFor="message-images"
             className={'messages-icon-button message-attach' + (canWrite ? '' : ' is-disabled')}
-            title="Attach images — you can also paste or drag them here"
+            title="Attach images or a video — you can also paste or drag files here"
           >
             <Icon name="attach" />
-            <span className="messages-visually-hidden">Attach images</span>
+            <span className="messages-visually-hidden">Attach files</span>
           </label>
           <div className="message-input">
             <label htmlFor="message-draft" className="messages-visually-hidden">
@@ -793,7 +900,8 @@ function Conversation({
           {draft.length} / {MAX_LENGTH} characters
         </p>
         <p id="message-attachments-help" className="messages-visually-hidden">
-          Attach up to 5 images. You can also send images without text.
+          Attach up to 5 images and one MP4/WebM video, 20 MiB in total. You can also send
+          attachments without text.
         </p>
         {state.sendError && (
           <div className="message-send-error">
@@ -811,6 +919,15 @@ function Conversation({
           </p>
         )}
       </form>
+      {viewer && (
+        <ImageViewer
+          conversationId={id}
+          images={viewer.images}
+          index={viewer.index}
+          onIndex={(index) => setViewer({ images: viewer.images, index })}
+          onClose={() => setViewer(null)}
+        />
+      )}
     </section>
   )
 }
