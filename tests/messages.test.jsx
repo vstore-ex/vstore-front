@@ -220,6 +220,10 @@ const reads = () => requests.filter((item) => item.path.endsWith('/read'))
 async function emit(event) {
   await act(async () => sockets.at(-1).onmessage({ data: JSON.stringify(event) }))
 }
+// Returning to the tab reloads the open conversation; there is no manual refresh control.
+async function returnToTab() {
+  await act(async () => document.dispatchEvent(new Event('visibilitychange')))
+}
 
 test('loads private history, marks incoming messages read and updates the inbox', async () => {
   await setup()
@@ -454,10 +458,10 @@ test('respects read-only conversations and handles rejected friendship on openin
   expect(await screen.findByText(/Only accepted friends/)).toBeInTheDocument()
 })
 test.each([401, 403, 404])('clears private history after a %s response', async (status) => {
-  const { user } = await setup()
+  await setup()
   await screen.findByRole('heading', { name: 'Conversation with @alex' })
   failures.messages = Object.assign(new Error('Denied'), { status })
-  await user.click(screen.getByRole('button', { name: 'Refresh messages' }))
+  await returnToTab()
   await waitFor(() => expect(screen.queryByRole('log')).toBeNull())
   expect(screen.queryByRole('heading', { name: 'Conversation with @alex' })).toBeNull()
   expect(screen.getByRole('textbox')).toBeDisabled()
@@ -468,7 +472,7 @@ test('retains the recoverable conversation after transient refresh and read fail
   await screen.findByText('Read unavailable')
   expect(screen.getByLabelText('1 unread messages')).toBeInTheDocument()
   failures.messages = new Error('History unavailable')
-  await user.click(screen.getByRole('button', { name: 'Refresh messages' }))
+  await returnToTab()
   await screen.findByText('History unavailable')
   expect(within(history()).getByText('Message 1')).toBeInTheDocument()
   failures.messages = null
