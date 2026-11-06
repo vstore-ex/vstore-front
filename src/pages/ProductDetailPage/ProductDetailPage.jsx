@@ -17,30 +17,33 @@ import NotFoundPage from '../NotFoundPage/NotFoundPage'
 
 function ProductDetails({ game, onViewAllAchievements, onSignIn }) {
   const presentation = productPresentation(game)
+  const primaryTag = game.tags[0]
+  const tagHref = (tag) => '#/discover?page=1&tag_id=' + encodeURIComponent(tag.id)
   return (
     <div className="product-detail-page catalog-detail">
       <div className="product-detail-page__inner">
-        <h1>{game.title}</h1>
-        <div className="product-detail-layout">
-          <div className="product-main">
+        <nav className="product-breadcrumbs" aria-label="Breadcrumb">
+          <a href="#/discover?view=catalog">All Games</a>
+          {primaryTag && (
+            <>
+              <span aria-hidden="true">›</span>
+              <a href={tagHref(primaryTag)}>{primaryTag.name}</a>
+            </>
+          )}
+          <span aria-hidden="true">›</span>
+          <span aria-current="page">{game.title}</span>
+        </nav>
+        <div className="product-title-row">
+          <h1>{game.title}</h1>
+          <a className="product-hub-link" href={`#/games/${game.id}`} onClick={scrollToCommunity}>
+            Community Hub
+          </a>
+        </div>
+
+        {/* "At a glance": highlight player + 324px information column. */}
+        <div className="product-glance">
+          <div className="product-glance__media">
             <MediaGallery game={game} />
-            <section className="detail-section about-section">
-              <h2>About this game</h2>
-              {game.description_md ? (
-                <ExpandableContent className="product-about-content" variant="about">
-                  <ProductMarkdown imported>{game.description_md}</ProductMarkdown>
-                </ExpandableContent>
-              ) : (
-                <p className="product-empty">No description available yet.</p>
-              )}
-            </section>
-            <Requirements value={game.requirements} />
-            {presentation.additional && (
-              <section className="detail-section">
-                <h2>Additional information</h2>
-                <ProductMarkdown>{presentation.additional}</ProductMarkdown>
-              </section>
-            )}
           </div>
           <aside className="product-sidebar" aria-label="Game information">
             <MediaImage
@@ -76,20 +79,64 @@ function ProductDetails({ game, onViewAllAchievements, onSignIn }) {
                   </div>
                 ))}
             </dl>
-            <div className="detail-price">
-              {game.discount && <span className="detail-price__discount">{game.discount}</span>}
-              <span>
-                {game.originalPrice && <del>{game.originalPrice}</del>}
-                <strong>{game.price}</strong>
-              </span>
-            </div>
-            <div className="product-actions">
-              <AddToCartButton gameId={game.id} className="product-action product-action--accent" />
-              <WishlistButton
-                gameId={game.id}
-                className="product-action product-action--secondary"
-              />
-            </div>
+            {game.tags.length > 0 && (
+              <div className="product-tags-block">
+                <span>Popular tags for this product:</span>
+                <div className="product-tags">
+                  {game.tags.map((tag) => (
+                    <a key={tag.id} href={tagHref(tag)}>
+                      {tag.name}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+          </aside>
+        </div>
+
+        <div className="product-queue" aria-label="Library actions">
+          <WishlistButton gameId={game.id} className="product-action product-action--secondary" />
+        </div>
+
+        <div className="product-detail-layout">
+          <div className="product-main">
+            <section className="product-purchase" aria-labelledby="product-purchase-title">
+              <h2 id="product-purchase-title">
+                {game.is_free ? `Play ${game.title}` : `Buy ${game.title}`}
+              </h2>
+              <div className="product-purchase__action">
+                <div className="detail-price">
+                  {game.discount && <span className="detail-price__discount">{game.discount}</span>}
+                  <span>
+                    {game.originalPrice && <del>{game.originalPrice}</del>}
+                    <strong>{game.price}</strong>
+                  </span>
+                </div>
+                <AddToCartButton
+                  gameId={game.id}
+                  className="product-action product-action--accent"
+                />
+              </div>
+            </section>
+            <section className="detail-section about-section">
+              <h2>About this game</h2>
+              {game.description_md ? (
+                <ExpandableContent className="product-about-content" variant="about">
+                  <ProductMarkdown imported>{game.description_md}</ProductMarkdown>
+                </ExpandableContent>
+              ) : (
+                <p className="product-empty">No description available yet.</p>
+              )}
+            </section>
+            <Requirements value={game.requirements} />
+            {presentation.additional && (
+              <section className="detail-section">
+                <h2>Additional information</h2>
+                <ProductMarkdown>{presentation.additional}</ProductMarkdown>
+              </section>
+            )}
+          </div>
+          <aside className="product-side-column" aria-label="Game details">
             {game.rating && (
               <div className="product-rating">
                 {presentation.ratingImage ? (
@@ -103,24 +150,25 @@ function ProductDetails({ game, onViewAllAchievements, onSignIn }) {
                 </div>
               </div>
             )}
-            {game.tags.length > 0 && (
-              <div className="product-tags">
-                {game.tags.map((tag) => (
-                  <a key={tag.id} href={'#/discover?page=1&tag_id=' + encodeURIComponent(tag.id)}>
-                    {tag.name}
-                  </a>
-                ))}
-              </div>
-            )}
+            <ProductAchievements id={game.id} onViewAll={onViewAllAchievements} />
           </aside>
         </div>
-        <ProductAchievements id={game.id} onViewAll={onViewAllAchievements} />
         <ProductNews id={game.id} />
         <ProductReviews onSignIn={onSignIn} id={game.id} isFree={game.is_free} />
-        <GameCommunity gameId={game.id} onSignIn={onSignIn} />
+        <div id="product-community">
+          <GameCommunity gameId={game.id} onSignIn={onSignIn} />
+        </div>
       </div>
     </div>
   )
+}
+
+function scrollToCommunity(event) {
+  // Hash routing owns the URL, so scroll to the in-page community section directly.
+  const target = document.getElementById('product-community')
+  if (!target) return
+  event.preventDefault()
+  target.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
 export default function ProductDetailPage({

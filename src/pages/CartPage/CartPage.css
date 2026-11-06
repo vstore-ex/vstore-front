@@ -887,3 +887,39 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ---------- Steam cart: item list + 300px summary column ---------- */
+.cart-page .cart-page__inner {
+  width: min(1680px, calc(100% - 2 * clamp(16px, 3vw, 56px)));
+  padding-top: 24px;
+}
+.cart-page .cart-page__header h1 {
+  font-size: clamp(24px, 2vw, 32px);
+}
+.cart-page .cart-layout {
+  grid-template-columns: minmax(0, 1fr) clamp(260px, 22vw, 320px);
+  gap: var(--space-6);
+  margin-top: var(--space-5);
+}
+.cart-page .cart-items {
+  gap: 6px;
+}
+.cart-page .server-cart-item {
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: 0;
+}
+.cart-page .cart-summary {
+  position: sticky;
+  top: var(--space-4);
+}
+@media (max-width: 860px) {
+  .cart-page .cart-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .cart-page .cart-summary {
+    position: static;
+  }
+}
