@@ -7,6 +7,8 @@ import NewsDetailPage from './pages/NewsDetailPage/NewsDetailPage'
 import { useEffect, useRef, useState } from 'react'
 import Header from './components/Header/Header'
 import Footer from './components/Footer/Footer'
+import EditProfilePage from './pages/AccountPage/EditProfilePage'
+import SupportArticlePage from './pages/SupportPage/SupportArticlePage'
 import AccountPage from './pages/AccountPage/AccountPage'
 import CartPage from './pages/CartPage/CartPage'
 import DiscoverPage from './pages/DiscoverPage/DiscoverPage'
@@ -42,6 +44,16 @@ function parseRouteFromHash() {
   if (!parts.length || (parts[0] === 'discover' && parts.length === 1)) {
     return defaultRoute
   }
+
+  if (parts[0] === 'account' && parts[1] === 'edit' && parts.length === 2)
+    return { view: 'editProfile', gameId: null, next: 'account/edit' }
+  if (
+    parts[0] === 'support' &&
+    parts[1] === 'articles' &&
+    /^[1-9]\d*$/.test(parts[2]) &&
+    parts.length === 3
+  )
+    return { view: 'supportArticle', articleId: parts[2], gameId: null }
 
   if (parts[0] === 'users' && parts[1] && parts.length === 2)
     return { view: 'userProfile', userId: parts[1], gameId: null }
@@ -123,6 +135,7 @@ function App() {
   const completedLogin = useRef(false)
   const [selectedGameId, setSelectedGameId] = useState(initialRoute.gameId)
   const [selectedUserId, setSelectedUserId] = useState(initialRoute.userId)
+  const [selectedArticleId, setSelectedArticleId] = useState(initialRoute.articleId)
   const [selectedNewsId, setSelectedNewsId] = useState(initialRoute.newsId)
   const [selectedConversationId, setSelectedConversationId] = useState(initialRoute.conversationId)
   const [currentView, setCurrentView] = useState(initialRoute.view)
@@ -135,6 +148,7 @@ function App() {
 
       setSelectedGameId(route.gameId)
       setCurrentView(route.view)
+      setSelectedArticleId(route.articleId)
       setSelectedNewsId(route.newsId)
       setSelectedUserId(route.userId)
       setSelectedConversationId(route.conversationId)
@@ -154,6 +168,7 @@ function App() {
     if (
       [
         'account',
+        'editProfile',
         'library',
         'wallet',
         'orders',
@@ -173,7 +188,15 @@ function App() {
     const expired = () => {
       if (
         isAuthenticated &&
-        !['news', 'newsDetail', 'userProfile', 'notFound', 'forgotPassword'].includes(currentView)
+        ![
+          'news',
+          'newsDetail',
+          'userProfile',
+          'notFound',
+          'forgotPassword',
+          'support',
+          'supportArticle',
+        ].includes(currentView)
       )
         navigateTo('login?next=' + encodeURIComponent(parseRouteFromHash().next || currentView))
     }
@@ -201,7 +224,7 @@ function App() {
     const route = parseRouteFromHash()
     if (route.view === 'login')
       navigateTo(
-        /^(?:account|library|wallet|orders|notifications|messages(?:\/[1-9]\d*)?|(?:wishlist|cart)(?:\?add=[^#&]+)?)$/.test(
+        /^(?:account(?:\/edit)?|library|wallet|orders|notifications|messages(?:\/[1-9]\d*)?|(?:wishlist|cart)(?:\?add=[^#&]+)?)$/.test(
           route.next,
         )
           ? route.next
@@ -276,7 +299,8 @@ function App() {
   if (isOAuthCallback) return <OAuthCallbackPage />
   const publicNews = ['news', 'newsDetail'].includes(currentView)
   const publicPage =
-    publicNews || ['userProfile', 'notFound', 'forgotPassword'].includes(currentView)
+    publicNews ||
+    ['userProfile', 'notFound', 'forgotPassword', 'support', 'supportArticle'].includes(currentView)
   const publicCatalog = ['discover', 'product', 'achievements'].includes(currentView)
   if (!publicPage && status === 'loading')
     return (
@@ -313,7 +337,15 @@ function App() {
   return (
     <main className="store-page">
       <Header
-        activeView={publicNews ? 'news' : currentView}
+        activeView={
+          publicNews
+            ? 'news'
+            : currentView === 'supportArticle'
+              ? 'support'
+              : currentView === 'editProfile'
+                ? 'account'
+                : currentView
+        }
         isAuthenticated={isAuthenticated}
         onSignIn={() => openAuth('login')}
         onDiscover={openDiscover}
@@ -357,6 +389,7 @@ function App() {
         <PasswordResetRequestPage />
       ) : [
           'account',
+          'editProfile',
           'library',
           'wallet',
           'orders',
@@ -379,12 +412,16 @@ function App() {
       ) : ['account', 'library', 'wallet', 'orders'].includes(currentView) ? (
         <AccountPage
           user={user}
+          focusWallet={currentView === 'wallet'}
+          focusLibrary={currentView === 'library'}
+        />
+      ) : currentView === 'editProfile' ? (
+        <EditProfilePage
+          user={user}
           onUpdated={updateUser}
           onPasswordChanged={handlePasswordChanged}
           onLogoutAll={() => signOut(true)}
           isLoggingOut={isLoggingOut}
-          focusWallet={currentView === 'wallet'}
-          focusLibrary={currentView === 'library'}
         />
       ) : currentView === 'notifications' ? (
         <NotificationsPage />
@@ -395,7 +432,9 @@ function App() {
       ) : currentView === 'wishlist' ? (
         <WishlistPage />
       ) : currentView === 'support' ? (
-        <SupportPage />
+        <SupportPage onSignIn={() => openAuth('login')} />
+      ) : currentView === 'supportArticle' ? (
+        <SupportArticlePage key={selectedArticleId} id={selectedArticleId} />
       ) : (
         <DiscoverPage onProductSelect={openGame} />
       )}

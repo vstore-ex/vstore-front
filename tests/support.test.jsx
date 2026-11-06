@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, expect, test, vi } from 'vitest'
 import { AuthContext } from '../src/auth/context'
+import Footer from '../src/components/Footer/Footer'
 import SupportPage from '../src/pages/SupportPage/SupportPage'
 import {
   createSupportTicket,
@@ -118,26 +119,27 @@ beforeEach(() => {
   })
 })
 
-function setup(ownerId = 7) {
+function setup(ownerId = 7, onSignIn = vi.fn()) {
   const user = userEvent.setup()
   const view = render(
     <AuthContext.Provider
       value={{ isAuthenticated: ownerId != null, currentUser: ownerId ? { id: ownerId } : null }}
     >
-      <SupportPage />
+      <SupportPage onSignIn={onSignIn} />
     </AuthContext.Provider>,
   )
-  return { user, ...view }
+  return { user, onSignIn, ...view }
 }
 
 test('shows public backend articles and keeps ticket endpoints private for guests', async () => {
-  setup(null)
+  const { user, onSignIn } = setup(null)
   expect(await screen.findByRole('button', { name: 'Help article 1' })).toBeInTheDocument()
   expect(getSupportArticles).toHaveBeenCalledWith(
     { page: 1, pageSize: 8, q: '' },
     expect.any(AbortSignal),
   )
-  expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '#/login')
+  await user.click(screen.getByRole('button', { name: 'Sign in' }))
+  expect(onSignIn).toHaveBeenCalledOnce()
   expect(getMySupportTickets).not.toHaveBeenCalled()
   expect(createSupportTicket).not.toHaveBeenCalled()
 })
@@ -235,4 +237,36 @@ test('preserves ticket drafts when the backend rejects a request', async () => {
   expect(await screen.findByRole('alert')).toHaveTextContent('Ticket submission failed.')
   expect(subject).toHaveValue('Please help')
   expect(message).toHaveValue('The order is missing.')
+})
+
+test('footer topics search real articles and prefill a support request without losing ticket conversations', async () => {
+  const { user } = setup()
+  render(<Footer />)
+  await user.click(screen.getByRole('link', { name: 'Jobs' }))
+  await waitFor(() => expect(screen.getByRole('searchbox', { name: 'Find help' })).toHaveValue('Jobs'))
+  expect(screen.getByLabelText('Subject')).toHaveValue('Jobs')
+  await waitFor(() => expect(getSupportArticles).toHaveBeenCalledWith({ page: 1, pageSize: 8, q: 'Jobs' }, expect.any(AbortSignal)))
+  expect(await screen.findByRole('button', { name: 'Open conversation (1)' })).toBeInTheDocument()
+  for (const link of screen.getAllByRole('link', { name: /Share on/ })) {
+    expect(link).toHaveAttribute('target', '_blank')
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+    expect(link.href).not.toContain('#/support')
+  }
+  expect(screen.queryByRole('link', { name: 'YouTube' })).not.toBeInTheDocument()
+})
+
+test('article links render safe Markdown and lead to a shareable detail route', async () => {
+  records = [{ ...article(12), content_md: '**Formatted** [More help](https://example.com/help)' }]
+  const { user } = setup(null)
+  await user.click(await screen.findByRole('button', { name: 'Help article 12' }))
+  expect(screen.getByText('Formatted').tagName).toBe('STRONG')
+  expect(screen.getByRole('link', { name: 'More help' })).toHaveAttribute('rel', 'noopener noreferrer')
+  expect(screen.getByRole('link', { name: 'Open full article' })).toHaveAttribute('href', '#/support/articles/12')
+})
+
+test('unrecognized support topics fall back to normal help search', async () => {
+  window.history.replaceState(null, '', '/#/support?topic=constructor')
+  setup(null)
+  await screen.findByRole('button', { name: 'Help article 1' })
+  expect(screen.getByRole('searchbox', { name: 'Find help' })).toHaveValue('')
 })

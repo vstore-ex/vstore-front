@@ -197,3 +197,15 @@ export function supportError(error) {
     ? 'Could not connect to support. Please try again.'
     : error.message || 'Could not load support. Please try again.'
 }
+
+export async function getSupportArticle(id, signal) {
+  if (!/^[1-9]\d*$/.test(String(id)) || !Number.isSafeInteger(Number(id)))
+    throw new Error('Invalid help article ID.')
+  return article(
+    await apiRequest('/articles/' + encodeURIComponent(id), {
+      signal,
+      auth: false,
+      credentials: 'omit',
+    }),
+  )
+}

@@ -51,6 +51,8 @@ vi.mock('../src/pages/AccountPage/AccountPage', () => ({
   default: ({ focusLibrary }) => <h1>{focusLibrary ? 'Your library' : 'Your account'}</h1>,
 }))
 
+vi.mock('../src/pages/AccountPage/EditProfilePage', () => ({ default: () => <h1>Edit profile page</h1> }))
+
 const gameId = '851241d0-1d80-4b71-b6ea-d7e7f5b5891a'
 const game = { id: gameId, title: 'Orbit', price: '20.00', currency: 'USD' }
 let games, cart, wishlist
@@ -434,4 +436,40 @@ describe('private message routes', () => {
     act(() => window.dispatchEvent(new Event('vstore:session-expired')))
     await waitFor(() => expect(window.location.hash).toBe('#/login?next=messages%2F12'))
   })
+})
+
+describe('profile editor and support routing', () => {
+  test('direct editor link requires sign in and returns to the separate editor', async () => {
+    setLocation('/#/account/edit')
+    render(<Store />)
+    await screen.findByRole('button', { name: 'Complete sign in' })
+    expect(window.location.hash).toBe('#/login?next=account%2Fedit')
+    await userEvent.click(screen.getByRole('button', { name: 'Complete sign in' }))
+    expect(await screen.findByRole('heading', { name: 'Edit profile page' })).toBeInTheDocument()
+  })
+  test.each(['/#/account/edit', '/#/login?next=account%2Fedit', '/#/support?topic=terms', '/#/support/articles/12'])(
+    'preserves OAuth destination for %s', path => {
+      setLocation(path)
+      rememberOAuthDestination()
+      expect(consumeOAuthDestination()).toBe(path.includes('login') ? '#/account/edit' : path.slice(1))
+    },
+  )
+  test('support article direct links are public even when account loading fails', async () => {
+    apiRequest.mockImplementation(async path => {
+      if (path === '/articles/12') return { id: 12, title: 'Help article', content_md: '**Published content**', category: null, created_at: '2026-11-06T10:00:00Z', updated_at: '2026-11-06T10:00:00Z' }
+      return []
+    })
+    setLocation('/#/support/articles/12')
+    render(<Store initialStatus="error" />)
+    expect(await screen.findByRole('heading', { name: 'Help article' })).toBeInTheDocument()
+    expect(screen.getByText('Published content')).toBeInTheDocument()
+  })
+})
+
+test('an expired editor session preserves the actual return path', async () => {
+  setLocation('/#/account/edit')
+  render(<Store initialStatus="authenticated" />)
+  await screen.findByRole('heading', { name: 'Edit profile page' })
+  act(() => window.dispatchEvent(new Event('vstore:session-expired')))
+  await waitFor(() => expect(window.location.hash).toBe('#/login?next=account%2Fedit'))
 })

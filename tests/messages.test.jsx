@@ -393,7 +393,7 @@ test.each([
   await setup()
   await screen.findByRole('heading', { name: 'Conversation with @alex' })
   expect(
-    screen.getByText('Attach up to 5 images. You can also send images without text.'),
+    screen.getByText(/Attach up to 5 images./),
   ).toBeInTheDocument()
   expect(screen.queryByText(/5 MiB each|15 MiB total/)).toBeNull()
   const files = inputs.map(

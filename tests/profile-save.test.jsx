@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, expect, test, vi } from 'vitest'
-import AccountPage from '../src/pages/AccountPage/AccountPage'
+import EditProfilePage from '../src/pages/AccountPage/EditProfilePage'
 import { normalizeUser } from '../src/api/auth'
 import { resetSession } from '../src/api/client'
 import { deferred, jsonResponse } from './helpers'
@@ -60,7 +60,7 @@ beforeEach(() => {
 
 function Account({ initial = account }) {
   const [user, setUser] = useState(normalizeUser(initial))
-  return <AccountPage user={user} onUpdated={setUser} />
+  return <EditProfilePage user={user} onUpdated={setUser} />
 }
 
 function profileAvatar() {
@@ -169,7 +169,7 @@ test.each(['upload', 'profile'])('aborts a pending %s when leaving the page and 
   const pending = deferred()
   reply = () => pending.promise
   const onUpdated = vi.fn()
-  const { unmount } = render(<AccountPage user={normalizeUser(account)} onUpdated={onUpdated} />)
+  const { unmount } = render(<EditProfilePage user={normalizeUser(account)} onUpdated={onUpdated} />)
   if (stage === 'upload') await user.upload(screen.getByLabelText('Avatar'), avatarFile())
   await user.click(screen.getByRole('button', { name: 'Save profile' }))
   unmount()
@@ -184,12 +184,12 @@ test('resets drafts on account change and never continues the old avatar/profile
   const pending = deferred()
   reply = () => pending.promise
   const onUpdated = vi.fn()
-  const { rerender } = render(<AccountPage user={normalizeUser(account)} onUpdated={onUpdated} />)
+  const { rerender } = render(<EditProfilePage user={normalizeUser(account)} onUpdated={onUpdated} />)
   await user.clear(screen.getByLabelText('Full name'))
   await user.type(screen.getByLabelText('Full name'), 'Private draft')
   await user.upload(screen.getByLabelText('Avatar'), avatarFile())
   await user.click(screen.getByRole('button', { name: 'Save profile' }))
-  rerender(<AccountPage user={normalizeUser({ ...account, id: 8, full_name: 'Another user' })} onUpdated={onUpdated} />)
+  rerender(<EditProfilePage user={normalizeUser({ ...account, id: 8, full_name: 'Another user' })} onUpdated={onUpdated} />)
   expect(screen.getByLabelText('Full name')).toHaveValue('Another user')
   expect(screen.getByRole('button', { name: 'Save profile' })).toBeEnabled()
   expect(requests[0].signal.aborted).toBe(true)
@@ -226,4 +226,35 @@ test('pending verification survives an avatar response that omits private email 
   await screen.findByText('Avatar saved successfully.')
   expect(screen.getByText('Pending email:', { exact: false })).toHaveTextContent('new@example.com')
   expect(screen.getByRole('button', { name: 'Resend confirmation email' })).toBeEnabled()
+})
+
+test('saves a changed username and updates identity without navigating or signing out', async () => {
+  const user = userEvent.setup()
+  render(<Account />)
+  await user.clear(screen.getByLabelText('Username'))
+  await user.type(screen.getByLabelText('Username'), ' New.Player ')
+  await user.click(screen.getByRole('button', { name: 'Save profile' }))
+  expect(await screen.findByRole('status')).toHaveTextContent('Profile saved.')
+  expect(JSON.parse(requests[0].body).username).toBe('New.Player')
+  expect(screen.getByRole('heading', { name: 'New.Player' })).toBeInTheDocument()
+  expect(screen.getByLabelText('Username')).toHaveValue('New.Player')
+  expect(screen.getByRole('link', { name: 'Back to account' })).toHaveAttribute('href', '#/account')
+})
+
+test('invalid nickname prevents profile and avatar requests; duplicate response preserves draft', async () => {
+  const user = userEvent.setup()
+  render(<Account />)
+  await user.clear(screen.getByLabelText('Username'))
+  await user.type(screen.getByLabelText('Username'), 'bad nickname')
+  await user.upload(screen.getByLabelText('Avatar'), avatarFile())
+  await user.click(screen.getByRole('button', { name: 'Save profile' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('Username must contain')
+  expect(requests).toHaveLength(0)
+  await user.clear(screen.getByLabelText('Username'))
+  await user.type(screen.getByLabelText('Username'), 'taken')
+  reply = (url) => url.endsWith('/avatar') ? jsonResponse(uploaded) : jsonResponse({ detail: 'username is already in use' }, 400)
+  await user.click(screen.getByRole('button', { name: 'Save profile' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('username is already in use')
+  expect(screen.getByLabelText('Username')).toHaveValue('taken')
+  expect(screen.getByRole('heading', { name: 'player' })).toBeInTheDocument()
 })
