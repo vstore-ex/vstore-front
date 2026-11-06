@@ -4,6 +4,7 @@ import CurrencySelector from '../../currency/CurrencySelector'
 import useCatalogResource from '../../hooks/useCatalogResource'
 import UserLink from '../../components/User/UserLink'
 import FriendsSection from './FriendsSection'
+import BlockedSection from './BlockedSection'
 import { useEffect, useRef, useState } from 'react'
 import { mediaUrl } from '../../api/client'
 import useOrders from '../../hooks/useOrders'
@@ -166,6 +167,7 @@ function AccountSession({
         <AccountAchievements resource={achievements} userId={user.id} />
         <Library focusLibrary={focusLibrary} />
         <FriendsSection />
+        <BlockedSection />
         <section className="account-section">
           <h2>Profile settings</h2>
           {user.pendingEmail && (
