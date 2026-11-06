@@ -17,7 +17,7 @@ if (isOAuthCallback) {
 
 function safeDestination(hash) {
   return typeof hash === 'string' &&
-    /^#\/(?:discover(?:\?[^#]*)?|account|library|wallet|orders|notifications|messages(?:\/[1-9]\d*)?|cart(?:\?add=[^#&]+)?|wishlist(?:\?add=[^#&]+)?|support|(?:games|products)\/[a-zA-Z0-9_-]+(?:\/achievements)?)$/.test(
+    /^#\/(?:discover(?:\?[^#]*)?|account(?:\/edit)?|library|wallet|orders|notifications|messages(?:\/[1-9]\d*)?|cart(?:\?add=[^#&]+)?|wishlist(?:\?add=[^#&]+)?|support(?:\?[^#]*)?|support\/articles\/[1-9]\d*|(?:games|products)\/[a-zA-Z0-9_-]+(?:\/achievements)?)$/.test(
       hash,
     )
     ? hash

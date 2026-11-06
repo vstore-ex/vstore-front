@@ -617,3 +617,29 @@
 .account-email-status {
   overflow-wrap: anywhere;
 }
+
+.account-profile-links {
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.account-page--edit .account-hero {
+  grid-template-columns: 177px minmax(0, 1fr);
+}
+@media (max-width: 760px) {
+  .account-page--edit .account-hero {
+    grid-template-columns: 80px minmax(0, 1fr);
+    gap: 16px;
+    min-height: 120px;
+  }
+  .account-page--edit .account-hero__avatar {
+    width: 80px;
+    height: 80px;
+  }
+  .account-page--edit .account-hero__identity h1 {
+    font-size: 24px;
+  }
+}

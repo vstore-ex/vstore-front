@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import ReactMarkdown from 'react-markdown'
+import { ProductMarkdown } from '../ProductDetailPage/ProductContent'
+import { readStoreLocation } from '../../utils/location'
+import { supportSubjects } from './topics'
 import Pagination from '../../components/Pagination/Pagination'
 import { useAuth } from '../../auth/context'
 import {
@@ -34,7 +36,8 @@ function SupportArticle({ item, isOpen, onToggle }) {
         <div className="support-topic__panel" id={panelId}>
           {item.category && <p className="support-article__category">{item.category}</p>}
           <div className="support-article__content">
-            <ReactMarkdown>{item.content_md}</ReactMarkdown>
+            <ProductMarkdown>{item.content_md}</ProductMarkdown>
+            <a href={`#/support/articles/${item.id}`}>Open full article</a>
           </div>
         </div>
       )}
@@ -232,12 +235,12 @@ function SupportTicketConversation({ ticket, ownerId, onUpdated }) {
   )
 }
 
-function SupportRequests({ ownerId }) {
+function SupportRequests({ ownerId, initialSubject = '' }) {
   const [tickets, setTickets] = useState([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
   const [reload, setReload] = useState(0)
-  const [subject, setSubject] = useState('')
+  const [subject, setSubject] = useState(initialSubject)
   const [message, setMessage] = useState('')
   const [priority, setPriority] = useState('medium')
   const [sending, setSending] = useState(false)
@@ -279,7 +282,7 @@ function SupportRequests({ ownerId }) {
       if (controller.signal.aborted) return
       setTickets((previous) => [created, ...previous.filter((item) => item.id !== created.id)])
       setLoadError('')
-      setSubject('')
+      setSubject(initialSubject)
       setMessage('')
       setPriority('medium')
       setNotice('Your support request was submitted.')
@@ -417,10 +420,27 @@ function SupportRequests({ ownerId }) {
   )
 }
 
-function SupportPage() {
+function readSupportLocation() {
+  const { params } = readStoreLocation()
+  const requested = params.get('topic') || ''
+  const topic = Object.hasOwn(supportSubjects, requested) ? requested : ''
+  return { topic, query: (params.get('q') ?? supportSubjects[topic] ?? '').slice(0, 200) }
+}
+function SupportPage({ onSignIn }) {
+  const [location, setLocation] = useState(readSupportLocation)
+  useEffect(() => {
+    const sync = () => setLocation(readSupportLocation())
+    window.addEventListener('hashchange', sync)
+    return () => window.removeEventListener('hashchange', sync)
+  }, [])
+  return (
+    <SupportSession key={location.topic + ':' + location.query} {...location} onSignIn={onSignIn} />
+  )
+}
+function SupportSession({ topic, query: initialQuery, onSignIn }) {
   const auth = useAuth() || {}
   const ownerId = auth.isAuthenticated ? Number(auth.currentUser?.id) : null
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(initialQuery)
   const [currentPage, setCurrentPage] = useState(1)
   const [openArticleId, setOpenArticleId] = useState(null)
   const [articles, setArticles] = useState({ items: [], total: 0, page_size: ARTICLES_PER_PAGE })
@@ -532,14 +552,18 @@ function SupportPage() {
         />
 
         {Number.isSafeInteger(ownerId) && ownerId > 0 ? (
-          <SupportRequests key={ownerId} ownerId={ownerId} />
+          <SupportRequests
+            key={ownerId + ':' + topic}
+            ownerId={ownerId}
+            initialSubject={supportSubjects[topic] || ''}
+          />
         ) : (
           <section className="support-requests" aria-label="Submit a support request">
             <h2>Contact support</h2>
             <p>Sign in to submit a request and view its status.</p>
-            <a className="button button--accent" href="#/login">
+            <button className="button button--accent" onClick={onSignIn}>
               Sign in
-            </a>
+            </button>
           </section>
         )}
       </div>

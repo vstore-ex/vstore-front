@@ -1,5 +1,5 @@
 .support-page {
-  min-height: 1460px;
+  min-height: 65svh;
   color: var(--color-text);
   background:
     linear-gradient(98deg, rgba(0, 0, 0, 0) 7%, rgba(123, 199, 77, 0.1) 93%), var(--color-surface);
@@ -546,4 +546,17 @@
   .support-ticket__meta {
     flex-wrap: wrap;
   }
+}
+
+.support-search input:focus,
+.support-search input:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+.support-article {
+  margin-top: 32px;
+  overflow-wrap: anywhere;
+}
+.support-article .product-markdown {
+  margin-top: 32px;
 }

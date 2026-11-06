@@ -3,6 +3,7 @@ import {
   createSupportTicket,
   getMySupportTickets,
   getSupportArticles,
+  getSupportArticle,
   getSupportTicketDetails,
   getSupportTicketMessages,
   sendSupportTicketMessage,
@@ -182,4 +183,12 @@ test('rejects malformed support article pagination metadata', async () => {
     ),
   )
   await expect(getSupportArticles()).rejects.toThrow('Could not read support data')
+})
+
+test('loads and validates a public help article without authentication', async () => {
+  vi.stubGlobal('fetch', vi.fn(async () => jsonResponse(article)))
+  expect(await getSupportArticle(3)).toMatchObject(article)
+  expect(fetch).toHaveBeenCalledWith('/api/v1/articles/3', expect.objectContaining({ credentials: 'omit' }))
+  await expect(getSupportArticle('../me')).rejects.toThrow('Invalid help article ID')
+  expect(fetch).toHaveBeenCalledTimes(1)
 })

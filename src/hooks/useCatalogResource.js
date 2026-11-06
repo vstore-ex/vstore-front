@@ -1,3 +1,4 @@
+import { getSupportArticle } from '../api/support'
 import { getReviewSummary } from '../api/reviews'
 import { searchUsers, searchReviews } from '../api/search'
 import { getUserById } from '../api/users'
@@ -8,6 +9,7 @@ import { getGameAchievements, getUserAchievements } from '../api/achievements'
 import { useCurrency } from '../currency/context'
 const pricedResources = ['game', 'games', 'discover', 'search']
 const loaders = {
+  supportArticle: getSupportArticle,
   reviewSummary: (key, signal) => getReviewSummary(JSON.parse(key).id, signal),
   userProfile: getUserById,
   userAchievements: getUserAchievements,

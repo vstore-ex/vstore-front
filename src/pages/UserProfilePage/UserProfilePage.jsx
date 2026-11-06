@@ -91,7 +91,7 @@ export default function UserProfilePage({ id, onSignIn }) {
                 {user.full_name && <p>{user.full_name}</p>}
                 <ProfileDate value={user.created_at} prefix="Joined" />
                 {own ? (
-                  <a className="profile-edit" href="#/account">
+                  <a className="profile-edit" href="#/account/edit">
                     Edit profile
                   </a>
                 ) : isAuthenticated && currentUser?.id != null && status === 'authenticated' ? (

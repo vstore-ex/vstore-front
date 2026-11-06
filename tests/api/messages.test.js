@@ -97,7 +97,7 @@ test('sends image attachments as authenticated multipart data and downloads only
     'fetch',
     vi.fn(async (url) =>
       url.endsWith('/attachments/3')
-        ? new Response(new Blob(['private image'], { type: 'image/webp' }), {
+        ? new Response('private image', {
             headers: { 'Content-Type': 'image/webp' },
           })
         : jsonResponse(sentMessage),
