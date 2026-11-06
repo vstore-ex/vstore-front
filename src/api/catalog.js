@@ -54,7 +54,8 @@ export function mapGame(game) {
     is_free: free,
     currency,
     id: String(game.id),
-    type: 'Base Game',
+    // The API has no product type yet; show none rather than labelling everything a base game.
+    type: typeof game.type === 'string' ? game.type.trim() : '',
     image: mediaUrl(poster),
     posterImage: mediaUrl(poster),
     heroImage: mediaUrl(hero),

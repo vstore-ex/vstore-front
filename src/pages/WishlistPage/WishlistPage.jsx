@@ -86,7 +86,7 @@ export default function WishlistPage() {
                   alt={item.title}
                 />
                 <div className="wishlist-item__info">
-                  <span className="wishlist-item__type">{item.type}</span>
+                  {item.type && <span className="wishlist-item__type">{item.type}</span>}
                   <h2>
                     <a href={`#/games/${item.id}`}>{item.title}</a>
                   </h2>
