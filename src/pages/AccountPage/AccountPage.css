@@ -617,3 +617,276 @@
 .account-email-status {
   overflow-wrap: anywhere;
 }
+
+/* ---------- Steam "Edit Profile" layout (proportions only; colors from tokens) ---------- */
+
+.account-page.account-page--current {
+  min-height: 75vh;
+  background: var(--color-surface);
+}
+.account-page--current .account-page__inner {
+  width: min(1680px, calc(100% - 2 * clamp(16px, 3vw, 56px)));
+  padding: 0 0 var(--space-12);
+}
+
+/* Header band: avatar, "username › Edit Profile", counters, profile link. */
+.account-page--current .account-hero {
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  gap: clamp(16px, 2vw, 28px);
+  min-height: 0;
+  margin: 0 calc(-1 * clamp(16px, 3vw, 56px));
+  padding: clamp(20px, 3vw, 32px) clamp(16px, 3vw, 56px);
+  border-bottom: 1px solid var(--color-border);
+  background:
+    radial-gradient(ellipse at 10% 0%, rgb(123 199 77 / 16%), transparent 60%),
+    linear-gradient(180deg, var(--color-control), var(--color-surface));
+}
+.account-page--current .account-hero__avatar {
+  width: clamp(64px, 6vw, 96px);
+  height: auto;
+  aspect-ratio: 1;
+  padding: 2px;
+  border-radius: 0;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-border-control));
+}
+.account-page--current .account-hero__identity {
+  padding: 0;
+}
+.account-page--current .account-hero__identity h1 {
+  font-size: clamp(22px, 2.2vw, 32px);
+  line-height: 1.2;
+}
+.account-page--current .account-hero__crumb {
+  color: var(--color-text-muted);
+}
+.account-page--current .account-hero__page {
+  color: var(--color-text-muted);
+  font-weight: 400;
+}
+.account-page--current .account-hero__identity p {
+  margin-top: 4px;
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+.account-page--current .account-hero__stats {
+  grid-template-columns: repeat(3, auto);
+  gap: var(--space-6);
+  padding: 0;
+}
+.account-page--current .account-stat span {
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.account-page--current .account-stat strong {
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+}
+.account-hero__profile-link {
+  padding: 8px 14px;
+  border-radius: 2px;
+  color: var(--color-text);
+  background: var(--color-control);
+  font-size: 14px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.account-hero__profile-link:hover {
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+}
+
+/* Left navigation (about 220px) and the panels column, as in Steam settings. */
+.account-layout {
+  display: grid;
+  grid-template-columns: clamp(190px, 15vw, 240px) minmax(0, 1fr);
+  gap: clamp(20px, 2.4vw, 36px);
+  align-items: start;
+  margin-top: var(--space-6);
+}
+.account-nav {
+  position: sticky;
+  top: calc(var(--store-header-height, 0px) + var(--space-4));
+  display: grid;
+  gap: 2px;
+}
+.account-page .account-nav button {
+  min-width: 0;
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 0;
+  border-left: 3px solid transparent;
+  border-radius: 0;
+  color: var(--color-text-muted);
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+.account-page .account-nav button:hover {
+  color: var(--color-text);
+  background: var(--color-surface-raised);
+  filter: none;
+}
+.account-page .account-nav button[aria-current] {
+  border-left-color: var(--color-accent);
+  color: var(--color-text);
+  background: var(--color-surface-raised);
+}
+
+.account-panels {
+  display: grid;
+  gap: var(--space-5);
+  min-width: 0;
+}
+.account-panels .account-section {
+  margin: 0;
+  padding: var(--space-5);
+  background: var(--color-surface-raised);
+  scroll-margin-top: calc(var(--store-header-height, 0px) + var(--space-4));
+}
+.account-panel-slot {
+  display: grid;
+  gap: var(--space-5);
+  scroll-margin-top: calc(var(--store-header-height, 0px) + var(--space-4));
+}
+.account-panel-slot:empty {
+  display: none;
+}
+.account-panels .account-section > h2,
+.account-panels .account-section h2:first-child {
+  margin: 0 0 var(--space-4);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.account-panel__hint {
+  margin: 0 0 var(--space-4);
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
+.account-profile-form {
+  display: grid;
+  gap: var(--space-5);
+  max-width: none;
+}
+.account-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-4);
+}
+.account-fields label {
+  display: grid;
+  gap: 6px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+/* Avatar editor: 184 / 64 / 32 previews like Steam. */
+.account-avatar-editor {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-6);
+  align-items: start;
+}
+.account-avatar-previews {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-4);
+}
+.account-avatar-previews img {
+  display: block;
+  object-fit: cover;
+  background: var(--color-control);
+}
+.account-avatar-preview--full {
+  width: 184px;
+  height: 184px;
+}
+.account-avatar-preview--medium {
+  width: 64px;
+  height: 64px;
+}
+.account-avatar-preview--small {
+  width: 32px;
+  height: 32px;
+}
+.account-avatar-choose {
+  display: grid;
+  gap: 6px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+/* Save bar sticks to the bottom while editing, like Steam's Save / Cancel row. */
+.account-save-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface-raised);
+}
+.account-save-bar p {
+  flex: 1;
+  margin: 0;
+}
+
+@media (max-width: 1100px) {
+  .account-page--current .account-hero {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+  .account-page--current .account-hero__stats {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+@media (max-width: 860px) {
+  .account-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .account-nav {
+    position: static;
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+  }
+  .account-page .account-nav button {
+    flex-shrink: 0;
+    border-left: 0;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+  }
+  .account-page .account-nav button[aria-current] {
+    border-bottom-color: var(--color-accent);
+  }
+  .account-avatar-editor {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .account-avatar-preview--full {
+    width: 128px;
+    height: 128px;
+  }
+}
+@media (max-width: 560px) {
+  .account-page--current .account-hero {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .account-hero__profile-link {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+  .account-panels .account-section {
+    padding: var(--space-4);
+  }
+}
