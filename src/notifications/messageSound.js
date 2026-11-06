@@ -19,28 +19,50 @@ export function setMessageSoundEnabled(value) {
   }
 }
 
-function tone(start, frequency, duration, peak) {
-  const oscillator = context.createOscillator()
-  const gain = context.createGain()
+function ensureContext() {
+  if (context) return context
+  const Context = window.AudioContext || window.webkitAudioContext
+  if (!Context) return null
+  context = new Context()
+  return context
+}
+
+function resumeContext() {
+  if (context?.state === 'suspended') void context.resume().catch(() => {})
+}
+
+// Audio policy stays suspended without a user gesture, so keep retrying on interactions.
+function unlockOnGesture() {
+  if (context) resumeContext()
+}
+if (typeof document !== 'undefined') {
+  document.addEventListener('pointerdown', unlockOnGesture)
+  document.addEventListener('keydown', unlockOnGesture)
+}
+
+function tone(audio, start, frequency, duration, peak) {
+  const oscillator = audio.createOscillator()
+  const gain = audio.createGain()
   oscillator.type = 'sine'
   oscillator.frequency.value = frequency
   gain.gain.setValueAtTime(0.0001, start)
   gain.gain.exponentialRampToValueAtTime(peak, start + 0.02)
   gain.gain.exponentialRampToValueAtTime(0.0001, start + duration)
   oscillator.connect(gain)
-  gain.connect(context.destination)
+  gain.connect(audio.destination)
   oscillator.start(start)
   oscillator.stop(start + duration)
 }
 
 export function playMessageSound() {
-  if (!messageSoundEnabled()) return
+  if (!messageSoundEnabled() || typeof window === 'undefined') return
+  const audio = ensureContext()
+  if (!audio) return
+  resumeContext()
   try {
-    context ||= new (window.AudioContext || window.webkitAudioContext)()
-    if (context.state === 'suspended') void context.resume()
-    const start = context.currentTime
-    tone(start, 880, 0.18, 0.08)
-    tone(start + 0.09, 1320, 0.22, 0.06)
+    const start = audio.currentTime
+    tone(audio, start, 880, 0.18, 0.08)
+    tone(audio, start + 0.09, 1320, 0.22, 0.06)
   } catch {
     // audio may be blocked until the first user gesture; stay silent
   }

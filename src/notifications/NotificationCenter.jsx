@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { notificationDestination } from '../api/notifications'
-import { messageSoundEnabled, setMessageSoundEnabled } from './messageSound'
+import { messageSoundEnabled, setMessageSoundEnabled, playMessageSound } from './messageSound'
 import { useNotifications } from './context'
 import './Notifications.css'
 
@@ -137,6 +137,7 @@ export default function NotificationCenter() {
               const next = !soundOn
               setMessageSoundEnabled(next)
               setSoundOn(next)
+              if (next) playMessageSound()
             }}
           >
             {soundOn ? 'Disable message sound' : 'Enable message sound'}
