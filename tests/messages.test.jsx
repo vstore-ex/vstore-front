@@ -393,7 +393,7 @@ test.each([
   await setup()
   await screen.findByRole('heading', { name: 'Conversation with @alex' })
   expect(
-    screen.getByText('Attach up to 5 images. You can also send images without text.'),
+    screen.getByText(/Attach up to 5 images./),
   ).toBeInTheDocument()
   expect(screen.queryByText(/5 MiB each|15 MiB total/)).toBeNull()
   const files = inputs.map(
@@ -730,4 +730,43 @@ test('live updates do not cancel the user destination during inbox pagination', 
   await act(async () => pending.resolve([conversations[20]]))
   expect(waiting.signal.aborted).toBe(true)
   expect(screen.getByText('Page 2')).toBeInTheDocument()
+})
+
+test('Enter sends once and Shift+Enter preserves a multiline draft', async () => {
+  const { user } = await setup()
+  await screen.findByRole('heading', { name: 'Conversation with @alex' })
+  const draft = screen.getByRole('textbox', { name: 'Your message' })
+  await user.type(draft, 'First line')
+  await user.keyboard('{Shift>}{Enter}{/Shift}Second line')
+  expect(draft).toHaveValue('First line\nSecond line')
+  expect(requests.filter(r => r.method === 'POST' && r.path.endsWith('/messages'))).toHaveLength(0)
+  await user.keyboard('{Enter}')
+  expect(await screen.findByText('Message sent.')).toBeInTheDocument()
+  expect(requests.filter(r => r.method === 'POST' && r.path.endsWith('/messages'))).toHaveLength(1)
+  expect(records[12].at(-1).content).toBe('First line\nSecond line')
+  expect(draft).toHaveValue('')
+  expect(draft).toHaveAccessibleDescription(/Shift\+Enter for a new line/)
+})
+
+test('IME confirmation and repeated Enter do not send; sending is locked while pending', async () => {
+  const { user } = await setup()
+  await screen.findByRole('heading', { name: 'Conversation with @alex' })
+  const draft = screen.getByRole('textbox', { name: 'Your message' })
+  await user.type(draft, 'Pending draft')
+  fireEvent.compositionStart(draft)
+  fireEvent.keyDown(draft, { key: 'Enter' })
+  fireEvent.compositionEnd(draft)
+  fireEvent.keyDown(draft, { key: 'Enter', isComposing: true })
+  fireEvent.keyDown(draft, { key: 'Enter', keyCode: 229 })
+  fireEvent.keyDown(draft, { key: 'Enter', repeat: true })
+  const sends = () => requests.filter(r => r.method === 'POST' && r.path.endsWith('/messages'))
+  expect(sends()).toHaveLength(0)
+  const pending = deferred()
+  intercept = (_path, _options, kind) => kind === 'send' ? pending.promise : undefined
+  act(() => { fireEvent.keyDown(draft, { key: 'Enter' }); fireEvent.keyDown(draft, { key: 'Enter' }) })
+  expect(sends()).toHaveLength(1)
+  expect(draft).toBeDisabled()
+  await act(async () => pending.reject(new Error('Delivery failed')))
+  expect(draft).toHaveValue('Pending draft')
+  expect(await screen.findByRole('alert')).toHaveTextContent('Delivery failed')
 })

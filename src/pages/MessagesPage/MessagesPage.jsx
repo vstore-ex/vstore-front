@@ -119,6 +119,7 @@ function Conversation({ id, owner, draft, files, changeDraft, changeFiles, onInb
   const state = useConversation(id, owner, onInboxUpdate)
   const [notice, setNotice] = useState('')
   const [attachmentError, setAttachmentError] = useState('')
+  const composing = useRef(false)
   const heading = useRef(null)
   const viewport = useRef(null)
   const nearBottom = useRef(true)
@@ -328,16 +329,29 @@ function Conversation({ id, owner, draft, files, changeDraft, changeFiles, onInb
           rows={4}
           maxLength={4000}
           value={draft}
-          aria-describedby="message-length"
+          aria-describedby="message-length message-keyboard-help"
           disabled={state.sending || !state.conversation?.can_send}
           onChange={(event) => {
             changeDraft(event.target.value)
             setNotice('')
           }}
           onKeyDown={(event) => {
-            if (event.key !== 'Enter' || event.shiftKey) return
+            if (
+              event.key !== 'Enter' ||
+              event.shiftKey ||
+              composing.current ||
+              event.nativeEvent.isComposing ||
+              event.nativeEvent.keyCode === 229
+            )
+              return
             event.preventDefault()
-            if (canSend) void send()
+            if (!event.repeat && canSend) event.currentTarget.form.requestSubmit()
+          }}
+          onCompositionStart={() => {
+            composing.current = true
+          }}
+          onCompositionEnd={() => {
+            composing.current = false
           }}
           onPaste={(event) => {
             const images = Array.from(event.clipboardData?.files || []).filter((file) =>
@@ -387,6 +401,7 @@ function Conversation({ id, owner, draft, files, changeDraft, changeFiles, onInb
             {attachmentError}
           </p>
         )}
+        <p id="message-keyboard-help">Enter to send · Shift+Enter for a new line.</p>
         <div className="message-composer-actions">
           <span id="message-length">{draft.length} / 4000 characters</span>
           <button type="submit" className="button button--accent" disabled={!canSend}>
