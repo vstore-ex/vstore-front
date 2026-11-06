@@ -52,6 +52,8 @@ function message(value, conversationId) {
     (value.content != null && typeof value.content !== 'string') ||
     typeof value.created_at !== 'string' ||
     !Number.isFinite(Date.parse(value.created_at)) ||
+    (value.edited_at != null && typeof value.edited_at !== 'string') ||
+    (value.deleted_at != null && typeof value.deleted_at !== 'string') ||
     (value.attachments != null &&
       (!Array.isArray(value.attachments) || value.attachments.length > MAX_MESSAGE_IMAGES))
   )
@@ -153,6 +155,37 @@ export async function sendMessage(conversationId, content, signal, files = []) {
     target,
   )
 }
+export async function getMessage(conversationId, messageId, signal) {
+  const target = id(conversationId)
+  return message(
+    await apiRequest(`/messages/conversations/${target}/messages/${id(messageId)}`, { signal }),
+    target,
+  )
+}
+export async function editMessage(conversationId, messageId, content, signal) {
+  const target = id(conversationId)
+  const current = id(messageId)
+  if (typeof content !== 'string' || !content.trim() || content.length > 4000)
+    throw new Error('Enter a message between 1 and 4000 characters.')
+  return message(
+    await apiRequest(`/messages/conversations/${target}/messages/${current}`, {
+      method: 'PATCH',
+      body: { content },
+      signal,
+    }),
+    target,
+  )
+}
+export async function deleteMessage(conversationId, messageId, signal) {
+  const target = id(conversationId)
+  return message(
+    await apiRequest(`/messages/conversations/${target}/messages/${id(messageId)}`, {
+      method: 'DELETE',
+      signal,
+    }),
+    target,
+  )
+}
 export async function getMessageAttachment(conversationId, item, signal) {
   const target = id(conversationId)
   const attachmentId = id(item?.id)
@@ -191,10 +224,10 @@ export function mergeMessages(previous, incoming) {
   return [...items.values()].sort((a, b) => a.id - b.id)
 }
 export function messagePreview(message) {
-  return (
-    message?.content ||
-    (message?.has_attachments || message?.attachments?.length
-      ? 'Image attachment'
-      : 'No messages yet')
-  )
+  return message?.deleted_at
+    ? 'Message deleted'
+    : message?.content ||
+        (message?.has_attachments || message?.attachments?.length
+          ? 'Image attachment'
+          : 'No messages yet')
 }

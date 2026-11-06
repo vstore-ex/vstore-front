@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import {
+  deleteMessage,
+  editMessage,
   getConversation,
+  getMessage,
   getMessages,
   markConversationRead,
   mergeMessages,
@@ -21,13 +24,14 @@ const initial = {
   olderError: '',
   sendError: '',
   readError: '',
+  editError: '',
 }
 
 export default function useConversation(id, owner, onInboxUpdate) {
   const [state, setState] = useState(initial)
   const current = useRef(initial)
   const active = useRef(false)
-  const requests = useRef({ load: null, older: null, send: null, read: null })
+  const requests = useRef({ load: null, older: null, send: null, read: null, mutations: new Set() })
   const { subscribeMessages, clearMessageNotificationsFrom } = useNotifications()
   const update = useCallback((change) => {
     if (!active.current) return
@@ -35,10 +39,12 @@ export default function useConversation(id, owner, onInboxUpdate) {
     setState(current.current)
   }, [])
   const abortAll = useCallback(() => {
-    for (const key of Object.keys(requests.current)) {
+    for (const key of ['load', 'older', 'send', 'read']) {
       requests.current[key]?.abort()
       requests.current[key] = null
     }
+    for (const controller of requests.current.mutations) controller.abort()
+    requests.current.mutations.clear()
   }, [])
   useLayoutEffect(() => {
     active.current = true
@@ -172,8 +178,27 @@ export default function useConversation(id, owner, onInboxUpdate) {
           )
             void clearMessageNotificationsFrom(event.data.sender_id)
         }
+        if (
+          (event.type === 'message_updated' || event.type === 'message_deleted') &&
+          event.data.conversation_id === Number(id)
+        ) {
+          if (!event.data.message_id) {
+            void refresh()
+            return
+          }
+          void (async () => {
+            const controller = new AbortController()
+            try {
+              const item = await getMessage(id, event.data.message_id, controller.signal)
+              if (controller.signal.aborted || !active.current) return
+              update((old) => ({ ...old, items: mergeMessages(old.items, [item]) }))
+            } catch {
+              if (!controller.signal.aborted && active.current) void refresh()
+            }
+          })()
+        }
       }),
-    [clearMessageNotificationsFrom, id, refresh, subscribeMessages],
+    [clearMessageNotificationsFrom, id, refresh, subscribeMessages, update],
   )
 
   async function older() {
@@ -226,5 +251,29 @@ export default function useConversation(id, owner, onInboxUpdate) {
       if (!controller.signal.aborted) update((old) => ({ ...old, sending: false }))
     }
   }
-  return { ...state, refresh, older, send, markRead }
+  async function changeMessage(messageId, action, content = '') {
+    if (!active.current || !current.current.conversation) return false
+    const controller = new AbortController()
+    requests.current.mutations.add(controller)
+    update((old) => ({ ...old, editError: '' }))
+    try {
+      const item = await action(id, messageId, content, controller.signal)
+      if (controller.signal.aborted || !active.current) return false
+      update((old) => ({ ...old, items: mergeMessages(old.items, [item]) }))
+      void onInboxUpdate()
+      return true
+    } catch (error) {
+      if (!controller.signal.aborted && active.current)
+        update((old) => ({ ...old, editError: messageError(error) }))
+      return false
+    } finally {
+      requests.current.mutations.delete(controller)
+    }
+  }
+  const edit = (messageId, content) => changeMessage(messageId, editMessage, content)
+  const remove = (messageId) =>
+    changeMessage(messageId, (conversationId, target, _content, signal) =>
+      deleteMessage(conversationId, target, signal),
+    )
+  return { ...state, refresh, older, send, markRead, edit, remove }
 }
