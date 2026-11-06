@@ -10,6 +10,8 @@ import { deferred, jsonResponse } from './helpers'
 vi.mock('../src/wallet/WalletSection', () => ({ default: () => null }))
 vi.mock('../src/currency/CurrencySelector', () => ({ default: () => null }))
 vi.mock('../src/pages/AccountPage/FriendsSection', () => ({ default: () => null }))
+// Blocking has its own tests; its list request would otherwise add a request and an alert here.
+vi.mock('../src/pages/AccountPage/BlockedSection', () => ({ default: () => null }))
 vi.mock('../src/pages/AccountPage/Library', () => ({ default: () => null }))
 vi.mock('../src/api/newsPreferences', () => ({
   getEmailNewsPreferences: vi.fn().mockResolvedValue({
@@ -139,7 +141,7 @@ test('locks fields and ignores repeated form submission while saving', async () 
   const pending = deferred()
   reply = () => pending.promise
   render(<Account />)
-  const form = screen.getByRole('button', { name: 'Save profile' }).closest('form')
+  const form = screen.getByRole('button', { name: 'Save profile' }).form
   act(() => {
     fireEvent.submit(form)
     fireEvent.submit(form)
