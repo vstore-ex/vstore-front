@@ -1,10 +1,15 @@
+/* Pinned to the top of every page; --store-header-height is published by Header.jsx. */
 .store-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
   width: 100%;
   min-height: 63px;
   display: flex;
   align-items: center;
   padding: 0 18px 0 25px;
   background: linear-gradient(90deg, #373c43 0%, #25282d 100%);
+  box-shadow: 0 2px 12px rgb(0 0 0 / 35%);
 }
 
 .header-menu {
@@ -195,6 +200,12 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
+  }
+  /* An open menu may be taller than a phone screen; let it scroll instead of overflowing. */
+  .store-header:has(.header-menu--open) {
+    max-height: 100svh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
   .header-actions,
