@@ -21,10 +21,28 @@ import { useAuth } from './auth/context'
 import OAuthCallbackPage from './pages/OAuthCallbackPage/OAuthCallbackPage'
 import { isOAuthCallback } from './auth/oauth'
 import { readStoreLocation } from './utils/location'
+import { pageTitle } from './hooks/useDocumentTitle'
 import './auth/Auth.css'
 import './App.css'
 
 const defaultRoute = { view: 'discover', gameId: null }
+
+// Detail views (game, news article, profile) set their own titles once loaded.
+const viewTitles = {
+  discover: 'Welcome to VStore',
+  login: pageTitle('Sign in'),
+  account: pageTitle('Account'),
+  library: pageTitle('Library'),
+  wallet: pageTitle('Wallet'),
+  orders: pageTitle('Orders'),
+  cart: pageTitle('Cart'),
+  wishlist: pageTitle('Wishlist'),
+  support: pageTitle('Support'),
+  notifications: pageTitle('Notifications'),
+  messages: pageTitle('Messages'),
+  news: pageTitle('News'),
+  notFound: pageTitle('Page not found'),
+}
 
 function parseRouteFromHash() {
   const { path, params } = readStoreLocation()
@@ -181,6 +199,10 @@ function App() {
     return () => window.removeEventListener('vstore:session-expired', expired)
   }, [currentView, isAuthenticated])
 
+  useEffect(() => {
+    if (viewTitles[currentView]) document.title = viewTitles[currentView]
+  }, [currentView])
+
   function openAuth(mode, action = null) {
     setPendingAction(action)
     setAuthNotice('')
@@ -316,6 +338,7 @@ function App() {
         activeView={publicNews ? 'news' : currentView}
         isAuthenticated={isAuthenticated}
         onSignIn={() => openAuth('login')}
+        onSignUp={() => openAuth('register')}
         onDiscover={openDiscover}
         onSupport={openSupport}
         onCart={openCart}

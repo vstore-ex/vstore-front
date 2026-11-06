@@ -26,7 +26,7 @@ const initialRegisterForm = {
   username: '',
   email: '',
   password: '',
-  acceptedTerms: true,
+  acceptedTerms: false,
   human: false,
 }
 
@@ -353,8 +353,8 @@ function RegisterPage({
                       aria-describedby={errors.acceptedTerms ? 'auth-terms-error' : undefined}
                     />
                     <span>
-                      I am 13 years of age or older and agree to the terms of the Steam Subscriber
-                      Agreement and the Valve Privacy Policy.
+                      I am 13 years of age or older and agree to the VStore Terms of Service and
+                      Privacy Policy.
                     </span>
                   </label>
                   {errors.acceptedTerms && (

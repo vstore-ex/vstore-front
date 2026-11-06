@@ -1,4 +1,5 @@
 import useCatalogResource from '../../hooks/useCatalogResource'
+import useDocumentTitle, { pageTitle } from '../../hooks/useDocumentTitle'
 import ResourceStatus from '../../components/Catalog/ResourceStatus'
 import { MediaImage } from '../../components/Catalog/Media'
 import { ProductMarkdown } from '../ProductDetailPage/ProductContent'
@@ -6,6 +7,7 @@ import { NewsDate } from '../../components/News/NewsCard'
 export default function NewsDetailPage({ id }) {
   const resource = useCatalogResource('newsDetail', String(id))
   const item = resource.data
+  useDocumentTitle(pageTitle(item?.title || 'News'))
   return (
     <div className="news-page">
       <div className="news-page__inner">

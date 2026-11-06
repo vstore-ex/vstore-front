@@ -1,5 +1,6 @@
 import { useAuth } from '../../auth/context'
 import useCatalogResource from '../../hooks/useCatalogResource'
+import useDocumentTitle, { pageTitle } from '../../hooks/useDocumentTitle'
 import ResourceStatus from '../../components/Catalog/ResourceStatus'
 import { MediaImage } from '../../components/Catalog/Media'
 import fallbackAvatar from '../../assets/avatar.webp'
@@ -54,6 +55,7 @@ export default function UserProfilePage({ id, onSignIn }) {
   const resource = useCatalogResource('userProfile', String(id))
   const { currentUser, isAuthenticated, status } = useAuth()
   const user = resource.data
+  useDocumentTitle(pageTitle(user ? `@${user.username}` : 'Profile'))
   const own = isAuthenticated && String(currentUser?.id) === String(user?.id)
   return (
     <div className="user-profile-page">

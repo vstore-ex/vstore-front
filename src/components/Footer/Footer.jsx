@@ -1,39 +1,14 @@
-import facebookIcon from '../../assets/discover/figma/2c987.svg'
-import twitterIcon from '../../assets/footer-twitter.svg'
-import youtubeIcon from '../../assets/discover/figma/e8be7.svg'
 import footerLogo from '../../assets/discover/figma/d5ed2.svg'
 import chevronUp from '../../assets/discover/figma/0474f.svg'
 import './Footer.css'
 
-const socialLinks = [
-  {
-    label: 'Facebook',
-    href: '#facebook',
-    icon: facebookIcon,
-    className: 'social-link__icon--facebook',
-  },
-  {
-    label: 'Twitter',
-    href: '#twitter',
-    icon: twitterIcon,
-    className: 'social-link__icon--twitter',
-  },
-  {
-    label: 'YouTube',
-    href: '#youtube',
-    icon: youtubeIcon,
-    className: 'social-link__icon--youtube',
-  },
-]
-
+// Only routes that exist in the store; placeholder anchors used to land on the 404 page.
 const footerLinks = [
-  { label: 'Terms of service', href: '#terms-of-service' },
-  { label: 'Jobs', href: '#jobs' },
-  { label: 'Rules', href: '#rules' },
-  { label: 'Contracts', href: '#contracts' },
-  { label: 'Gift cards', href: '#gift-cards' },
-  { label: 'Facebook', href: '#facebook' },
-  { label: 'Twitter', href: '#twitter' },
+  { label: 'Store', href: '#/discover' },
+  { label: 'News', href: '#/news' },
+  { label: 'Support', href: '#/support' },
+  { label: 'Wishlist', href: '#/wishlist' },
+  { label: 'Wallet', href: '#/wallet' },
 ]
 
 function Footer() {
@@ -46,18 +21,10 @@ function Footer() {
       <div className="footer-content">
         <div className="footer-main">
           <div className="footer-copy">
-            <div className="social-links" aria-label="Social links">
-              {socialLinks.map(({ label, href, icon, className }) => (
-                <a className="social-link" href={href} aria-label={label} key={label}>
-                  <img className={className} src={icon} alt="" />
-                </a>
-              ))}
-            </div>
-
             <p className="legal-copy">
               <span>
-                &copy; 2025 Valve Corporation. All rights reserved. All trademarks are property of
-                their respective owners in the US and other countries.
+                &copy; {new Date().getFullYear()} VStore. All rights reserved. All trademarks are
+                property of their respective owners.
               </span>
               <span>VAT included in all prices where applicable</span>
             </p>

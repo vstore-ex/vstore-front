@@ -4,6 +4,7 @@ import AchievementsPage from '../AchievementsPage/AchievementsPage'
 import WishlistButton from '../../components/Wishlist/WishlistButton'
 import AddToCartButton from '../../components/Cart/AddToCartButton'
 import useCatalogResource from '../../hooks/useCatalogResource'
+import useDocumentTitle, { pageTitle } from '../../hooks/useDocumentTitle'
 import MediaGallery, { MediaImage } from '../../components/Catalog/Media'
 import ResourceStatus from '../../components/Catalog/ResourceStatus'
 import { productPresentation } from '../../api/product'
@@ -129,6 +130,16 @@ export default function ProductDetailPage({
   onSignIn,
 }) {
   const resource = useCatalogResource('game', String(id))
+  const gameTitle = resource.data?.title
+  useDocumentTitle(
+    resource.error?.status === 404
+      ? pageTitle('Game not found')
+      : gameTitle
+        ? showAchievements
+          ? pageTitle(`${gameTitle} achievements`)
+          : `${gameTitle} on VStore`
+        : pageTitle(),
+  )
   if (resource.error?.status === 404)
     return (
       <NotFoundPage

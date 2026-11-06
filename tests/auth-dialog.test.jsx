@@ -58,6 +58,7 @@ async function fillRegistration(user) {
   await user.type(screen.getByLabelText('PUT YOUR EMAIL HERE'), 'reader@example.com')
   await user.type(screen.getByLabelText('CREATE AN ACCOUNT NAME'), 'reader')
   await user.type(screen.getByLabelText('CREATE A PASSWORD'), 'longsecret1234')
+  await user.click(screen.getByRole('checkbox', { name: /I am 13/ }))
   await user.click(screen.getByRole('checkbox', { name: /I am human/ }))
 }
 
@@ -97,7 +98,8 @@ test('links login validation messages and focuses the first invalid field withou
 test('registration associates checkbox errors and follows the visual field order', async () => {
   const user = await open('register')
   const terms = screen.getByRole('checkbox', { name: /I am 13/ })
-  await user.click(terms)
+  // Consent must be given explicitly; the box starts unchecked.
+  expect(terms).not.toBeChecked()
   await user.click(screen.getByRole('button', { name: 'SIGN IN', exact: true }))
   expect(screen.getByLabelText('PUT YOUR EMAIL HERE')).toHaveFocus()
   expect(terms).toHaveAttribute('aria-invalid', 'true')
