@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../../auth/context'
 import { notificationDestination } from '../../api/notifications'
 import { useNotifications } from '../../notifications/context'
+import NotificationIcon from '../../notifications/NotificationIcon'
+import { dayGroup, fullTime, relativeTime } from '../../notifications/format'
 import '../../notifications/Notifications.css'
 
 function NotificationList() {
@@ -27,12 +29,23 @@ function NotificationList() {
   async function mark(ids) {
     if (await state.markAsRead(ids)) setSelected([])
   }
+  const groups = []
+  for (const item of data?.items || []) {
+    const label = dayGroup(item.created_at)
+    const group = groups.find((entry) => entry.label === label)
+    if (group) group.items.push(item)
+    else groups.push({ label, items: [item] })
+  }
   return (
     <section className="notifications-page" aria-labelledby="notifications-title">
-      <div className="notifications-heading">
+      <header className="notifications-heading">
         <div>
           <h1 id="notifications-title">Notifications</h1>
-          <p>Your updates and activity.</p>
+          <p>
+            {data
+              ? `${data.unread_count.toLocaleString()} unread · ${data.total.toLocaleString()} total`
+              : 'Your updates and activity.'}
+          </p>
         </div>
         <button
           className="button button--secondary"
@@ -41,40 +54,52 @@ function NotificationList() {
         >
           Refresh notifications
         </button>
-      </div>
+      </header>
       <div className="notifications-toolbar">
-        <label>
+        <label className="notifications-switch">
           <input
             type="checkbox"
             checked={list.loading ? list.retryQuery.unread_only : query.unread_only}
             disabled={disabled}
             onChange={(event) => change({ ...query, offset: 0, unread_only: event.target.checked })}
           />
+          <span className="notifications-switch__track" aria-hidden="true" />
           Unread only
         </label>
-        <button
-          className="button button--secondary"
-          disabled={disabled || !selection.length || !!list.error}
-          onClick={() => mark(selection)}
-        >
-          Mark selected as read
-        </button>
-        <button
-          className="button button--secondary"
-          disabled={disabled || !data?.unread_count || !!list.error}
-          onClick={() => mark(null)}
-        >
-          Mark all as read
-        </button>
+        <div className="notifications-toolbar__actions">
+          {selection.length > 0 && (
+            <span className="notifications-selection">{selection.length} selected</span>
+          )}
+          <button
+            className="button button--secondary"
+            disabled={disabled || !selection.length || !!list.error}
+            onClick={() => mark(selection)}
+          >
+            Mark selected as read
+          </button>
+          <button
+            className="button button--secondary"
+            disabled={disabled || !data?.unread_count || !!list.error}
+            onClick={() => mark(null)}
+          >
+            Mark all as read
+          </button>
+        </div>
       </div>
       {state.actionError && (
         <p className="notifications-error" role="alert">
           {state.actionError} Retry the action or refresh notifications.
         </p>
       )}
-      {state.message && <p role="status">{state.message}</p>}
+      {state.message && (
+        <p className="notifications-message" role="status">
+          {state.message}
+        </p>
+      )}
       {disabled && (
-        <p role="status">{busy ? 'Updating notifications…' : 'Loading notifications…'}</p>
+        <p className="notifications-loading" role="status">
+          {busy ? 'Updating notifications…' : 'Loading notifications…'}
+        </p>
       )}
       {list.error && (
         <div className="notifications-error" role="alert">
@@ -90,73 +115,97 @@ function NotificationList() {
         </div>
       )}
       {data && !data.items.length && !list.error && (
-        <p className="notifications-empty">
-          {query.unread_only ? 'No unread notifications.' : 'No notifications yet.'}
-        </p>
+        <div className="notifications-empty">
+          <NotificationIcon type="" />
+          <p>{query.unread_only ? 'No unread notifications.' : 'No notifications yet.'}</p>
+        </div>
       )}
-      {data && (
-        <ul className="notifications-list" aria-label="Notifications" aria-busy={disabled}>
-          {data.items.map((item) => {
-            const destination = notificationDestination(item)
-            const messageDestination = item.type === 'new_message' ? destination : null
-            return (
-              <li
-                key={item.id}
-                className={'notification-card' + (item.is_read ? '' : ' notification-card--unread')}
-              >
-                <div className="notification-body">
-                  <span className="notification-status">{item.is_read ? 'Read' : 'Unread'}</span>
-                  {messageDestination ? (
-                    <a className="notification-message-link" href={messageDestination.href}>
-                      <h2>{item.title}</h2>
-                      <p>{item.message}</p>
-                      <span>{messageDestination.label}</span>
-                    </a>
-                  ) : (
-                    <>
-                      <h2>{item.title}</h2>
-                      <p>{item.message}</p>
-                    </>
-                  )}
-                  <time dateTime={item.created_at}>
-                    {new Date(item.created_at).toLocaleString()}
-                  </time>
-                  {destination && !messageDestination && (
-                    <a href={destination.href}>{destination.label}</a>
-                  )}
-                </div>
-                <div className="notification-actions">
-                  {!item.is_read && (
-                    <label>
-                      <input
-                        type="checkbox"
-                        aria-label={'Select ' + item.title}
-                        checked={selection.includes(item.id)}
-                        disabled={disabled || !!list.error}
-                        onChange={(event) =>
-                          setSelected((previous) =>
-                            event.target.checked
-                              ? [...previous, item.id]
-                              : previous.filter((id) => id !== item.id),
-                          )
-                        }
-                      />
-                      Select
-                    </label>
-                  )}
-                  <button
-                    className="button button--secondary"
-                    aria-label={'Delete ' + item.title}
-                    disabled={disabled || !!list.error}
-                    onClick={() => state.remove(item.id)}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </li>
-            )
-          })}
-        </ul>
+      {data && !!data.items.length && (
+        <div className="notifications-groups" aria-busy={disabled}>
+          {groups.map((group) => (
+            <section key={group.label} className="notifications-group" aria-label={group.label}>
+              <h2 className="notifications-group__title">{group.label}</h2>
+              <ul className="notifications-list" aria-label={`${group.label} notifications`}>
+                {group.items.map((item) => {
+                  const destination = notificationDestination(item)
+                  const messageDestination = item.type === 'new_message' ? destination : null
+                  const unread = !item.is_read
+                  return (
+                    <li
+                      key={item.id}
+                      className={'notification-card' + (unread ? ' notification-card--unread' : '')}
+                    >
+                      <div className="notification-card__select">
+                        {unread && (
+                          <input
+                            type="checkbox"
+                            aria-label={'Select ' + item.title}
+                            checked={selection.includes(item.id)}
+                            disabled={disabled || !!list.error}
+                            onChange={(event) =>
+                              setSelected((previous) =>
+                                event.target.checked
+                                  ? [...previous, item.id]
+                                  : previous.filter((id) => id !== item.id),
+                              )
+                            }
+                          />
+                        )}
+                      </div>
+                      <NotificationIcon type={item.type} />
+                      <div className="notification-body">
+                        {/* Messages open the conversation from the whole card; others get a link. */}
+                        {messageDestination ? (
+                          <a className="notification-main-link" href={messageDestination.href}>
+                            <h3>{item.title}</h3>
+                            {item.message && <p>{item.message}</p>}
+                            <span className="notification-link">{messageDestination.label}</span>
+                          </a>
+                        ) : (
+                          <>
+                            <h3>{item.title}</h3>
+                            {item.message && <p>{item.message}</p>}
+                          </>
+                        )}
+                        <div className="notification-meta">
+                          <span
+                            className={
+                              'notification-status' + (unread ? ' notification-status--unread' : '')
+                            }
+                          >
+                            {unread ? 'Unread' : 'Read'}
+                          </span>
+                          <time dateTime={item.created_at} title={fullTime(item.created_at)}>
+                            {relativeTime(item.created_at)}
+                          </time>
+                          {destination && !messageDestination && (
+                            <a className="notification-link" href={destination.href}>
+                              {destination.label}
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                      <div className="notification-actions">
+                        <button
+                          type="button"
+                          className="notification-action notification-action--delete"
+                          aria-label={'Delete ' + item.title}
+                          title="Delete"
+                          disabled={disabled || !!list.error}
+                          onClick={() => state.remove(item.id)}
+                        >
+                          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path d="M5 7h14M10 11v6M14 11v6M6 7l1 12h10l1-12M9 7V4h6v3" />
+                          </svg>
+                        </button>
+                      </div>
+                    </li>
+                  )
+                })}
+              </ul>
+            </section>
+          ))}
+        </div>
       )}
       {data && total > 0 && (
         <nav className="notifications-pagination" aria-label="Notification pages">
