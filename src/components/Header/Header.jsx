@@ -22,6 +22,7 @@ function Header({
   activeView = 'discover',
   isAuthenticated = false,
   onSignIn,
+  onSignUp,
   onDiscover,
   onSupport,
   onCart,
@@ -264,9 +265,11 @@ function Header({
               Sign in
             </button>
           )}
-          <button className="button button--accent" type="button">
-            Download
-          </button>
+          {!isAuthenticated && !isLoggingOut && onSignUp && (
+            <button className="button button--accent" type="button" onClick={onSignUp}>
+              Create account
+            </button>
+          )}
         </div>
       </div>
     </header>
