@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { notificationDestination } from '../api/notifications'
+import { messageSoundEnabled, setMessageSoundEnabled } from './messageSound'
 import { useNotifications } from './context'
 import './Notifications.css'
 
@@ -24,6 +25,7 @@ export default function NotificationCenter() {
     requestDesktopPermission,
   } = useNotifications()
   const [open, setOpen] = useState(false)
+  const [soundOn, setSoundOn] = useState(messageSoundEnabled)
   const panelId = useId()
   const root = useRef(null)
   const toggle = useRef(null)
@@ -127,6 +129,18 @@ export default function NotificationCenter() {
               Desktop notifications are blocked in browser settings.
             </p>
           )}
+          <button
+            type="button"
+            className="notification-desktop-toggle"
+            aria-pressed={soundOn}
+            onClick={() => {
+              const next = !soundOn
+              setMessageSoundEnabled(next)
+              setSoundOn(next)
+            }}
+          >
+            {soundOn ? 'Disable message sound' : 'Enable message sound'}
+          </button>
           {error && (
             <div className="notification-error" role="alert">
               <p>{error}</p>
