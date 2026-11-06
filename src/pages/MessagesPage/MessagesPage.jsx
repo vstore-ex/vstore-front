@@ -1,6 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useAuth } from '../../auth/context'
-import { useNotifications } from '../../notifications/context'
 import {
   getMessageAttachment,
   messageError,
@@ -23,14 +22,6 @@ let nextImageDraftId = 0
 function Icon({ name }) {
   const paths = {
     back: <path d="M15 5l-7 7 7 7" />,
-    refresh: (
-      <>
-        <path d="M20 11a8 8 0 0 0-14.6-4.5L4 8" />
-        <path d="M4 4v4h4" />
-        <path d="M4 13a8 8 0 0 0 14.6 4.5L20 16" />
-        <path d="M20 20v-4h-4" />
-      </>
-    ),
     attach: (
       <path d="M20.5 11.5l-8.1 8.1a5 5 0 0 1-7.1-7.1l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7l-8.5 8.5a1.7 1.7 0 0 1-2.4-2.4l7.8-7.8" />
     ),
@@ -396,16 +387,6 @@ function Conversation({
             )}
           </div>
         </div>
-        <button
-          type="button"
-          className="messages-icon-button"
-          aria-label="Refresh messages"
-          title="Refresh messages"
-          disabled={state.loading}
-          onClick={state.refresh}
-        >
-          <Icon name="refresh" />
-        </button>
       </header>
       <div className="conversation-body">
         {state.loading && (
@@ -708,8 +689,8 @@ function Conversation({
           <div className="message-send-error">
             <ErrorNotice error={state.sendError} compact />
             <p>
-              Your draft is preserved. Refresh the conversation before retrying if delivery is
-              uncertain.
+              Your draft is preserved. If delivery is uncertain, check the conversation before
+              retrying.
             </p>
           </div>
         )}
@@ -723,30 +704,26 @@ function Conversation({
   )
 }
 
-function ConnectionStatus({ value }) {
-  const label =
-    value === 'connected'
-      ? 'Live updates connected'
-      : value === 'connecting'
-        ? 'Connecting to live updates...'
-        : 'Live updates unavailable. Reconnecting when possible; you can refresh manually.'
-  const short = value === 'connected' ? 'Live' : value === 'connecting' ? 'Connecting…' : 'Offline'
-  return (
-    <p className={'messages-connection messages-connection--' + value} role="status" title={label}>
-      <span className="messages-connection-dot" aria-hidden="true" />
-      <span aria-hidden="true">{short}</span>
-      <span className="messages-visually-hidden">{label}</span>
-    </p>
-  )
-}
-
 function MessagesSession({ conversationId, owner }) {
   const inbox = useInbox()
-  const { messageConnection } = useNotifications()
   const [drafts, setDrafts] = useState({})
   const [imageDrafts, setImageDrafts] = useState({})
   const [query, setQuery] = useState('')
   const imageDraftsRef = useRef(imageDrafts)
+  const page = useRef(null)
+  useLayoutEffect(() => {
+    // Fill the viewport below the store header, whatever height it wraps to.
+    const node = page.current
+    if (!node) return
+    const measure = () =>
+      node.style.setProperty(
+        '--messages-top',
+        Math.max(0, node.getBoundingClientRect().top + window.scrollY) + 'px',
+      )
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [])
   useEffect(
     () => () => {
       Object.values(imageDraftsRef.current)
@@ -772,24 +749,11 @@ function MessagesSession({ conversationId, owner }) {
       )
     : inbox.items
   return (
-    <div className="messages-page">
+    <div className="messages-page" ref={page}>
       <div className={'messages-layout' + (conversationId ? ' messages-layout--open' : '')}>
         <section className="messages-inbox" aria-labelledby="messages-title">
           <header className="messages-inbox-heading">
-            <div className="messages-inbox-title">
-              <h1 id="messages-title">Messages</h1>
-              <ConnectionStatus value={messageConnection} />
-            </div>
-            <button
-              type="button"
-              className="messages-icon-button"
-              aria-label="Refresh conversations"
-              title="Refresh conversations"
-              disabled={inbox.loading}
-              onClick={() => inbox.load()}
-            >
-              <Icon name="refresh" />
-            </button>
+            <h1 id="messages-title">Messages</h1>
           </header>
           <p className="messages-visually-hidden">Private conversations with your friends.</p>
           <div className="messages-search">

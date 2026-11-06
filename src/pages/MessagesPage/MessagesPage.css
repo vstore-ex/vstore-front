@@ -3,7 +3,8 @@
  * sidebar and history scroll independently while the composer stays in reach.
  */
 .messages-page {
-  --messages-header-offset: 63px;
+  /* Set by MessagesSession from the page's real offset below the store header. */
+  --messages-top: 110px;
   --messages-bubble-radius: 18px;
   --messages-bubble-tight: 6px;
   --messages-bubble-other: var(--color-control);
@@ -14,9 +15,9 @@
   --messages-selected: rgb(123 199 77 / 16%);
   --messages-muted: var(--color-text-muted);
 
-  width: min(1240px, calc(100% - 48px));
-  margin: 0 auto;
-  padding: var(--space-6) 0 var(--space-10);
+  width: 100%;
+  margin: 0;
+  padding: 0;
   overflow-wrap: anywhere;
 }
 
@@ -28,13 +29,10 @@
 
 .messages-layout {
   display: grid;
-  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
-  height: clamp(540px, calc(100svh - var(--messages-header-offset) - 96px), 920px);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
+  grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+  height: max(480px, calc(100svh - var(--messages-top)));
+  border-top: 1px solid var(--messages-divider);
   background: var(--color-surface);
-  overflow: hidden;
-  box-shadow: 0 24px 60px rgb(0 0 0 / 28%);
 }
 
 /* ---------- Shared controls ---------- */
@@ -150,39 +148,12 @@
   gap: var(--space-2);
   padding: var(--space-5) var(--space-4) var(--space-2) var(--space-5);
 }
-.messages-inbox-title {
-  min-width: 0;
-}
 .messages-page h1 {
   margin: 0;
   font-size: 28px;
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.15;
-}
-
-.messages-connection {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin: var(--space-1) 0 0;
-  color: var(--messages-muted);
-  font-size: 12px;
-  font-weight: 500;
-}
-.messages-connection-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--color-error);
-}
-.messages-connection--connected .messages-connection-dot {
-  background: var(--color-success);
-  box-shadow: 0 0 0 3px rgb(157 222 117 / 18%);
-}
-.messages-connection--connecting .messages-connection-dot {
-  background: var(--color-warning);
-  animation: messages-pulse 1.2s ease-in-out infinite;
 }
 
 .messages-search {
@@ -944,15 +915,9 @@
     background-position: -150% 0;
   }
 }
-@keyframes messages-pulse {
-  50% {
-    opacity: 0.35;
-  }
-}
 @media (prefers-reduced-motion: reduce) {
   .message-bubble,
-  .message-image-placeholder,
-  .messages-connection--connecting .messages-connection-dot {
+  .message-image-placeholder {
     animation: none;
   }
 }
@@ -960,17 +925,8 @@
 /* ---------- Compact: one pane at a time, like Messages on iPhone ---------- */
 
 @media (max-width: 800px) {
-  .messages-page {
-    width: 100%;
-    padding: 0;
-  }
   .messages-layout {
     grid-template-columns: minmax(0, 1fr);
-    height: calc(100svh - var(--messages-header-offset));
-    min-height: 480px;
-    border: 0;
-    border-radius: 0;
-    box-shadow: none;
   }
   .messages-inbox {
     border-right: 0;
