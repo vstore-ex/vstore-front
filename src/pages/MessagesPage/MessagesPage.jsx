@@ -52,6 +52,16 @@ function Icon({ name }) {
     bubble: (
       <path d="M12 4c4.97 0 9 3.36 9 7.5S16.97 19 12 19c-1 0-1.97-.13-2.87-.38L4.5 20.5l1.33-3.55C4.07 15.6 3 13.65 3 11.5 3 7.36 7.03 4 12 4z" />
     ),
+    edit: <path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />,
+    trash: (
+      <>
+        <path d="M4 6h16" />
+        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+        <path d="M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14" />
+        <path d="M10 11v6" />
+        <path d="M14 11v6" />
+      </>
+    ),
   }
   return (
     <svg
@@ -247,6 +257,7 @@ function Conversation({
   const state = useConversation(id, owner, onInboxUpdate)
   const [notice, setNotice] = useState('')
   const [attachmentError, setAttachmentError] = useState('')
+  const [editing, setEditing] = useState(null)
   const [atBottom, setAtBottom] = useState(true)
   const [dragging, setDragging] = useState(false)
   const heading = useRef(null)
@@ -325,6 +336,18 @@ function Conversation({
       })),
     ])
     setAttachmentError('')
+  }
+  function startEdit(item) {
+    setEditing({ id: item.id, draft: item.content || '' })
+    setNotice('')
+  }
+  async function saveEdit() {
+    if (!editing) return
+    if (await state.edit(editing.id, editing.draft)) setEditing(null)
+  }
+  function removeFromMessages(item) {
+    setEditing((current) => (current?.id === item.id ? null : current))
+    void state.remove(item.id)
   }
   const canWrite = !!state.conversation?.can_send && !state.sending
   const canSend =
@@ -457,6 +480,8 @@ function Conversation({
                 {rows.map(({ item, date, separator, first, last }) => {
                   const own = item.sender.id === owner
                   const imagesOnly = !item.content && item.attachments.length > 0
+                  const deleted = !!item.deleted_at
+                  const editingThis = editing?.id === item.id
                   return (
                     <li
                       key={item.id}
@@ -491,24 +516,109 @@ function Conversation({
                           )}
                           :{' '}
                         </span>
-                        {item.content && <p>{item.content}</p>}
-                        {!!item.attachments.length && (
-                          <div
-                            className={
-                              'message-attachments message-attachments--' +
-                              Math.min(item.attachments.length, 2)
-                            }
-                            aria-label="Message attachments"
+                        {editing && editingThis ? (
+                          <form
+                            className="message-edit"
+                            onSubmit={(event) => {
+                              event.preventDefault()
+                              void saveEdit()
+                            }}
                           >
-                            {item.attachments.map((attachment, index) => (
-                              <MessageImage
-                                key={attachment.id}
-                                attachment={attachment}
-                                conversationId={id}
-                                index={index}
-                              />
-                            ))}
-                          </div>
+                            <textarea
+                              className="message-edit-input"
+                              rows={2}
+                              maxLength={4000}
+                              autoFocus
+                              value={editing.draft}
+                              onChange={(event) =>
+                                setEditing((current) =>
+                                  current ? { ...current, draft: event.target.value } : current,
+                                )
+                              }
+                              onKeyDown={(event) => {
+                                if (event.key === 'Escape') {
+                                  event.preventDefault()
+                                  setEditing(null)
+                                }
+                                if (event.key === 'Enter' && !event.shiftKey) {
+                                  event.preventDefault()
+                                  void saveEdit()
+                                }
+                              }}
+                            />
+                            <div className="message-edit-actions">
+                              <span className="message-edit-hint">
+                                Enter saves, Shift+Enter inserts a newline.
+                              </span>
+                              <button type="submit" className="messages-text-button">
+                                Save
+                              </button>
+                              <button
+                                type="button"
+                                className="messages-text-button"
+                                onClick={() => setEditing(null)}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </form>
+                        ) : deleted ? (
+                          <p className="message-deleted-note" role="status">
+                            Message deleted
+                          </p>
+                        ) : (
+                          <>
+                            {item.content && (
+                              <p>
+                                {item.content}
+                                {item.edited_at && (
+                                  <span className="message-edited"> (edited)</span>
+                                )}
+                              </p>
+                            )}
+                            {!!item.attachments.length && (
+                              <div
+                                className={
+                                  'message-attachments message-attachments--' +
+                                  Math.min(item.attachments.length, 2)
+                                }
+                                aria-label="Message attachments"
+                              >
+                                {item.attachments.map((attachment, index) => (
+                                  <MessageImage
+                                    key={attachment.id}
+                                    attachment={attachment}
+                                    conversationId={id}
+                                    index={index}
+                                  />
+                                ))}
+                              </div>
+                            )}
+                          </>
+                        )}
+                        {own && !deleted && !editingThis && (
+                          <span className="message-actions">
+                            {item.content && (
+                              <button
+                                type="button"
+                                className="message-action"
+                                aria-label="Edit message"
+                                title="Edit"
+                                onClick={() => startEdit(item)}
+                              >
+                                <Icon name="edit" />
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              className="message-action"
+                              aria-label="Delete message"
+                              title="Delete"
+                              onClick={() => removeFromMessages(item)}
+                            >
+                              <Icon name="trash" />
+                            </button>
+                          </span>
                         )}
                       </div>
                       {own && item.id === lastOwn?.id && (
@@ -694,6 +804,7 @@ function Conversation({
             </p>
           </div>
         )}
+        {state.editError && <ErrorNotice error={state.editError} compact />}
         {notice && (
           <p role="status" className="messages-visually-hidden">
             {notice}

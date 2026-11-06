@@ -594,6 +594,87 @@
   font-weight: 500;
 }
 
+.message-row {
+  position: relative;
+}
+.message-actions {
+  position: absolute;
+  top: -10px;
+  right: 6px;
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--messages-divider);
+  border-radius: 10px;
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-popover);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+.message-row:hover .message-actions,
+.message-row:focus-within .message-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+.message-row--own .message-actions {
+  right: auto;
+  left: 6px;
+}
+.message-action {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 8px;
+  color: var(--color-text);
+  background: transparent;
+  cursor: pointer;
+}
+.message-action:hover {
+  background: var(--messages-hover);
+}
+.message-edited {
+  font-size: 11px;
+  opacity: 0.7;
+}
+.message-deleted-note {
+  margin: 0;
+  color: var(--messages-muted);
+  font-style: italic;
+}
+
+.message-edit {
+  display: grid;
+  gap: 6px;
+  min-width: min(320px, 70vw);
+}
+.message-edit-input {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--messages-divider);
+  border-radius: 10px;
+  color: inherit;
+  background: rgb(0 0 0 / 20%);
+  font: inherit;
+  line-height: 1.45;
+  resize: vertical;
+}
+.message-edit-input:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+.message-edit-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.message-edit-hint {
+  flex: 1;
+  color: var(--messages-muted);
+  font-size: 11px;
+}
+
 .conversation-jump {
   position: absolute;
   right: var(--space-5);
