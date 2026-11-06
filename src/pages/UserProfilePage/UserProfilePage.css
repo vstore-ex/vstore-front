@@ -1,51 +1,289 @@
+/* Steam-style public profile. Colors come from tokens.css. */
+
 .user-profile-page {
+  --profile-width: min(1680px, calc(100% - 2 * clamp(16px, 3vw, 56px)));
+
   min-height: 75vh;
   color: var(--color-text);
-  background:
-    radial-gradient(ellipse at top right, #7bc74d12, transparent 65%), var(--color-surface);
+  background: var(--color-surface);
+  overflow-wrap: anywhere;
 }
 .user-profile-inner {
-  width: min(1140px, calc(100% - 64px));
-  margin: auto;
-  padding: 36px 0 64px;
+  width: var(--profile-width);
+  margin: 0 auto;
 }
-.profile-back {
-  display: inline-block;
-  margin-bottom: 32px;
-  color: #a5d985;
+
+/* Header band: avatar frame, identity, actions. */
+.profile-hero {
+  background:
+    radial-gradient(ellipse at 15% 0%, rgb(123 199 77 / 18%), transparent 60%),
+    linear-gradient(180deg, var(--color-control), var(--color-surface));
+  border-bottom: 1px solid var(--color-border);
 }
-.public-profile-header {
-  display: flex;
+.profile-hero__inner {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 32px;
+  gap: clamp(20px, 2.4vw, 36px);
+  padding: clamp(28px, 4vw, 48px) 0;
+}
+.profile-avatar-frame {
+  padding: 3px;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-border-control));
+  box-shadow: 0 10px 30px rgb(0 0 0 / 45%);
 }
 .public-profile-avatar {
-  width: 177px;
-  height: 177px;
-  flex-shrink: 0;
-  border-radius: 12px;
+  display: block;
+  width: clamp(112px, 11vw, 166px);
+  aspect-ratio: 1;
   object-fit: cover;
   background: var(--color-control);
 }
 .public-profile-identity {
   min-width: 0;
-  overflow-wrap: anywhere;
 }
 .public-profile-identity h1 {
-  margin: 8px 0;
-  font-size: clamp(28px, 4vw, 48px);
+  margin: 0;
+  font-size: clamp(26px, 2.6vw, 38px);
+  line-height: 1.15;
 }
-.public-profile-identity p {
-  margin: 10px 0;
-  color: #ccd0d5;
+.profile-real-name {
+  margin: 4px 0 0;
+  color: var(--color-text-muted);
+  font-size: 16px;
+}
+.profile-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 12px 0 0;
+  color: var(--color-text-muted);
+  font-size: 13px;
 }
 .profile-role {
-  color: #a5d985;
+  color: var(--color-accent);
+  font-weight: 600;
+  text-transform: capitalize;
 }
-.public-profile-identity .profile-user-id {
-  margin: 8px 0;
+.profile-hero__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-2);
+  max-width: 340px;
+}
+.profile-hero__actions .profile-social {
+  justify-content: flex-end;
+  margin-top: 0;
+}
+
+/* Content: showcases (main) + summary (side), about 2:1 like Steam. */
+.profile-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(240px, 22vw, 320px);
+  gap: clamp(20px, 2.4vw, 36px);
+  align-items: start;
+  padding: var(--space-6) 0 var(--space-12);
+}
+.profile-main {
+  display: grid;
+  gap: var(--space-5);
+  min-width: 0;
+}
+.profile-showcase {
+  scroll-margin-top: var(--space-4);
+  padding: var(--space-4) var(--space-5) var(--space-5);
+  background: var(--color-surface-raised);
+}
+.profile-showcase h2 {
+  margin: 0 0 var(--space-4);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.profile-empty {
+  margin: 0;
+  color: var(--color-text-muted);
   font-size: 14px;
 }
+.profile-showcase__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.profile-achievement {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-3);
+  background: var(--color-control);
+}
+.profile-achievement__icon {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+}
+.profile-achievement > div {
+  min-width: 0;
+}
+.profile-achievement h3 {
+  margin: 0;
+  font-size: 15px;
+}
+.profile-achievement p {
+  margin: 4px 0 0;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.profile-achievement__date {
+  font-size: 12px;
+}
+.profile-showcase__more {
+  margin: var(--space-3) 0 0;
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+.profile-showcase__error p {
+  margin: 0 0 var(--space-2);
+}
+
+/* Recent activity: one row per game, like "recently played" on Steam. */
+.profile-activity {
+  display: grid;
+  grid-template-columns: clamp(140px, 14vw, 184px) minmax(0, 1fr);
+  gap: var(--space-4);
+  padding: var(--space-3);
+  background: var(--color-control);
+}
+.profile-activity + .profile-activity {
+  margin-top: var(--space-2);
+}
+.profile-activity__capsule {
+  display: block;
+  aspect-ratio: 184 / 69;
+  overflow: hidden;
+  background: var(--color-surface);
+}
+.profile-activity__capsule > :is(img, .catalog-placeholder) {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: cover;
+}
+.profile-activity__body {
+  min-width: 0;
+}
+.profile-activity h3 {
+  margin: 0;
+  font-size: 16px;
+}
+.profile-activity h3 a {
+  color: var(--color-text);
+  text-decoration: none;
+}
+.profile-activity h3 a:hover {
+  color: var(--color-accent);
+}
+.profile-activity__meta {
+  margin: 4px 0 var(--space-2);
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+.profile-activity__icons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.profile-activity__icons img,
+.profile-activity__icons .catalog-placeholder {
+  display: block;
+  width: 32px;
+  height: 32px;
+  min-height: 0;
+  object-fit: cover;
+  font-size: 0;
+}
+
+/* Side column. */
+.profile-sidebar {
+  position: sticky;
+  top: var(--space-4);
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: var(--color-surface-raised);
+}
+.profile-status {
+  margin: 0;
+  font-size: 18px;
+}
+.profile-status--online {
+  color: var(--color-success);
+}
+.public-profile-stats {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+}
+.public-profile-stats > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--color-border);
+}
+.public-profile-stats dt {
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+.public-profile-stats dt a {
+  color: var(--color-text);
+  text-decoration: none;
+}
+.public-profile-stats dt a:hover {
+  color: var(--color-accent);
+}
+.public-profile-stats dd {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.profile-sidebar__links {
+  display: grid;
+  gap: 2px;
+}
+.profile-sidebar__links a {
+  padding: 6px 4px;
+  color: var(--color-text);
+  font-size: 14px;
+  text-decoration: none;
+}
+.profile-sidebar__links a:hover {
+  color: var(--color-accent);
+}
+
+.profile-missing {
+  padding: var(--space-12) 0;
+}
+.profile-missing a {
+  color: var(--color-accent);
+}
+
 .user-profile-page button,
 .profile-edit,
 .profile-friend-menu summary {
@@ -115,96 +353,32 @@
   margin: 4px 0 0;
   color: var(--color-error);
 }
-.public-profile-stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-  margin: 40px 0;
-}
-.public-profile-stats > div {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 24px;
-  background: var(--color-control);
-  border-radius: 10px;
-  text-align: center;
-  overflow-wrap: anywhere;
-}
-.public-profile-stats dt {
-  color: #ccd0d5;
-}
-.public-profile-stats dd {
-  margin: 0;
-  font-size: clamp(22px, 3vw, 34px);
-  font-weight: 600;
-}
-.profile-achievements h2 {
-  font-size: 30px;
-  margin: 0 0 24px;
-}
-.profile-achievements-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-}
-.profile-achievement {
-  display: flex;
-  align-items: flex-start;
-  gap: 18px;
-  padding: 20px;
-  background: var(--color-control);
-  border-radius: 10px;
-  min-width: 0;
-}
-.profile-achievement__icon {
-  flex-shrink: 0;
-  width: 72px;
-  height: 72px;
-  object-fit: cover;
-  border-radius: 8px;
-}
-.profile-achievement > div {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-.profile-achievement h3 {
-  margin: 0;
-  font-size: 20px;
-}
-.profile-achievement p {
-  color: #ccd0d5;
-  line-height: 1.5;
-}
-.profile-achievement a {
-  color: #a5d985;
-}
-@media (max-width: 700px) {
-  .user-profile-inner {
-    width: calc(100% - 32px);
-    padding-top: 24px;
+
+@media (max-width: 900px) {
+  .profile-hero__inner {
+    grid-template-columns: auto minmax(0, 1fr);
   }
-  .public-profile-header {
+  .profile-hero__actions {
+    grid-column: 1 / -1;
     align-items: flex-start;
-    gap: 20px;
-    flex-direction: column;
+    max-width: none;
   }
-  .public-profile-avatar {
-    width: 112px;
-    height: 112px;
+  .profile-hero__actions .profile-social {
+    justify-content: flex-start;
   }
-  .public-profile-stats {
-    gap: 8px;
+  .profile-content {
+    grid-template-columns: minmax(0, 1fr);
   }
-  .public-profile-stats > div {
-    padding: 16px 6px;
-    font-size: 13px;
+  .profile-sidebar {
+    position: static;
+    order: -1;
   }
-  .profile-achievements-grid {
-    grid-template-columns: 1fr;
+}
+@media (max-width: 560px) {
+  .profile-activity {
+    grid-template-columns: minmax(0, 1fr);
   }
-  .profile-achievement {
-    padding: 16px;
-    gap: 12px;
+  .profile-showcase {
+    padding-inline: var(--space-3);
   }
 }
