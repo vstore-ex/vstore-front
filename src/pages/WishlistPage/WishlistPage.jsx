@@ -79,9 +79,14 @@ export default function WishlistPage() {
           {wishlist.items.map((item) => (
             <article className="wishlist-item" key={item.id}>
               <div className="wishlist-item__main">
-                <MediaImage className="wishlist-item__cover" src={item.image} alt={item.title} />
+                <MediaImage
+                  className="wishlist-item__cover"
+                  src={item.capsuleImage || item.image}
+                  fallbackSrc={item.image}
+                  alt={item.title}
+                />
                 <div className="wishlist-item__info">
-                  <span className="wishlist-item__type">{item.type}</span>
+                  {item.type && <span className="wishlist-item__type">{item.type}</span>}
                   <h2>
                     <a href={`#/games/${item.id}`}>{item.title}</a>
                   </h2>

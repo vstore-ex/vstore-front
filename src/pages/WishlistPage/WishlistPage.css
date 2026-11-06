@@ -487,3 +487,36 @@
   opacity: 0.5;
   cursor: wait;
 }
+
+/* ---------- Steam wishlist rows: 292x136 capsule, details, price and actions ---------- */
+.wishlist-page .wishlist-page__inner {
+  width: min(1680px, calc(100% - 2 * clamp(16px, 3vw, 56px)));
+  padding-top: 24px;
+}
+.wishlist-page .wishlist-page__header h1 {
+  font-size: clamp(24px, 2vw, 32px);
+}
+.wishlist-page .wishlist-list {
+  gap: 6px;
+}
+.wishlist-page .wishlist-item {
+  min-height: 0;
+  gap: var(--space-4);
+  padding: 10px;
+  border-radius: 0;
+}
+.wishlist-page .wishlist-item__main {
+  grid-template-columns: clamp(184px, 18vw, 292px) minmax(0, 1fr);
+  gap: var(--space-4);
+}
+.wishlist-page .wishlist-item__cover {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 460 / 215;
+  border-radius: 0;
+}
+@media (max-width: 760px) {
+  .wishlist-page .wishlist-item__main {
+    grid-template-columns: 120px minmax(0, 1fr);
+  }
+}

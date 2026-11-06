@@ -881,3 +881,236 @@
 .review-card__reactions button span {
   font-variant-numeric: tabular-nums;
 }
+
+/* ---------- Steam app page layout (proportions only; colors from tokens) ---------- */
+
+.product-detail-page .product-detail-page__inner {
+  width: min(1680px, calc(100% - 2 * clamp(16px, 3vw, 56px)));
+  padding-top: 20px;
+}
+.product-breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+.product-breadcrumbs a {
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+.product-breadcrumbs a:hover {
+  color: var(--color-accent);
+}
+.product-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: 14px;
+}
+.product-detail-page .product-title-row h1 {
+  margin: 0;
+  font-size: clamp(24px, 2vw, 32px);
+  line-height: 1.2;
+}
+.product-hub-link {
+  padding: 6px 14px;
+  border-radius: 2px;
+  color: var(--color-text);
+  background: var(--color-control);
+  font-size: 13px;
+  text-decoration: none;
+}
+.product-hub-link:hover {
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+}
+
+/* Highlight player 616 : info column 324. */
+.product-glance {
+  display: grid;
+  grid-template-columns: minmax(0, 616fr) minmax(0, 324fr);
+  gap: 16px;
+  padding: 16px;
+  background: rgb(0 0 0 / 20%);
+}
+.product-glance__media {
+  min-width: 0;
+}
+.product-detail-page .product-glance .catalog-media-stage {
+  aspect-ratio: 16 / 9;
+  border-radius: 0;
+}
+.product-detail-page .product-glance .product-gallery__thumbs {
+  grid-auto-columns: calc((100% - 5 * 6px) / 6);
+  gap: 6px;
+  margin-top: 6px;
+}
+.product-detail-page .product-glance .product-gallery__thumb {
+  aspect-ratio: 116 / 65;
+  border-radius: 0;
+}
+.product-glance .product-sidebar {
+  gap: 12px;
+}
+.product-glance .product-sidebar::before {
+  display: none;
+}
+.product-glance .product-sidebar__cover {
+  aspect-ratio: 460 / 215;
+  margin: 0;
+  object-fit: cover;
+}
+.product-glance .product-sidebar__description {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.product-glance .product-meta {
+  gap: 6px;
+  font-size: 12px;
+  line-height: 1.35;
+}
+.product-glance .product-meta__row {
+  grid-template-columns: 100px minmax(0, 1fr);
+}
+.product-glance .product-meta dd {
+  text-align: left;
+}
+.product-tags-block {
+  display: grid;
+  gap: 6px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+.product-glance .product-tags {
+  gap: 4px;
+}
+.product-detail-page .product-glance .product-tags a {
+  padding: 2px 7px;
+  font-size: 12px;
+}
+
+.product-queue {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 16px 0 0;
+  padding: 12px 16px;
+  background: var(--color-surface-raised);
+}
+.product-queue .product-action {
+  width: auto;
+}
+
+/* Left column 616 : right column 308. */
+.product-detail-page .product-detail-layout {
+  grid-template-columns: minmax(0, 616fr) minmax(0, 308fr);
+  gap: 24px;
+  align-items: start;
+  margin-top: 24px;
+}
+.product-detail-page .product-main > .detail-section,
+.product-detail-page .product-main > section {
+  margin-top: 28px;
+}
+.product-detail-page .product-main > .product-purchase {
+  margin-top: 0;
+}
+.product-purchase {
+  position: relative;
+  padding: 16px 16px 26px;
+  background: var(--color-surface-raised);
+}
+.product-detail-page .product-purchase h2 {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.3;
+}
+.product-purchase__action {
+  position: absolute;
+  right: 16px;
+  bottom: -18px;
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  padding: 2px;
+  background: var(--color-page);
+}
+.product-purchase__action .detail-price {
+  margin: 0;
+  padding: 0 10px;
+}
+.product-purchase__action .product-action {
+  width: auto;
+  min-width: 140px;
+}
+.product-side-column {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+.product-side-column .product-rating {
+  margin: 0;
+}
+.product-detail-page .product-side-column .product-achievements {
+  margin: 0;
+  padding: 14px;
+  background: var(--color-surface-raised);
+}
+.product-detail-page .product-side-column .product-achievements h2 {
+  font-size: 15px;
+  line-height: 1.3;
+  margin-bottom: 12px;
+}
+.product-detail-page .product-side-column .achievement-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.product-detail-page .product-side-column .achievement-card h3 {
+  font-size: 12px;
+}
+.product-detail-page .product-side-column .achievement-card p {
+  font-size: 11px;
+}
+.product-detail-page .product-main h2,
+.product-detail-page > .product-detail-page__inner > section h2 {
+  font-size: 15px;
+  line-height: 1.3;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+#product-community {
+  scroll-margin-top: var(--space-4);
+}
+
+@media (max-width: 1100px) {
+  .product-glance {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+  .product-detail-page .product-detail-layout {
+    grid-template-columns: minmax(0, 1fr) 280px;
+  }
+}
+@media (max-width: 760px) {
+  .product-glance,
+  .product-detail-page .product-detail-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .product-glance {
+    padding: 0;
+    background: none;
+  }
+  .product-detail-page .product-main {
+    display: block;
+  }
+  .product-purchase__action {
+    position: static;
+    margin-top: var(--space-3);
+    justify-content: flex-end;
+  }
+}

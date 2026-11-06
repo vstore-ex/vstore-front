@@ -94,7 +94,7 @@ function ProductCard({ product, onSelect }) {
           )}
         </span>
 
-        <span className="product-card__type">{product.type}</span>
+        {product.type && <span className="product-card__type">{product.type}</span>}
         <span className="product-card__title">{product.title}</span>
 
         {product.discount ? (

@@ -143,7 +143,7 @@ describe('not-found and library navigation', () => {
     expect(screen.getByText('404')).toBeInTheDocument()
     expect(catalogRequests()).toHaveLength(0)
     await userEvent.setup().click(screen.getByRole('link', { name: 'Back to store' }))
-    await screen.findByText('Orbit', { selector: '.product-card__title' })
+    await screen.findByText('Orbit', { selector: '.store-row__title' })
   })
   test.each(['loading', 'error'])('404 is public when auth is %s', async (initialStatus) => {
     setLocation('/#/missing')
@@ -251,7 +251,7 @@ describe('catalog URL state (#22)', () => {
     setLocation('/discover?view=catalog&tag_id=7&page=2')
     const user = userEvent.setup()
     render(<Store />)
-    await screen.findByText('Game 1', { selector: '.product-card__title' })
+    await screen.findByText('Game 1', { selector: '.store-row__title' })
     expect(lastCatalogQuery().get('tag_id')).toBe('7')
     expect(lastCatalogQuery().get('skip')).toBe('24')
     expect(lastCatalogQuery().get('limit')).toBe('25')

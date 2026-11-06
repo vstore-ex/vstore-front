@@ -1,8 +1,8 @@
 import { useId, useState } from 'react'
+import { GameRow } from '../../components/Store/StoreParts'
 import Markdown from 'react-markdown'
 import useCatalogResource from '../../hooks/useCatalogResource'
 import ResourceStatus from '../../components/Catalog/ResourceStatus'
-import { MediaImage } from '../../components/Catalog/Media'
 import UserLink from '../../components/User/UserLink'
 import './SearchResults.css'
 
@@ -25,34 +25,7 @@ const categories = {
 }
 
 function GameResult({ game, onProductSelect }) {
-  return (
-    <a
-      className="search-result"
-      href={'#/games/' + encodeURIComponent(game.id)}
-      onClick={(event) => {
-        if (
-          !event.ctrlKey &&
-          !event.metaKey &&
-          !event.shiftKey &&
-          !event.altKey &&
-          onProductSelect
-        ) {
-          event.preventDefault()
-          onProductSelect(game.id)
-        }
-      }}
-    >
-      <MediaImage src={game.headerImage || game.image} alt="" />
-      <div>
-        <h2>{game.title}</h2>
-        {game.developer && <p>{game.developer}</p>}
-        <span>
-          {game.originalPrice && <del>{game.originalPrice} </del>}
-          {game.price}
-        </span>
-      </div>
-    </a>
-  )
+  return <GameRow game={game} onSelect={onProductSelect} />
 }
 
 function ReviewResult({ review }) {
@@ -100,7 +73,7 @@ function CategoryResults({ category, query, onProductSelect }) {
             : categories[category].empty}
         </p>
       )}
-      <div className="search-results">
+      <div className={'search-results search-results--' + category}>
         {resource.data?.map((item) =>
           category === 'games' ? (
             <GameResult key={item.id} game={item} onProductSelect={onProductSelect} />
