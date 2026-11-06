@@ -134,8 +134,7 @@ function Conversation({ id, owner, draft, files, changeDraft, changeFiles, onInb
     })
     return () => cancelAnimationFrame(frame)
   }, [newestId])
-  async function send(event) {
-    event.preventDefault()
+  async function send() {
     setNotice('')
     if (
       await state.send(
@@ -150,6 +149,30 @@ function Conversation({ id, owner, draft, files, changeDraft, changeFiles, onInb
       setNotice('Message sent.')
     }
   }
+  function addFiles(selected) {
+    const nextFiles = [...files.map((entry) => entry.file), ...selected]
+    const error = messageFilesError(nextFiles)
+    if (error) {
+      setAttachmentError(error)
+      return
+    }
+    changeFiles([
+      ...files,
+      ...selected.map((file) => ({
+        file,
+        previewUrl: URL.createObjectURL(file),
+        key: ++nextImageDraftId,
+      })),
+    ])
+    setAttachmentError('')
+  }
+  const canSend =
+    !state.sending &&
+    !state.loading &&
+    !state.error &&
+    state.conversation?.can_send &&
+    (draft.trim() || files.length) &&
+    draft.length <= 4000
   async function older() {
     const box = viewport.current
     const height = box?.scrollHeight || 0
@@ -283,7 +306,22 @@ function Conversation({ id, owner, draft, files, changeDraft, changeFiles, onInb
           )}
         </>
       )}
-      <form className="message-composer" onSubmit={send}>
+      <form
+        className="message-composer"
+        onSubmit={(event) => {
+          event.preventDefault()
+          void send()
+        }}
+        onDragOver={(event) => event.preventDefault()}
+        onDrop={(event) => {
+          event.preventDefault()
+          const images = Array.from(event.dataTransfer?.files || []).filter((file) =>
+            file.type.startsWith('image/'),
+          )
+          if (!images.length) return
+          addFiles(images)
+        }}
+      >
         <label htmlFor="message-draft">Your message</label>
         <textarea
           id="message-draft"
@@ -295,6 +333,19 @@ function Conversation({ id, owner, draft, files, changeDraft, changeFiles, onInb
           onChange={(event) => {
             changeDraft(event.target.value)
             setNotice('')
+          }}
+          onKeyDown={(event) => {
+            if (event.key !== 'Enter' || event.shiftKey) return
+            event.preventDefault()
+            if (canSend) void send()
+          }}
+          onPaste={(event) => {
+            const images = Array.from(event.clipboardData?.files || []).filter((file) =>
+              file.type.startsWith('image/'),
+            )
+            if (!images.length) return
+            event.preventDefault()
+            addFiles(images)
           }}
         />
         <label htmlFor="message-images">Attach images</label>
@@ -309,25 +360,12 @@ function Conversation({ id, owner, draft, files, changeDraft, changeFiles, onInb
             const selected = Array.from(event.target.files || [])
             event.target.value = ''
             if (!selected.length) return
-            const nextFiles = [...files.map((entry) => entry.file), ...selected]
-            const error = messageFilesError(nextFiles)
-            if (error) {
-              setAttachmentError(error)
-              return
-            }
-            changeFiles([
-              ...files,
-              ...selected.map((file) => ({
-                file,
-                previewUrl: URL.createObjectURL(file),
-                key: ++nextImageDraftId,
-              })),
-            ])
-            setAttachmentError('')
+            addFiles(selected)
           }}
         />
         <p id="message-attachments-help">
-          Attach up to 5 images. You can also send images without text.
+          Attach up to 5 images. Images can also be pasted from the clipboard or dragged here, and
+          sent without text.
         </p>
         {files.length > 0 && (
           <ul className="message-selected-images" aria-label="Selected images">
@@ -351,18 +389,7 @@ function Conversation({ id, owner, draft, files, changeDraft, changeFiles, onInb
         )}
         <div className="message-composer-actions">
           <span id="message-length">{draft.length} / 4000 characters</span>
-          <button
-            type="submit"
-            className="button button--accent"
-            disabled={
-              state.sending ||
-              state.loading ||
-              !!state.error ||
-              !state.conversation?.can_send ||
-              (!draft.trim() && !files.length) ||
-              draft.length > 4000
-            }
-          >
+          <button type="submit" className="button button--accent" disabled={!canSend}>
             {state.sending ? 'Sending...' : 'Send message'}
           </button>
         </div>

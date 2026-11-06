@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { API_BASE_URL } from '../api/client'
 import { isMessageId } from '../api/messages'
 import { readStoreLocation } from '../utils/location'
+import { playMessageSound } from './messageSound'
 
 const MAX_TOASTS = 5
 const TOAST_DURATION = 7000
@@ -150,6 +151,8 @@ export default function useMessageNotifications(refresh, enabled, recoverSession
             seenMessages.current.delete(seenMessages.current.values().next().value)
           // Deliver immediately: a slow notification-list request must not delay the conversation.
           publish({ type: 'new_message', data: payload.data })
+          if (readStoreLocation().path !== 'messages/' + payload.data.conversation_id)
+            playMessageSound()
 
           const response = await Promise.resolve()
             .then(refresh)
