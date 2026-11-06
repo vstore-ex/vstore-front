@@ -8,7 +8,7 @@ import CommunityEditor from './CommunityEditor'
 import CommunityDetail from './CommunityDetail'
 import './Community.css'
 
-function Collection({ gameId, kind, onSignIn }) {
+export function Collection({ gameId, kind, onSignIn }) {
   const { isAuthenticated } = useAuth()
   const loader = useCallback(
     (signal) => (kind === 'artwork' ? getGameArtworks : getGameDiscussions)(gameId, signal),
