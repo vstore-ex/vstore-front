@@ -149,29 +149,29 @@ function ErrorNotice({ error, retry, label, compact = false }) {
     </div>
   ) : null
 }
+const mediaObjectUrls = new Map()
+
 function MessageImage({ attachment, conversationId, index, onView }) {
-  const [imageUrl, setImageUrl] = useState('')
+  const key = `${conversationId}:${attachment.id}`
+  const [imageUrl, setImageUrl] = useState(() => mediaObjectUrls.get(key) || '')
   const [error, setError] = useState('')
   const [attempt, setAttempt] = useState(0)
   useEffect(() => {
+    if (mediaObjectUrls.has(key)) return
     const controller = new AbortController()
     let active = true
-    let objectUrl = ''
     getMessageAttachment(conversationId, attachment, controller.signal)
       .then((blob) => {
-        if (!active) return
-        objectUrl = URL.createObjectURL(blob)
-        setImageUrl(objectUrl)
+        if (!mediaObjectUrls.has(key)) mediaObjectUrls.set(key, URL.createObjectURL(blob))
+        if (active) setImageUrl(mediaObjectUrls.get(key))
       })
       .catch((reason) => {
         if (active && !controller.signal.aborted) setError(messageError(reason))
       })
     return () => {
       active = false
-      controller.abort()
-      if (objectUrl) URL.revokeObjectURL(objectUrl)
     }
-  }, [attachment, attempt, conversationId])
+  }, [attempt, conversationId, attachment, key])
   if (error)
     return (
       <div className="message-attachment-error" role="group" aria-label="Private image">
@@ -206,77 +206,10 @@ function MessageImage({ attachment, conversationId, index, onView }) {
     </div>
   )
 }
-function MessageVideo({ attachment, conversationId }) {
-  const [videoUrl, setVideoUrl] = useState('')
-  const [error, setError] = useState('')
-  const [attempt, setAttempt] = useState(0)
-  useEffect(() => {
-    const controller = new AbortController()
-    let active = true
-    let objectUrl = ''
-    getMessageAttachment(conversationId, attachment, controller.signal)
-      .then((blob) => {
-        if (!active) return
-        objectUrl = URL.createObjectURL(blob)
-        setVideoUrl(objectUrl)
-      })
-      .catch((reason) => {
-        if (active && !controller.signal.aborted) setError(messageError(reason))
-      })
-    return () => {
-      active = false
-      controller.abort()
-      if (objectUrl) URL.revokeObjectURL(objectUrl)
-    }
-  }, [attachment, attempt, conversationId])
-  if (error)
-    return (
-      <div className="message-attachment-error" role="group" aria-label="Private video">
-        <p role="alert">Could not load private video: {error}</p>
-        <button
-          type="button"
-          className="messages-text-button"
-          onClick={() => {
-            setError('')
-            setAttempt((value) => value + 1)
-          }}
-        >
-          Retry video
-        </button>
-      </div>
-    )
-  return videoUrl ? (
-    <video className="message-video" src={videoUrl} controls preload="metadata" />
-  ) : (
-    <div className="message-image-placeholder">
-      <span className="messages-visually-hidden" role="status">
-        Loading private video...
-      </span>
-    </div>
-  )
-}
 function SelectedImage({ entry, remove, disabled }) {
   return (
     <li className="message-selected-image">
       <img src={entry.previewUrl} alt={`Preview of ${entry.file.name}`} />
-      <button
-        type="button"
-        className="message-selected-remove"
-        aria-label={`Remove ${entry.file.name}`}
-        title={`Remove ${entry.file.name}`}
-        disabled={disabled}
-        onClick={remove}
-      >
-        <Icon name="close" />
-      </button>
-    </li>
-  )
-}
-
-function SelectedVideo({ entry, remove, disabled }) {
-  return (
-    <li className="message-selected-image message-selected-video">
-      <video src={entry.previewUrl} muted preload="metadata" />
       <button
         type="button"
         className="message-selected-remove"
@@ -660,14 +593,7 @@ function Conversation({
                                 aria-label="Message attachments"
                               >
                                 {item.attachments.map((attachment) => {
-                                  if (attachment.content_type !== 'image/webp')
-                                    return (
-                                      <MessageVideo
-                                        key={attachment.id}
-                                        attachment={attachment}
-                                        conversationId={id}
-                                      />
-                                    )
+                                  if (attachment.content_type !== 'image/webp') return null
                                   const images = item.attachments.filter(
                                     (part) => part.content_type === 'image/webp',
                                   )
@@ -787,41 +713,26 @@ function Conversation({
           dragDepth.current = 0
           setDragging(false)
           if (!canWrite) return
-          const dropped = Array.from(event.dataTransfer?.files || []).filter(
-            (file) =>
-              file.type.startsWith('image/') ||
-              file.type === 'video/mp4' ||
-              file.type === 'video/webm',
+          const images = Array.from(event.dataTransfer?.files || []).filter((file) =>
+            file.type.startsWith('image/'),
           )
-          if (!dropped.length) return
-          addFiles(dropped)
+          if (!images.length) return
+          addFiles(images)
         }}
       >
         {files.length > 0 && (
-          <ul className="message-selected-images" aria-label="Selected attachments">
-            {files.map((file, index) =>
-              file.file.type.startsWith('video/') ? (
-                <SelectedVideo
-                  key={file.key}
-                  entry={file}
-                  disabled={state.sending}
-                  remove={() => {
-                    changeFiles(files.filter((_, fileIndex) => fileIndex !== index))
-                    setAttachmentError('')
-                  }}
-                />
-              ) : (
-                <SelectedImage
-                  key={file.key}
-                  entry={file}
-                  disabled={state.sending}
-                  remove={() => {
-                    changeFiles(files.filter((_, fileIndex) => fileIndex !== index))
-                    setAttachmentError('')
-                  }}
-                />
-              ),
-            )}
+          <ul className="message-selected-images" aria-label="Selected images">
+            {files.map((file, index) => (
+              <SelectedImage
+                key={file.key}
+                entry={file}
+                disabled={state.sending}
+                remove={() => {
+                  changeFiles(files.filter((_, fileIndex) => fileIndex !== index))
+                  setAttachmentError('')
+                }}
+              />
+            ))}
           </ul>
         )}
         {attachmentError && (
@@ -834,7 +745,7 @@ function Conversation({
             id="message-images"
             className="messages-visually-hidden"
             type="file"
-            accept="image/*,video/mp4,video/webm"
+            accept="image/*"
             multiple
             aria-describedby="message-attachments-help"
             disabled={!canWrite}
@@ -848,10 +759,10 @@ function Conversation({
           <label
             htmlFor="message-images"
             className={'messages-icon-button message-attach' + (canWrite ? '' : ' is-disabled')}
-            title="Attach images or a video — you can also paste or drag files here"
+            title="Attach images — you can also paste or drag them here"
           >
             <Icon name="attach" />
-            <span className="messages-visually-hidden">Attach files</span>
+            <span className="messages-visually-hidden">Attach images</span>
           </label>
           <div className="message-input">
             <label htmlFor="message-draft" className="messages-visually-hidden">
@@ -912,8 +823,7 @@ function Conversation({
           {draft.length} / {MAX_LENGTH} characters
         </p>
         <p id="message-attachments-help" className="messages-visually-hidden">
-          Attach up to 5 images and one MP4/WebM video, 20 MiB in total. You can also send
-          attachments without text.
+          Attach up to 5 images. You can also send images without text.
         </p>
         {state.sendError && (
           <div className="message-send-error">
