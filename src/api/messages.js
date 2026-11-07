@@ -2,8 +2,8 @@ import { apiRequest, ApiError, mediaUrl } from './client'
 
 export const isMessageId = (value) => Number.isSafeInteger(value) && value > 0
 export const MAX_MESSAGE_IMAGES = 5
-export const MAX_MESSAGE_VIDEOS = 1
-export const MAX_MESSAGE_TOTAL_BYTES = 20 * 1024 * 1024
+export const MAX_MESSAGE_IMAGE_BYTES = 5 * 1024 * 1024
+export const MAX_MESSAGE_IMAGES_BYTES = 15 * 1024 * 1024
 function id(value) {
   const parsed = typeof value === 'string' && /^[1-9]\d*$/.test(value) ? Number(value) : value
   if (!isMessageId(parsed)) throw new Error('Invalid conversation or user ID.')
@@ -122,17 +122,14 @@ export async function getMessages(conversationId, { before_id, limit = 50 } = {}
 }
 export function messageFilesError(files) {
   if (!files.length) return ''
-  if (files.length > MAX_MESSAGE_IMAGES + MAX_MESSAGE_VIDEOS)
-    return 'Attach up to 5 images and 1 video.'
-  const isVideo = (file) => file.type === 'video/mp4' || file.type === 'video/webm'
-  const isImage = (file) => file.type?.startsWith('image/')
-  if (files.some((file) => !isImage(file) && !isVideo(file)))
-    return 'Only images and MP4/WebM videos can be attached.'
-  if (files.filter(isVideo).length > MAX_MESSAGE_VIDEOS)
-    return 'Only one video can be attached per message.'
-  if (files.some((file) => !file.size)) return 'Attachments cannot be empty.'
-  if (files.reduce((total, file) => total + file.size, 0) > MAX_MESSAGE_TOTAL_BYTES)
-    return 'Attachments together must be 20 MiB or smaller.'
+  if (files.length > MAX_MESSAGE_IMAGES) return 'Attach up to 5 images.'
+  if (files.some((file) => !file.type?.startsWith('image/')))
+    return 'Only image files can be attached.'
+  if (files.some((file) => !file.size)) return 'Images cannot be empty.'
+  if (files.some((file) => file.size > MAX_MESSAGE_IMAGE_BYTES))
+    return 'Each image must be 5 MiB or smaller.'
+  if (files.reduce((total, file) => total + file.size, 0) > MAX_MESSAGE_IMAGES_BYTES)
+    return 'All images together must be 15 MiB or smaller.'
   return ''
 }
 export async function sendMessage(conversationId, content, signal, files = []) {
