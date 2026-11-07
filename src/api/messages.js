@@ -20,7 +20,7 @@ function attachment(value, conversationId) {
   const expectedUrl = `/api/v1/messages/conversations/${conversationId}/attachments/${value?.id}`
   if (
     !isMessageId(value?.id) ||
-    value.content_type !== 'image/webp' ||
+    !MESSAGE_MEDIA_TYPES.has(value.content_type) ||
     !Number.isSafeInteger(value.size_bytes) ||
     value.size_bytes <= 0 ||
     value.download_url !== expectedUrl
