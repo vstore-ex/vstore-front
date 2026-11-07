@@ -20,6 +20,7 @@ import { useWishlist } from './wishlist/context'
 import { useAuth } from './auth/context'
 import OAuthCallbackPage from './pages/OAuthCallbackPage/OAuthCallbackPage'
 import CommunityHubPage from './pages/CommunityHubPage/CommunityHubPage'
+import LibraryPage from './pages/LibraryPage/LibraryPage'
 import { isOAuthCallback } from './auth/oauth'
 import { readStoreLocation } from './utils/location'
 import { pageTitle } from './hooks/useDocumentTitle'
@@ -35,7 +36,7 @@ const viewTitles = {
   account: pageTitle('Account'),
   library: pageTitle('Library'),
   wallet: pageTitle('Wallet'),
-  orders: pageTitle('Orders'),
+  orders: pageTitle('Library'),
   cart: pageTitle('Cart'),
   wishlist: pageTitle('Wishlist'),
   support: pageTitle('Support'),
@@ -341,7 +342,7 @@ function App() {
   return (
     <main className="store-page">
       <Header
-        activeView={publicNews ? 'news' : currentView}
+        activeView={publicNews ? 'news' : currentView === 'orders' ? 'library' : currentView}
         isAuthenticated={isAuthenticated}
         onSignIn={() => openAuth('login')}
         onSignUp={() => openAuth('register')}
@@ -411,7 +412,10 @@ function App() {
           showAchievements={currentView === 'achievements'}
           onViewAllAchievements={() => navigateTo(`games/${selectedGameId}/achievements`)}
         />
-      ) : ['account', 'library', 'wallet', 'orders'].includes(currentView) ? (
+      ) : ['library', 'orders'].includes(currentView) ? (
+        // #/orders stays as an alias for old links; the separate orders list was removed.
+        <LibraryPage />
+      ) : ['account', 'wallet'].includes(currentView) ? (
         <AccountPage
           user={user}
           onUpdated={updateUser}
@@ -419,7 +423,6 @@ function App() {
           onLogoutAll={() => signOut(true)}
           isLoggingOut={isLoggingOut}
           focusWallet={currentView === 'wallet'}
-          focusLibrary={currentView === 'library'}
         />
       ) : currentView === 'notifications' ? (
         <NotificationsPage />

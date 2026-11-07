@@ -8,12 +8,10 @@ import BlockedSection from './BlockedSection'
 import { useEffect, useRef, useState } from 'react'
 import { mediaUrl } from '../../api/client'
 import useOrders from '../../hooks/useOrders'
-import { formatMoney } from '../../api/cart'
 import { useWishlist } from '../../wishlist/context'
 import { updateUser, updateAvatar } from '../../api/auth'
 import fallbackAvatar from '../../assets/avatar.webp'
 import EmailVerification from '../../auth/EmailVerification'
-import Library from './Library'
 import EmailNewsSettings from './EmailNewsSettings'
 import PasswordSettings from './PasswordSettings'
 import './AccountPage.css'
@@ -24,11 +22,9 @@ const ACCOUNT_SECTIONS = [
   ['account-security', 'Password & security'],
   ['account-notifications', 'Email notifications'],
   ['account-wallet', 'Wallet & currency'],
-  ['account-library', 'Library'],
   ['account-achievements', 'Achievements'],
   ['account-friends', 'Friends'],
   ['account-blocked', 'Blocked users'],
-  ['account-orders', 'Orders'],
   ['account-sessions', 'Sessions'],
 ]
 
@@ -43,7 +39,6 @@ function AccountSession({
   onPasswordChanged,
   isLoggingOut,
   focusWallet,
-  focusLibrary,
 }) {
   const [values, setValues] = useState({
     full_name: user.fullName,
@@ -320,9 +315,6 @@ function AccountSession({
               <WalletSection focusWallet={focusWallet} />
               <CurrencySelector profile />
             </div>
-            <div id="account-library" className="account-panel-slot">
-              <Library focusLibrary={focusLibrary} />
-            </div>
             <div id="account-achievements" className="account-panel-slot">
               <AccountAchievements resource={achievements} userId={user.id} />
             </div>
@@ -332,44 +324,6 @@ function AccountSession({
             <div id="account-blocked" className="account-panel-slot">
               <BlockedSection />
             </div>
-            <section
-              id="account-orders"
-              className="account-section account-panel"
-              aria-labelledby="account-orders-title"
-            >
-              <h2 id="account-orders-title">Orders</h2>
-              {orders.loading && <p role="status">Loading orders...</p>}
-              {orders.error && (
-                <div role="alert">
-                  {orders.error}
-                  <button type="button" onClick={orders.retry}>
-                    Retry orders
-                  </button>
-                </div>
-              )}
-              {!orders.loading && !orders.error && orders.data?.length === 0 && (
-                <p>No orders yet.</p>
-              )}
-              <div className="order-list">
-                {orders.data?.map((order) => (
-                  <article key={order.id}>
-                    <h3>Order #{order.id}</h3>
-                    <p>
-                      {new Date(order.created_at).toLocaleDateString()} /{' '}
-                      {formatMoney(order.total, order.currency)}
-                    </p>
-                    <ul>
-                      {order.items.map((item) => (
-                        <li key={item.game_id}>
-                          <a href={`#/games/${item.game_id}`}>Game #{item.game_id}</a> /{' '}
-                          {formatMoney(item.price_at_purchase, item.currency || order.currency)}
-                        </li>
-                      ))}
-                    </ul>
-                  </article>
-                ))}
-              </div>
-            </section>
             <section
               id="account-sessions"
               className="account-section account-panel"

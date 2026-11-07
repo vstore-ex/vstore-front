@@ -47,6 +47,9 @@ vi.mock('../src/pages/NotificationsPage/NotificationsPage', () => ({
 vi.mock('../src/pages/MessagesPage/MessagesPage', () => ({
   default: ({ conversationId }) => <h1>Messages {conversationId || 'inbox'}</h1>,
 }))
+vi.mock('../src/pages/LibraryPage/LibraryPage', () => ({
+  default: () => <h1>Your library</h1>,
+}))
 vi.mock('../src/pages/AccountPage/AccountPage', () => ({
   default: ({ focusLibrary }) => <h1>{focusLibrary ? 'Your library' : 'Your account'}</h1>,
 }))
