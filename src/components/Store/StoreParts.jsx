@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { CarouselPageContext } from './carouselPage'
 import { MediaImage } from '../Catalog/Media'
 import './StoreParts.css'
 
@@ -154,7 +155,7 @@ export function Carousel({
           </button>
         )}
         <div className="store-carousel__track" ref={track} onScroll={measure}>
-          {children}
+          <CarouselPageContext.Provider value={page}>{children}</CarouselPageContext.Provider>
         </div>
         {pages > 1 && (
           <button
