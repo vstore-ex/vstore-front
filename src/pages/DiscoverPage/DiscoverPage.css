@@ -222,7 +222,7 @@
 
 .store-home {
   display: grid;
-  grid-template-columns: clamp(190px, 14vw, 240px) minmax(0, 1fr);
+  grid-template-columns: clamp(220px, 17vw, 280px) minmax(0, 1fr);
   gap: clamp(24px, 2.4vw, 40px);
   align-items: start;
 }
@@ -231,56 +231,6 @@
 }
 .store-home__main > .store-carousel:first-child {
   margin-top: 0;
-}
-
-.store-gutter {
-  position: sticky;
-  top: calc(var(--store-header-height, 64px) + var(--space-4));
-  display: grid;
-  gap: var(--space-5);
-  font-size: 13px;
-}
-.store-gutter__wallet {
-  display: grid;
-  gap: 4px;
-  padding: var(--space-3);
-  border-radius: var(--radius-sm);
-  color: var(--color-on-accent);
-  background: var(--color-accent);
-  line-height: 1.3;
-}
-.store-gutter__wallet span {
-  font-size: 12px;
-  opacity: 0.85;
-}
-.store-gutter__block {
-  display: grid;
-  gap: 2px;
-}
-.store-gutter__block h2 {
-  margin: 0 0 6px;
-  color: var(--color-text-muted);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.discover-page .store-gutter__block :is(a, button) {
-  min-width: 0;
-  min-height: 0;
-  padding: 4px 8px;
-  border: 0;
-  border-radius: 2px;
-  color: var(--color-text);
-  background: transparent;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-.discover-page .store-gutter__block :is(a, button):hover {
-  color: var(--color-on-accent);
-  background: var(--color-accent);
-  filter: none;
 }
 
 /* Featured & Recommended: main capsule 616x353 + 324px info panel. */
