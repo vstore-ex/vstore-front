@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-export default function HoverVideo({ src }) {
+export default function HoverVideo({ src, className }) {
   const video = useRef(null)
   const [ready, setReady] = useState(false)
   const [failed, setFailed] = useState(false)
@@ -19,11 +19,12 @@ export default function HoverVideo({ src }) {
       element.load()
     }
   }, [src])
+  const readyClass = className ? 'is-ready' : 'product-card__preview--ready'
   return (
     <video
       ref={video}
       className={
-        'product-card__preview' + (ready && !failed ? ' product-card__preview--ready' : '')
+        (className || 'product-card__preview') + (ready && !failed ? ` ${readyClass}` : '')
       }
       src={src}
       muted

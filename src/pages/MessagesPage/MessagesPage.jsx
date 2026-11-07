@@ -713,9 +713,21 @@ function Conversation({
                           </span>
                         )}
                       </div>
-                      {own && item.id === lastOwn?.id && (
-                        <span className="message-receipt">
-                          {item.read_at ? 'Read' : 'Delivered'}
+                      {own && !deleted && !editingThis && (
+                        <span
+                          className={
+                            'message-receipt' + (item.read_at ? ' message-receipt--read' : '')
+                          }
+                          title={item.read_at ? fullTime(new Date(item.read_at)) : undefined}
+                        >
+                          {item.read_at
+                            ? `✓ Read ${new Date(item.read_at).toLocaleTimeString(
+                                undefined,
+                                timeFormat,
+                              )}`
+                            : item.id === lastOwn?.id
+                              ? '✓ Delivered'
+                              : '✓ Sent'}
                         </span>
                       )}
                     </li>

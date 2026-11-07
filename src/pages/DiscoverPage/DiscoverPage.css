@@ -462,6 +462,15 @@ a.store-update:hover {
   min-height: 0;
   object-fit: cover;
 }
+.store-tabs__screens > .store-tabs__trailer {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  min-height: 0;
+  object-fit: cover;
+  border-radius: 4px;
+  background: #000;
+}
 
 .discover-page .mobile-banner {
   margin-top: 40px;

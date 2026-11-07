@@ -1,6 +1,7 @@
 import SearchResults from './SearchResults'
 import { useEffect, useId, useState } from 'react'
 import { MediaImage } from '../../components/Catalog/Media'
+import HoverVideo from '../../components/ProductCard/HoverVideo'
 import {
   Carousel,
   GameLink,
@@ -197,6 +198,7 @@ function HomeTabs({ data, onSelect }) {
   const tab = tabs[Math.min(active, tabs.length - 1)]
   const games = tab.games.map(homeGame)
   const preview = games.find((game) => game.id === hovered) || games[0]
+  const trailerUrl = mediaUrl(preview.media?.find((item) => item.media_type === 'video')?.url)
   return (
     <section className="store-tabs" aria-label="Browse lists">
       <div className="store-tabs__list" role="tablist" aria-label="Game lists">
@@ -239,7 +241,10 @@ function HomeTabs({ data, onSelect }) {
           <h3>{preview.title}</h3>
           <TagList tags={preview.tags} limit={5} />
           <div className="store-tabs__screens">
-            {previewImages(preview, 4).map((item, index) => (
+            {trailerUrl ? (
+              <HoverVideo key={trailerUrl} src={trailerUrl} className="store-tabs__trailer" />
+            ) : null}
+            {previewImages(preview, trailerUrl ? 3 : 4).map((item, index) => (
               <MediaImage
                 key={item.key}
                 src={item.src}
