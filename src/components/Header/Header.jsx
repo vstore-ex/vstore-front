@@ -175,7 +175,7 @@ function Header({
       >
         <div className="header-left">
           <nav className="primary-nav" aria-label="Primary navigation">
-            {(isAuthenticated ? [...navItems, 'Messages'] : navItems).map((item) => (
+            {(isAuthenticated ? [...navItems, 'Library', 'Messages'] : navItems).map((item) => (
               <a
                 className={`primary-nav__link${
                   activeView === item.toLowerCase() ? ' primary-nav__link--active' : ''
