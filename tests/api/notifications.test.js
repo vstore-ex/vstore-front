@@ -142,10 +142,10 @@ test('builds supported internal destinations; ignores arbitrary links and path i
   expect(notificationDestination({ data: { news_id: 12 } }).href).toBe('#/news/12')
   expect(
     notificationDestination({ type: 'support_ticket_reply', data: { ticket_id: 12 } }),
-  ).toEqual({ href: '#/support', label: 'Open support request' })
+  ).toEqual({ href: '#/support?request=12', label: 'Open support request' })
   expect(
     notificationDestination({ type: 'support_ticket_assigned', data: { ticket_id: 12 } }),
-  ).toEqual({ href: '#/support', label: 'Open support request' })
+  ).toEqual({ href: '#/support?request=12', label: 'Open support request' })
   expect(
     notificationDestination({
       type: 'support_ticket_reply',

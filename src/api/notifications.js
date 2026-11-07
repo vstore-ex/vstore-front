@@ -129,7 +129,7 @@ export function notificationDestination(item) {
     Number.isSafeInteger(data.ticket_id) &&
     data.ticket_id > 0
   )
-    return { href: '#/support', label: 'Open support request' }
+    return { href: '#/support?request=' + data.ticket_id, label: 'Open support request' }
   const userId =
     item.type === 'friend_request'
       ? data.sender_id
