@@ -1,6 +1,7 @@
 import SearchResults from './SearchResults'
 import { useEffect, useId, useState } from 'react'
 import { MediaImage } from '../../components/Catalog/Media'
+import { useCarouselPage } from '../../components/Store/carouselPage'
 import HoverVideo from '../../components/ProductCard/HoverVideo'
 import {
   Carousel,
@@ -60,10 +61,75 @@ function featuredSlides(data) {
     seen.add(game.id)
     slides.push({ game: homeGame(game), reason })
   }
-  if (data?.featured) add(data.featured, data.featured.featured_subtitle || 'Featured')
+  for (const game of data?.featured || []) add(game, 'Featured')
   for (const section of data?.sections || [])
     for (const game of section.games) add(game, section.title || 'Recommended')
   return slides
+}
+
+/** Hero media of a featured slide: banner first, muted trailer 1 s after the
+ * slide becomes active, banner again once the trailer finishes. Remounted on
+ * (de)activation so the reveal timer and played state always start fresh. */
+function FeaturedSlideMedia({ game, active }) {
+  const trailer = (game.media || []).find((item) => item.media_type === 'video')?.url
+  const [revealed, setRevealed] = useState(false)
+  const [finished, setFinished] = useState(true)
+
+  useEffect(() => {
+    if (!active || !trailer) return undefined
+    const timer = window.setTimeout(() => {
+      setFinished(false)
+      setRevealed(true)
+    }, 1000)
+    return () => window.clearTimeout(timer)
+  }, [active, trailer])
+
+  return (
+    <>
+      <MediaImage src={game.mainCapsule} fallbackSrc={game.heroImage} alt={game.title} eager />
+      {trailer && revealed && !finished && (
+        <video
+          key={trailer}
+          className="store-featured__trailer"
+          src={mediaUrl(trailer)}
+          muted
+          autoPlay
+          playsInline
+          preload="auto"
+          onEnded={() => setFinished(true)}
+          aria-hidden="true"
+          tabIndex={-1}
+        />
+      )}
+    </>
+  )
+}
+
+function FeaturedSlide({ game, reason, onSelect, slideIndex }) {
+  const page = useCarouselPage()
+  const active = page === slideIndex
+  return (
+    <article className="store-featured__slide" aria-label={game.title}>
+      <GameLink game={game} onSelect={onSelect} className="store-featured__capsule">
+        <FeaturedSlideMedia key={active ? 'live' : 'idle'} game={game} active={active} />
+      </GameLink>
+      <div className="store-featured__info">
+        <h3 className="store-featured__title">
+          <GameLink game={game} onSelect={onSelect}>
+            {game.title}
+          </GameLink>
+        </h3>
+        <GameScreenshots game={game} count={4} className="store-featured__screens" />
+        <div className="store-featured__reason">
+          <strong>{reason}</strong>
+          <TagList tags={game.tags} limit={4} />
+        </div>
+        <div className="store-featured__footer">
+          <PriceBlock game={game} />
+        </div>
+      </div>
+    </article>
+  )
 }
 
 function FeaturedCarousel({ data, onSelect }) {
@@ -76,32 +142,15 @@ function FeaturedCarousel({ data, onSelect }) {
       autoplay={8000}
       itemCount={slides.length}
     >
-      {slides.map(({ game, reason }, index) => {
-        const hero =
-          (index === 0 && mediaUrl(data.featured?.featured_image_url)) || game.mainCapsule
-        return (
-          <article className="store-featured__slide" key={game.id} aria-label={game.title}>
-            <GameLink game={game} onSelect={onSelect} className="store-featured__capsule">
-              <MediaImage src={hero} fallbackSrc={game.heroImage} alt={game.title} eager />
-            </GameLink>
-            <div className="store-featured__info">
-              <h3 className="store-featured__title">
-                <GameLink game={game} onSelect={onSelect}>
-                  {game.title}
-                </GameLink>
-              </h3>
-              <GameScreenshots game={game} count={4} className="store-featured__screens" />
-              <div className="store-featured__reason">
-                <strong>{reason}</strong>
-                <TagList tags={game.tags} limit={4} />
-              </div>
-              <div className="store-featured__footer">
-                <PriceBlock game={game} />
-              </div>
-            </div>
-          </article>
-        )
-      })}
+      {slides.map(({ game, reason }, index) => (
+        <FeaturedSlide
+          key={game.id}
+          game={game}
+          reason={reason}
+          onSelect={onSelect}
+          slideIndex={index}
+        />
+      ))}
     </Carousel>
   )
 }
