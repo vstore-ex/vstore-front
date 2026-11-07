@@ -23,15 +23,32 @@ function homeGame(game) {
   return { ...game, price: game.release_label || game.price }
 }
 
-function previewImages(game, count) {
-  // Discover lists omit gallery media; fall back to the game's wide banners.
-  const shots = game.media
-    .filter((item) => item.media_type === 'image')
-    .map((item) => ({ key: item.id ?? item.url, src: item.thumbnail_url || item.url }))
-  const banners = [game.libraryHero, game.heroImage, game.capsuleImage]
-    .filter((src, index, all) => src && all.indexOf(src) === index)
-    .map((src) => ({ key: src, src }))
-  return (shots.length ? shots : banners).slice(0, count)
+/**
+ * Gallery screenshots for a home preview. Discover lists omit gallery media, so the
+ * game's own details are loaded (shared catalog cache); banners are never shown here.
+ */
+function GameScreenshots({ game, count, className }) {
+  const own = game.media.filter((item) => item.media_type === 'image')
+  const details = useCatalogResource('game', String(game.id))
+  const shots = (
+    own.length ? own : (details.data?.media || []).filter((item) => item.media_type === 'image')
+  ).slice(0, count)
+  if (!shots.length && !details.loading) return null
+  return (
+    <div className={className}>
+      {shots.length
+        ? shots.map((item, index) => (
+            <MediaImage
+              key={item.id ?? item.url}
+              src={item.thumbnail_url || item.url}
+              alt={`${game.title} screenshot ${index + 1}`}
+            />
+          ))
+        : Array.from({ length: count }, (_, index) => (
+            <span key={index} className="store-screenshot-placeholder" aria-hidden="true" />
+          ))}
+    </div>
+  )
 }
 
 function featuredSlides(data) {
@@ -61,7 +78,6 @@ function FeaturedCarousel({ data, onSelect }) {
       {slides.map(({ game, reason }, index) => {
         const hero =
           (index === 0 && mediaUrl(data.featured?.featured_image_url)) || game.mainCapsule
-        const screens = previewImages(game, 4)
         return (
           <article className="store-featured__slide" key={game.id} aria-label={game.title}>
             <GameLink game={game} onSelect={onSelect} className="store-featured__capsule">
@@ -73,15 +89,7 @@ function FeaturedCarousel({ data, onSelect }) {
                   {game.title}
                 </GameLink>
               </h3>
-              <div className="store-featured__screens">
-                {screens.map((item, screen) => (
-                  <MediaImage
-                    key={item.key}
-                    src={item.src}
-                    alt={`${game.title} screenshot ${screen + 1}`}
-                  />
-                ))}
-              </div>
+              <GameScreenshots game={game} count={4} className="store-featured__screens" />
               <div className="store-featured__reason">
                 <strong>{reason}</strong>
                 <TagList tags={game.tags} limit={4} />
@@ -240,17 +248,16 @@ function HomeTabs({ data, onSelect }) {
         <aside className="store-tabs__preview" aria-label={`${preview.title} preview`}>
           <h3>{preview.title}</h3>
           <TagList tags={preview.tags} limit={5} />
-          <div className="store-tabs__screens">
+          <div className="store-tabs__media">
             {trailerUrl ? (
               <HoverVideo key={trailerUrl} src={trailerUrl} className="store-tabs__trailer" />
             ) : null}
-            {previewImages(preview, trailerUrl ? 3 : 4).map((item, index) => (
-              <MediaImage
-                key={item.key}
-                src={item.src}
-                alt={`${preview.title} screenshot ${index + 1}`}
-              />
-            ))}
+            <GameScreenshots
+              key={preview.id}
+              game={preview}
+              count={trailerUrl ? 3 : 4}
+              className="store-tabs__screens"
+            />
           </div>
         </aside>
       </div>

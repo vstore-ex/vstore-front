@@ -335,6 +335,12 @@
   opacity: 0.85;
   transition: opacity var(--duration-fast) var(--ease-standard);
 }
+.store-screenshot-placeholder {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: var(--color-control);
+}
 .store-featured__screens > img:hover {
   opacity: 1;
 }
@@ -455,14 +461,11 @@ a.store-update:hover {
   display: grid;
   gap: 8px;
 }
-.store-tabs__screens > :is(img, .catalog-placeholder) {
-  display: block;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  min-height: 0;
-  object-fit: cover;
+.store-tabs__media {
+  display: grid;
+  gap: 8px;
 }
-.store-tabs__screens > .store-tabs__trailer {
+.store-tabs__media > .store-tabs__trailer {
   display: block;
   width: 100%;
   aspect-ratio: 16 / 9;
@@ -470,6 +473,26 @@ a.store-update:hover {
   object-fit: cover;
   border-radius: 4px;
   background: #000;
+}
+.store-tabs__media {
+  display: grid;
+  gap: 8px;
+}
+.store-tabs__media > .store-tabs__trailer {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  min-height: 0;
+  object-fit: cover;
+  border-radius: 4px;
+  background: #000;
+}
+.store-tabs__screens > :is(img, .catalog-placeholder) {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  min-height: 0;
+  object-fit: cover;
 }
 
 .discover-page .mobile-banner {
