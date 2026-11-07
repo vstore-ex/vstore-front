@@ -335,6 +335,12 @@
   opacity: 0.85;
   transition: opacity var(--duration-fast) var(--ease-standard);
 }
+.store-screenshot-placeholder {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: var(--color-control);
+}
 .store-featured__screens > img:hover {
   opacity: 1;
 }
