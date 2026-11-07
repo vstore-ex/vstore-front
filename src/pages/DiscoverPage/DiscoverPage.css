@@ -461,6 +461,32 @@ a.store-update:hover {
   display: grid;
   gap: 8px;
 }
+.store-tabs__media {
+  display: grid;
+  gap: 8px;
+}
+.store-tabs__media > .store-tabs__trailer {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  min-height: 0;
+  object-fit: cover;
+  border-radius: 4px;
+  background: #000;
+}
+.store-tabs__media {
+  display: grid;
+  gap: 8px;
+}
+.store-tabs__media > .store-tabs__trailer {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  min-height: 0;
+  object-fit: cover;
+  border-radius: 4px;
+  background: #000;
+}
 .store-tabs__screens > :is(img, .catalog-placeholder) {
   display: block;
   width: 100%;
