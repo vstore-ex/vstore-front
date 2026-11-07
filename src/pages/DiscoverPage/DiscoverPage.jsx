@@ -13,6 +13,7 @@ import { mediaUrl, PAGE_SIZE } from '../../api/catalog'
 import useCatalogResource from '../../hooks/useCatalogResource'
 import { readStoreLocation } from '../../utils/location'
 import ResourceStatus from '../../components/Catalog/ResourceStatus'
+import StoreGutter from './StoreGutter'
 import '../../components/Catalog/Catalog.css'
 import mobileLinkIcon from '../../assets/discover/figma/99b90.svg'
 import chevronLeft from '../../assets/discover/figma/bbb18.svg'
@@ -275,44 +276,6 @@ function MobileBanner({ banner }) {
         )}
       </div>
     </section>
-  )
-}
-
-/** Left gutter of the Steam home page. */
-function StoreGutter({ tags, onBrowse }) {
-  return (
-    <aside className="store-gutter" aria-label="Store navigation">
-      <a className="store-gutter__wallet" href="#/wallet">
-        <strong>VStore Wallet</strong>
-        <span>Add funds to buy games and add-ons</span>
-      </a>
-      <nav className="store-gutter__block" aria-label="Your store">
-        <h2>Your store</h2>
-        <a href="#/discover">Home</a>
-        <a href="#/wishlist">Wishlist</a>
-        <a href="#/library">Library</a>
-        <a href="#/news">News</a>
-      </nav>
-      <nav className="store-gutter__block" aria-label="Browse categories">
-        <h2>Browse categories</h2>
-        <button type="button" onClick={() => onBrowse()}>
-          All games
-        </button>
-        <button type="button" onClick={() => onBrowse(1, '', true)}>
-          Free to Play
-        </button>
-      </nav>
-      {!!tags?.length && (
-        <nav className="store-gutter__block" aria-label="Browse by tag">
-          <h2>Browse by tag</h2>
-          {tags.slice(0, 14).map((tag) => (
-            <button type="button" key={tag.id} onClick={() => onBrowse(1, String(tag.id))}>
-              {tag.name}
-            </button>
-          ))}
-        </nav>
-      )}
-    </aside>
   )
 }
 
