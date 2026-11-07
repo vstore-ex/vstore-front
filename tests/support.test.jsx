@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, expect, test, vi } from 'vitest'
 import { AuthContext } from '../src/auth/context'
@@ -235,4 +235,49 @@ test('preserves ticket drafts when the backend rejects a request', async () => {
   expect(await screen.findByRole('alert')).toHaveTextContent('Ticket submission failed.')
   expect(subject).toHaveValue('Please help')
   expect(message).toHaveValue('The order is missing.')
+})
+
+test('filters help articles by a category taken from the articles', async () => {
+  records = [
+    article(1, 'Refund policy'),
+    { ...article(2, 'Reset your password'), category: 'Account' },
+  ]
+  records[0].category = 'Payment'
+  const { user } = setup(null)
+  const categories = await screen.findByRole('group', { name: 'Help categories' })
+  await user.click(await within(categories).findByRole('button', { name: 'Account' }))
+  expect(within(categories).getByRole('button', { name: 'Account' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+  expect(await screen.findByRole('button', { name: 'Reset your password' })).toBeInTheDocument()
+  await waitFor(() =>
+    expect(screen.queryByRole('button', { name: 'Refund policy' })).not.toBeInTheDocument(),
+  )
+})
+
+test('opens a request from a shared link and shows its progress', async () => {
+  requests = [ticket(4, 'Payment issue', { status: 'waiting_for_customer' })]
+  window.history.replaceState(null, '', '/#/support?request=4')
+  setup()
+  const dialog = await screen.findByRole('dialog', { name: 'Conversation for request #4' })
+  const track = within(dialog).getByRole('list', { name: 'Request progress' })
+  expect(within(track).getByText('In progress').closest('li')).toHaveAttribute(
+    'aria-current',
+    'step',
+  )
+  expect(within(dialog).getByText(/waiting for your answer/)).toBeInTheDocument()
+  await userEvent.setup().click(within(dialog).getByRole('button', { name: 'Close dialog' }))
+  expect(window.location.hash).toBe('#/support')
+  window.history.replaceState(null, '', '/')
+})
+
+test('hides finished requests until all requests are shown', async () => {
+  requests = [ticket(4, 'Payment issue'), ticket(5, 'Old refund', { status: 'resolved' })]
+  const { user } = setup()
+  await screen.findByRole('heading', { name: 'Payment issue' })
+  expect(screen.queryByRole('heading', { name: 'Old refund' })).not.toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'All (2)' }))
+  expect(screen.getByRole('heading', { name: 'Old refund' })).toBeInTheDocument()
+  expect(screen.getByText('Resolved')).toBeInTheDocument()
 })
