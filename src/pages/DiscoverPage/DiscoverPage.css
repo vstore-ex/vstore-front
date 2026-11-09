@@ -509,18 +509,35 @@ a.store-update:hover {
 .store-search {
   display: grid;
   grid-template-columns: minmax(0, 1fr) clamp(220px, 18vw, 300px);
-  gap: var(--space-6);
+  column-gap: var(--space-6);
   align-items: start;
   margin-top: var(--space-5);
 }
 .store-search__results {
+  grid-column: 1;
   min-width: 0;
 }
+.store-search > .store-pagination {
+  grid-column: 1;
+}
+/* The tag list is longer than a page of games: size-containment keeps it out of the
+   row height, so the sidebar matches the game rows and scrolls its own tag list. */
 .store-search__filters {
-  position: sticky;
-  top: calc(var(--store-header-height, 64px) + var(--space-4));
+  grid-column: 2;
+  grid-row: 1;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  min-height: 320px;
+  contain: size;
   padding: var(--space-4);
   background: var(--color-surface-raised);
+}
+.store-search__filters .catalog-tags {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  flex-wrap: nowrap;
 }
 .store-search__filters h2 {
   margin: 0;
@@ -537,6 +554,7 @@ a.store-update:hover {
   margin: var(--space-3) 0 0;
 }
 .discover-page .store-search__filters .catalog-tags button {
+  flex-shrink: 0;
   min-height: 32px;
   padding: 4px 8px;
   border: 0;
@@ -582,12 +600,16 @@ a.store-update:hover {
     grid-template-columns: minmax(0, 1fr);
   }
   .store-search__filters {
-    position: static;
+    grid-column: 1;
+    grid-row: auto;
     order: -1;
+    min-height: 0;
+    contain: none;
   }
   .store-search__filters .catalog-tags {
     flex-direction: row;
     flex-wrap: wrap;
+    overflow-y: visible;
   }
 }
 @media (max-width: 680px) {
