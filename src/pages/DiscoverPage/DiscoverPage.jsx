@@ -487,8 +487,8 @@ function DiscoverContent({ onProductSelect }) {
                     {filters.tag ? 'No games match this tag.' : 'No games available on this page.'}
                   </p>
                 )}
-                {pagination}
               </div>
+              {pagination}
               {!filters.free && (
                 <aside className="store-search__filters" aria-label="Narrow by tag">
                   <h2>Narrow by tag</h2>
