@@ -1066,3 +1066,14 @@
     margin-left: 44px;
   }
 }
+
+@media (hover: none) {
+  .message-actions {
+    position: static;
+    width: fit-content;
+    margin-left: auto;
+    margin-top: 4px;
+    opacity: 1;
+    pointer-events: auto;
+  }
+}

@@ -1,7 +1,3 @@
-@import '@fontsource/roboto/600.css';
-@import '@fontsource/roboto/900.css';
-@import '@fontsource/inter/700.css';
-
 .discover-page {
   /* Fluid layout: the Figma 1140px grid scales proportionally up to a readable cap. */
   --discover-gutter: clamp(16px, 3vw, 56px);
@@ -42,7 +38,7 @@
   padding: 10px;
   color: var(--color-surface);
   background: var(--color-accent);
-  font-family: Inter, sans-serif;
+  font-family: var(--font-body);
   font-size: 16px;
   font-weight: 500;
   line-height: 19px;
@@ -59,7 +55,7 @@
   color: var(--color-text);
   background: transparent;
   opacity: 0.8;
-  font-family: Inter, sans-serif;
+  font-family: var(--font-body);
   font-size: 16px;
   font-weight: 500;
   line-height: 19px;
@@ -191,31 +187,6 @@
 }
 .store-page:has(> .discover-page) .primary-nav__link--active {
   color: var(--color-accent);
-}
-.store-page:has(> .discover-page) .footer-content {
-  /* Same fluid width as .discover-page__inner (the footer sits outside its variables). */
-  width: min(1680px, calc(100% - 2 * clamp(16px, 3vw, 56px)));
-  padding-bottom: 38px;
-}
-.store-page:has(> .discover-page) .footer-main {
-  position: relative;
-  grid-template-columns: minmax(0, 1fr) 39px;
-  gap: 149px;
-}
-.store-page:has(> .discover-page) .legal-copy {
-  margin-top: 44px;
-  line-height: 16px;
-}
-.store-page:has(> .discover-page) .footer-nav a {
-  line-height: 19px;
-}
-.store-page:has(> .discover-page) .footer-nav {
-  width: auto;
-  padding-top: 44px;
-  flex-wrap: wrap;
-}
-.store-page:has(> .discover-page) .footer-logo {
-  margin-top: 50px;
 }
 
 /* ---------- Steam home: gutter + main column ---------- */
@@ -517,6 +488,14 @@ a.store-update:hover {
   min-width: 0;
 }
 .store-search__filters {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: min(
+    var(--catalog-results-height, 560px),
+    560px,
+    calc(100dvh - var(--store-header-height, 64px) - 32px)
+  );
   position: sticky;
   top: calc(var(--store-header-height, 64px) + var(--space-4));
   padding: var(--space-4);
@@ -531,12 +510,19 @@ a.store-update:hover {
   text-transform: uppercase;
 }
 .store-search__filters .catalog-tags {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-control) transparent;
+  flex-wrap: nowrap;
   flex-direction: column;
   align-items: stretch;
   gap: 2px;
   margin: var(--space-3) 0 0;
 }
 .discover-page .store-search__filters .catalog-tags button {
+  flex-shrink: 0;
   min-height: 32px;
   padding: 4px 8px;
   border: 0;
@@ -584,6 +570,7 @@ a.store-update:hover {
   .store-search__filters {
     position: static;
     order: -1;
+    max-height: 280px;
   }
   .store-search__filters .catalog-tags {
     flex-direction: row;
@@ -609,19 +596,6 @@ a.store-update:hover {
     gap: 14px;
     flex-wrap: wrap;
     margin-top: 32px;
-  }
-  .store-page:has(> .discover-page) .footer-content {
-    width: calc(100% - 32px);
-  }
-  .store-page:has(> .discover-page) .footer-main {
-    grid-template-columns: 1fr;
-    gap: 26px;
-  }
-  .store-page:has(> .discover-page) .footer-logo {
-    margin-top: 0;
-  }
-  .store-page:has(> .discover-page) .footer-nav {
-    padding-top: 30px;
   }
 }
 

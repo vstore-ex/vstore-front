@@ -69,13 +69,6 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface-raised);
-  transition:
-    border-color var(--duration-fast) var(--ease-standard),
-    transform var(--duration-fast) var(--ease-standard);
-}
-.library-card:hover {
-  border-color: var(--color-border-control);
-  transform: translateY(-2px);
 }
 .library-card a {
   color: inherit;
@@ -132,15 +125,6 @@
 .user-library > p,
 .user-library > div[role='alert'] {
   margin-bottom: 20px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .library-card {
-    transition: none;
-  }
-  .library-card:hover {
-    transform: none;
-  }
 }
 
 .user-library a:not(.button, .library-card__cover) {

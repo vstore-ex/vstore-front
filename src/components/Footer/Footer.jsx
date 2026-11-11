@@ -8,7 +8,6 @@ const footerLinks = [
   { label: 'News', href: '#/news' },
   { label: 'Support', href: '#/support' },
   { label: 'Wishlist', href: '#/wishlist' },
-  { label: 'Wallet', href: '#/wallet' },
 ]
 
 function Footer() {

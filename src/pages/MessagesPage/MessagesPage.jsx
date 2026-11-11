@@ -10,6 +10,7 @@ import useInbox from '../../messages/useInbox'
 import useConversation from '../../messages/useConversation'
 import fallbackAvatar from '../../assets/avatar.webp'
 import ImageViewer from '../../components/ImageViewer'
+import MessageBubble from './MessageBubble'
 import './MessagesPage.css'
 
 const MAX_LENGTH = 4000
@@ -507,7 +508,10 @@ function Conversation({
                           {formatSeparator(date)}
                         </div>
                       )}
-                      <div
+                      <MessageBubble
+                        canManage={own && !deleted && !editingThis}
+                        onEdit={item.content ? () => startEdit(item) : undefined}
+                        onDelete={() => removeFromMessages(item)}
                         className={
                           'message-bubble' +
                           (own ? ' message-bubble--own' : '') +
@@ -614,31 +618,7 @@ function Conversation({
                             )}
                           </>
                         )}
-                        {own && !deleted && !editingThis && (
-                          <span className="message-actions">
-                            {item.content && (
-                              <button
-                                type="button"
-                                className="message-action"
-                                aria-label="Edit message"
-                                title="Edit"
-                                onClick={() => startEdit(item)}
-                              >
-                                <Icon name="edit" />
-                              </button>
-                            )}
-                            <button
-                              type="button"
-                              className="message-action"
-                              aria-label="Delete message"
-                              title="Delete"
-                              onClick={() => removeFromMessages(item)}
-                            >
-                              <Icon name="trash" />
-                            </button>
-                          </span>
-                        )}
-                      </div>
+                      </MessageBubble>
                       {own && !deleted && !editingThis && (
                         <span
                           className={

@@ -161,7 +161,7 @@
   padding: 10px;
   color: rgba(238, 238, 238, 0.8);
   background: transparent;
-  font-family: Inter, Roboto, Arial, sans-serif;
+  font-family: var(--font-body);
   font-size: 16px;
   font-weight: 500;
   line-height: normal;
@@ -208,7 +208,7 @@
   padding: 14px 16px;
   color: var(--color-surface);
   background: var(--color-accent);
-  font-family: Inter, Roboto, Arial, sans-serif;
+  font-family: var(--font-body);
   font-size: 16px;
   font-weight: 700;
   line-height: normal;
@@ -279,7 +279,7 @@
   padding: 30px 20px;
   color: var(--color-text);
   background: var(--color-control);
-  font-family: Roboto, Arial, sans-serif;
+  font-family: var(--font-body);
 }
 
 .checkout-payment,
@@ -329,7 +329,7 @@
   padding: 10px 20px;
   color: var(--color-text);
   background: var(--color-surface);
-  font-family: Roboto, Arial, sans-serif;
+  font-family: var(--font-body);
   font-size: 16px;
   font-weight: 500;
   text-align: left;
@@ -618,7 +618,7 @@
   border-radius: 5px;
   color: var(--color-surface);
   background: linear-gradient(90deg, var(--color-accent) 0%, #82ca77 100%);
-  font-family: Roboto, Arial, sans-serif;
+  font-family: var(--font-body);
   font-size: 14px;
   font-weight: 800;
   line-height: normal;
@@ -645,7 +645,7 @@
   background:
     radial-gradient(circle at 50% 38%, rgba(96, 105, 118, 0.35) 0%, rgba(96, 105, 118, 0) 42%),
     linear-gradient(104deg, rgba(0, 0, 0, 0) 7%, rgba(123, 199, 77, 0.07) 93%), var(--color-surface);
-  font-family: Roboto, Arial, sans-serif;
+  font-family: var(--font-body);
   text-align: center;
 }
 

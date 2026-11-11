@@ -1,5 +1,5 @@
 import SearchResults from './SearchResults'
-import { useEffect, useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { MediaImage } from '../../components/Catalog/Media'
 import { useCarouselPage } from '../../components/Store/carouselPage'
 import HoverVideo from '../../components/ProductCard/HoverVideo'
@@ -61,7 +61,7 @@ function featuredSlides(data) {
     seen.add(game.id)
     slides.push({ game: homeGame(game), reason })
   }
-  for (const game of data?.featured || []) add(game, 'Featured')
+  add(data?.featured, 'Featured')
   for (const section of data?.sections || [])
     for (const game of section.games) add(game, section.title || 'Recommended')
   return slides
@@ -374,6 +374,21 @@ function DiscoverContent({ onProductSelect }) {
     data?.mobile_banner,
   )
   const showCatalog = filters.browse || (!layout.loading && !curated)
+  const resultsRef = useRef(null)
+  useEffect(() => {
+    const results = resultsRef.current
+    if (!results || typeof ResizeObserver === 'undefined') return
+    const measure = () => {
+      results.parentElement.style.setProperty(
+        '--catalog-results-height',
+        Math.max(240, results.getBoundingClientRect().height) + 'px',
+      )
+    }
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(results)
+    return () => observer.disconnect()
+  }, [showCatalog])
   const catalogGames = filters.free ? data?.free_games : catalog.data?.slice(0, PAGE_SIZE)
   function navigate(page = 1, tag = '', free = false) {
     const params = new URLSearchParams({ view: 'catalog', page: String(page) })
@@ -473,7 +488,7 @@ function DiscoverContent({ onProductSelect }) {
               </p>
             )}
             <div className="store-search">
-              <div className="store-search__results">
+              <div className="store-search__results" ref={resultsRef}>
                 {!filters.free && <ResourceStatus resource={catalog} label="games" />}
                 {catalogGames?.length > 0 && (
                   <div className="store-search__rows">
