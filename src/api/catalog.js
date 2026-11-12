@@ -127,7 +127,7 @@ export async function getDiscover(_key, signal, currency) {
   if (!data || typeof data !== 'object' || Array.isArray(data))
     throw new Error('The server returned an invalid Discover layout.')
   return {
-    featured: data.featured?.id != null ? checkedGame(data.featured, currency) : null,
+    featured: games(data.featured, currency),
     sections: array(data.sections)
       .filter(Boolean)
       .map((s) => ({ ...s, games: games(s.games, currency) })),

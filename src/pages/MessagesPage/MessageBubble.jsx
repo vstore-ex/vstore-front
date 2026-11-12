@@ -1,4 +1,4 @@
-﻿import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+﻿import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import './MessageBubble.css'
 
@@ -6,13 +6,26 @@ function MessageMenu({ position, trigger, onClose, onEdit, onDelete }) {
   const menu = useRef(null)
   useLayoutEffect(() => {
     const node = menu.current
-    const box = node.getBoundingClientRect()
-    node.style.left =
-      Math.max(8, Math.min(position.x, document.documentElement.clientWidth - box.width - 8)) + 'px'
-    node.style.top =
-      Math.max(8, Math.min(position.y, document.documentElement.clientHeight - box.height - 8)) +
-      'px'
-    node.querySelector('button')?.focus()
+    const viewport = window.visualViewport
+    const place = () => {
+      const box = node.getBoundingClientRect()
+      const left = viewport?.offsetLeft || 0
+      const top = viewport?.offsetTop || 0
+      const width = viewport?.width || document.documentElement.clientWidth
+      const height = viewport?.height || document.documentElement.clientHeight
+      node.style.left =
+        Math.max(left + 8, Math.min(position.x, left + width - box.width - 8)) + 'px'
+      node.style.top = Math.max(top + 8, Math.min(position.y, top + height - box.height - 8)) + 'px'
+    }
+    place()
+    node.querySelector('button')?.focus({ preventScroll: true })
+    // Keep an open menu usable during incoming-message autoscroll and mobile keyboard resize.
+    window.addEventListener('resize', place)
+    viewport?.addEventListener('resize', place)
+    return () => {
+      window.removeEventListener('resize', place)
+      viewport?.removeEventListener('resize', place)
+    }
   }, [position])
   useEffect(() => {
     const outside = (event) => {
@@ -23,14 +36,9 @@ function MessageMenu({ position, trigger, onClose, onEdit, onDelete }) {
         return
       onClose(false)
     }
-    const dismiss = () => onClose(false)
     document.addEventListener('pointerdown', outside)
-    window.addEventListener('resize', dismiss)
-    window.addEventListener('scroll', outside, true)
     return () => {
       document.removeEventListener('pointerdown', outside)
-      window.removeEventListener('resize', dismiss)
-      window.removeEventListener('scroll', outside, true)
     }
   }, [onClose, trigger])
   function choose(action) {
@@ -43,8 +51,16 @@ function MessageMenu({ position, trigger, onClose, onEdit, onDelete }) {
       role="menu"
       aria-label="Message actions"
       className="message-context-menu"
-      onContextMenu={(event) => event.preventDefault()}
+      onContextMenu={(event) => {
+        event.preventDefault()
+        event.stopPropagation()
+      }}
       onKeyDown={(event) => {
+        event.stopPropagation()
+        if (event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10')) {
+          event.preventDefault()
+          return
+        }
         if (event.key === 'Escape') {
           event.preventDefault()
           event.stopPropagation()
@@ -86,12 +102,17 @@ function MessageMenu({ position, trigger, onClose, onEdit, onDelete }) {
 export default function MessageBubble({ canManage, onEdit, onDelete, children, ...props }) {
   const [position, setPosition] = useState(null)
   const trigger = useRef(null)
-  function close(restoreFocus) {
+  const close = useCallback((restoreFocus) => {
     setPosition(null)
-    if (restoreFocus) trigger.current?.focus()
-  }
+    if (restoreFocus) trigger.current?.focus({ preventScroll: true })
+  }, [])
   function open(event) {
-    if (!canManage) return
+    if (!canManage || !event.currentTarget.contains(event.target)) return
+    if (
+      event.type === 'contextmenu' &&
+      (window.getSelection()?.toString() || event.target.closest?.('img, a'))
+    )
+      return
     event.preventDefault()
     const box = trigger.current.getBoundingClientRect()
     setPosition(

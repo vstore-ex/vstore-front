@@ -1,5 +1,5 @@
 import SearchResults from './SearchResults'
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { MediaImage } from '../../components/Catalog/Media'
 import { useCarouselPage } from '../../components/Store/carouselPage'
 import HoverVideo from '../../components/ProductCard/HoverVideo'
@@ -61,7 +61,7 @@ function featuredSlides(data) {
     seen.add(game.id)
     slides.push({ game: homeGame(game), reason })
   }
-  add(data?.featured, 'Featured')
+  for (const game of data?.featured || []) add(game, 'Featured')
   for (const section of data?.sections || [])
     for (const game of section.games) add(game, section.title || 'Recommended')
   return slides
@@ -365,7 +365,7 @@ function DiscoverContent({ onProductSelect }) {
   const data = layout.data
   const sections = data?.sections || []
   const curated = Boolean(
-    data?.featured ||
+    data?.featured?.length ||
     sections.some((section) => section.games.length) ||
     data?.promos.length ||
     data?.deals.length ||
@@ -374,21 +374,6 @@ function DiscoverContent({ onProductSelect }) {
     data?.mobile_banner,
   )
   const showCatalog = filters.browse || (!layout.loading && !curated)
-  const resultsRef = useRef(null)
-  useEffect(() => {
-    const results = resultsRef.current
-    if (!results || typeof ResizeObserver === 'undefined') return
-    const measure = () => {
-      results.parentElement.style.setProperty(
-        '--catalog-results-height',
-        Math.max(240, results.getBoundingClientRect().height) + 'px',
-      )
-    }
-    measure()
-    const observer = new ResizeObserver(measure)
-    observer.observe(results)
-    return () => observer.disconnect()
-  }, [showCatalog])
   const catalogGames = filters.free ? data?.free_games : catalog.data?.slice(0, PAGE_SIZE)
   function navigate(page = 1, tag = '', free = false) {
     const params = new URLSearchParams({ view: 'catalog', page: String(page) })
@@ -488,7 +473,7 @@ function DiscoverContent({ onProductSelect }) {
               </p>
             )}
             <div className="store-search">
-              <div className="store-search__results" ref={resultsRef}>
+              <div className="store-search__results">
                 {!filters.free && <ResourceStatus resource={catalog} label="games" />}
                 {catalogGames?.length > 0 && (
                   <div className="store-search__rows">
@@ -505,25 +490,27 @@ function DiscoverContent({ onProductSelect }) {
                 {pagination}
               </div>
               {!filters.free && (
-                <aside className="store-search__filters" aria-label="Narrow by tag">
-                  <h2>Narrow by tag</h2>
-                  <ResourceStatus resource={tags} label="tags" />
-                  <div className="catalog-tags" aria-label="Filter games by tag">
-                    <button type="button" aria-pressed={!filters.tag} onClick={() => navigate(1)}>
-                      All tags
-                    </button>
-                    {tags.data?.map((tag) => (
-                      <button
-                        type="button"
-                        key={tag.id}
-                        aria-pressed={filters.tag === String(tag.id)}
-                        onClick={() => navigate(1, String(tag.id))}
-                      >
-                        {tag.name}
+                <div className="store-search__filter-slot">
+                  <aside className="store-search__filters" aria-label="Narrow by tag">
+                    <h2>Narrow by tag</h2>
+                    <ResourceStatus resource={tags} label="tags" />
+                    <div className="catalog-tags" aria-label="Filter games by tag">
+                      <button type="button" aria-pressed={!filters.tag} onClick={() => navigate(1)}>
+                        All tags
                       </button>
-                    ))}
-                  </div>
-                </aside>
+                      {tags.data?.map((tag) => (
+                        <button
+                          type="button"
+                          key={tag.id}
+                          aria-pressed={filters.tag === String(tag.id)}
+                          onClick={() => navigate(1, String(tag.id))}
+                        >
+                          {tag.name}
+                        </button>
+                      ))}
+                    </div>
+                  </aside>
+                </div>
               )}
             </div>
           </section>

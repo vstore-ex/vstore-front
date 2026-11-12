@@ -105,7 +105,7 @@
 .mobile-banner h2 {
   margin: 0 0 10px;
   font-size: 24px;
-  font-weight: 900;
+  font-weight: 800;
   line-height: 28px;
 }
 .mobile-banner p {
@@ -487,17 +487,19 @@ a.store-update:hover {
 .store-search__results {
   min-width: 0;
 }
+.store-search__filter-slot {
+  position: relative;
+  align-self: stretch;
+  min-height: 240px;
+}
 .store-search__filters {
+  position: absolute;
+  inset: 0;
+  height: 100%;
   display: flex;
   flex-direction: column;
   min-height: 0;
-  max-height: min(
-    var(--catalog-results-height, 560px),
-    560px,
-    calc(100dvh - var(--store-header-height, 64px) - 32px)
-  );
-  position: sticky;
-  top: calc(var(--store-header-height, 64px) + var(--space-4));
+  max-height: min(560px, calc(100dvh - var(--store-header-height, 64px) - 32px));
   padding: var(--space-4);
   background: var(--color-surface-raised);
 }
@@ -567,10 +569,9 @@ a.store-update:hover {
   .store-search {
     grid-template-columns: minmax(0, 1fr);
   }
-  .store-search__filters {
-    position: static;
+  .store-search__filter-slot {
     order: -1;
-    max-height: 280px;
+    height: 280px;
   }
   .store-search__filters .catalog-tags {
     flex-direction: row;

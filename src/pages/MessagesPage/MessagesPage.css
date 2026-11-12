@@ -613,8 +613,7 @@
   top: -34px;
   right: 6px;
   z-index: 2;
-  display: flex;
-  gap: 2px;
+  display: block;
   padding: 2px;
   border: 1px solid var(--messages-divider);
   border-radius: 10px;

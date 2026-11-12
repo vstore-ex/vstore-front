@@ -437,7 +437,7 @@ function App() {
       ) : (
         <DiscoverPage onProductSelect={openGame} />
       )}
-      <Footer />
+      <Footer showWallet={currentView !== 'discover'} />
       {(authMode || currentView === 'login') && !isLoggingOut && (
         <RegisterPage
           initialMode={authMode || 'login'}
