@@ -5,8 +5,9 @@ import { useCurrency } from '../../currency/context'
 import { useWallet } from '../../wallet/context'
 import { MediaImage } from '../../components/Catalog/Media'
 import { useAuth } from '../../auth/context'
+import '../LibraryPage/LibraryPage.css'
 
-function LibrarySession({ focusLibrary }) {
+function LibrarySession({ focusLibrary, standalone }) {
   const heading = useRef(null)
   useEffect(() => {
     if (!focusLibrary) return
@@ -72,10 +73,26 @@ function LibrarySession({ focusLibrary }) {
     (game?.title || `Game #${id}`).normalize('NFKC').toLocaleLowerCase().includes(search),
   )
   return (
-    <section className="account-section user-library" aria-labelledby="library-title">
-      <h2 id="library-title" ref={heading} tabIndex={-1}>
-        Your library
-      </h2>
+    <section
+      className={'user-library' + (standalone ? ' user-library--page' : ' account-section')}
+      aria-labelledby="library-title"
+    >
+      {standalone ? (
+        <header className="library-page__header">
+          <h1 id="library-title" ref={heading} tabIndex={-1}>
+            Your library
+          </h1>
+          {!!orders.ownedIds.length && (
+            <p>
+              {orders.ownedIds.length} game{orders.ownedIds.length === 1 ? '' : 's'}
+            </p>
+          )}
+        </header>
+      ) : (
+        <h2 id="library-title" ref={heading} tabIndex={-1}>
+          Your library
+        </h2>
+      )}
       {orders.loading && <p role="status">Loading library...</p>}
       {orders.error && (
         <div role="alert">
@@ -188,7 +205,9 @@ function LibrarySession({ focusLibrary }) {
   )
 }
 
-export default function Library({ focusLibrary = false }) {
+export default function Library({ focusLibrary = false, standalone = false }) {
   const { currentUser } = useAuth()
-  return currentUser ? <LibrarySession key={currentUser.id} focusLibrary={focusLibrary} /> : null
+  return currentUser ? (
+    <LibrarySession key={currentUser.id} focusLibrary={focusLibrary} standalone={standalone} />
+  ) : null
 }

@@ -20,7 +20,7 @@ function attachment(value, conversationId) {
   const expectedUrl = `/api/v1/messages/conversations/${conversationId}/attachments/${value?.id}`
   if (
     !isMessageId(value?.id) ||
-    value.content_type !== 'image/webp' ||
+    !MESSAGE_MEDIA_TYPES.has(value.content_type) ||
     !Number.isSafeInteger(value.size_bytes) ||
     value.size_bytes <= 0 ||
     value.download_url !== expectedUrl
@@ -186,16 +186,19 @@ export async function deleteMessage(conversationId, messageId, signal) {
     target,
   )
 }
+export const MESSAGE_MEDIA_TYPES = new Set(['image/webp', 'video/mp4', 'video/webm'])
+
 export async function getMessageAttachment(conversationId, item, signal) {
   const target = id(conversationId)
   const attachmentId = id(item?.id)
   const expectedUrl = `/api/v1/messages/conversations/${target}/attachments/${attachmentId}`
-  if (item?.download_url !== expectedUrl || item?.content_type !== 'image/webp') unreadable()
+  if (item?.download_url !== expectedUrl || !MESSAGE_MEDIA_TYPES.has(item?.content_type))
+    unreadable()
   const blob = await apiRequest(`/messages/conversations/${target}/attachments/${attachmentId}`, {
     signal,
     responseType: 'blob',
   })
-  if (!blob || blob.type !== 'image/webp') unreadable()
+  if (!blob || blob.type !== item?.content_type) unreadable()
   return blob
 }
 export async function markConversationRead(conversationId, signal) {
@@ -228,6 +231,6 @@ export function messagePreview(message) {
     ? 'Message deleted'
     : message?.content ||
         (message?.has_attachments || message?.attachments?.length
-          ? 'Image attachment'
+          ? 'Attachment'
           : 'No messages yet')
 }

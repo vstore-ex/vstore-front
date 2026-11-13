@@ -1,6 +1,8 @@
 import SearchResults from './SearchResults'
 import { useEffect, useId, useState } from 'react'
 import { MediaImage } from '../../components/Catalog/Media'
+import { useCarouselPage } from '../../components/Store/carouselPage'
+import HoverVideo from '../../components/ProductCard/HoverVideo'
 import {
   Carousel,
   GameLink,
@@ -13,6 +15,7 @@ import { mediaUrl, PAGE_SIZE } from '../../api/catalog'
 import useCatalogResource from '../../hooks/useCatalogResource'
 import { readStoreLocation } from '../../utils/location'
 import ResourceStatus from '../../components/Catalog/ResourceStatus'
+import StoreGutter from './StoreGutter'
 import '../../components/Catalog/Catalog.css'
 import mobileLinkIcon from '../../assets/discover/figma/99b90.svg'
 import chevronLeft from '../../assets/discover/figma/bbb18.svg'
@@ -22,15 +25,32 @@ function homeGame(game) {
   return { ...game, price: game.release_label || game.price }
 }
 
-function previewImages(game, count) {
-  // Discover lists omit gallery media; fall back to the game's wide banners.
-  const shots = game.media
-    .filter((item) => item.media_type === 'image')
-    .map((item) => ({ key: item.id ?? item.url, src: item.thumbnail_url || item.url }))
-  const banners = [game.libraryHero, game.heroImage, game.capsuleImage]
-    .filter((src, index, all) => src && all.indexOf(src) === index)
-    .map((src) => ({ key: src, src }))
-  return (shots.length ? shots : banners).slice(0, count)
+/**
+ * Gallery screenshots for a home preview. Discover lists omit gallery media, so the
+ * game's own details are loaded (shared catalog cache); banners are never shown here.
+ */
+function GameScreenshots({ game, count, className }) {
+  const own = game.media.filter((item) => item.media_type === 'image')
+  const details = useCatalogResource('game', String(game.id))
+  const shots = (
+    own.length ? own : (details.data?.media || []).filter((item) => item.media_type === 'image')
+  ).slice(0, count)
+  if (!shots.length && !details.loading) return null
+  return (
+    <div className={className}>
+      {shots.length
+        ? shots.map((item, index) => (
+            <MediaImage
+              key={item.id ?? item.url}
+              src={item.thumbnail_url || item.url}
+              alt={`${game.title} screenshot ${index + 1}`}
+            />
+          ))
+        : Array.from({ length: count }, (_, index) => (
+            <span key={index} className="store-screenshot-placeholder" aria-hidden="true" />
+          ))}
+    </div>
+  )
 }
 
 function featuredSlides(data) {
@@ -41,10 +61,75 @@ function featuredSlides(data) {
     seen.add(game.id)
     slides.push({ game: homeGame(game), reason })
   }
-  if (data?.featured) add(data.featured, data.featured.featured_subtitle || 'Featured')
+  for (const game of data?.featured || []) add(game, 'Featured')
   for (const section of data?.sections || [])
     for (const game of section.games) add(game, section.title || 'Recommended')
   return slides
+}
+
+/** Hero media of a featured slide: banner first, muted trailer 1 s after the
+ * slide becomes active, banner again once the trailer finishes. Remounted on
+ * (de)activation so the reveal timer and played state always start fresh. */
+function FeaturedSlideMedia({ game, active }) {
+  const trailer = (game.media || []).find((item) => item.media_type === 'video')?.url
+  const [revealed, setRevealed] = useState(false)
+  const [finished, setFinished] = useState(true)
+
+  useEffect(() => {
+    if (!active || !trailer) return undefined
+    const timer = window.setTimeout(() => {
+      setFinished(false)
+      setRevealed(true)
+    }, 1000)
+    return () => window.clearTimeout(timer)
+  }, [active, trailer])
+
+  return (
+    <>
+      <MediaImage src={game.mainCapsule} fallbackSrc={game.heroImage} alt={game.title} eager />
+      {trailer && revealed && !finished && (
+        <video
+          key={trailer}
+          className="store-featured__trailer"
+          src={mediaUrl(trailer)}
+          muted
+          autoPlay
+          playsInline
+          preload="auto"
+          onEnded={() => setFinished(true)}
+          aria-hidden="true"
+          tabIndex={-1}
+        />
+      )}
+    </>
+  )
+}
+
+function FeaturedSlide({ game, reason, onSelect, slideIndex }) {
+  const page = useCarouselPage()
+  const active = page === slideIndex
+  return (
+    <article className="store-featured__slide" aria-label={game.title}>
+      <GameLink game={game} onSelect={onSelect} className="store-featured__capsule">
+        <FeaturedSlideMedia key={active ? 'live' : 'idle'} game={game} active={active} />
+      </GameLink>
+      <div className="store-featured__info">
+        <h3 className="store-featured__title">
+          <GameLink game={game} onSelect={onSelect}>
+            {game.title}
+          </GameLink>
+        </h3>
+        <GameScreenshots game={game} count={4} className="store-featured__screens" />
+        <div className="store-featured__reason">
+          <strong>{reason}</strong>
+          <TagList tags={game.tags} limit={4} />
+        </div>
+        <div className="store-featured__footer">
+          <PriceBlock game={game} />
+        </div>
+      </div>
+    </article>
+  )
 }
 
 function FeaturedCarousel({ data, onSelect }) {
@@ -57,41 +142,15 @@ function FeaturedCarousel({ data, onSelect }) {
       autoplay={8000}
       itemCount={slides.length}
     >
-      {slides.map(({ game, reason }, index) => {
-        const hero =
-          (index === 0 && mediaUrl(data.featured?.featured_image_url)) || game.mainCapsule
-        const screens = previewImages(game, 4)
-        return (
-          <article className="store-featured__slide" key={game.id} aria-label={game.title}>
-            <GameLink game={game} onSelect={onSelect} className="store-featured__capsule">
-              <MediaImage src={hero} fallbackSrc={game.heroImage} alt={game.title} eager />
-            </GameLink>
-            <div className="store-featured__info">
-              <h3 className="store-featured__title">
-                <GameLink game={game} onSelect={onSelect}>
-                  {game.title}
-                </GameLink>
-              </h3>
-              <div className="store-featured__screens">
-                {screens.map((item, screen) => (
-                  <MediaImage
-                    key={item.key}
-                    src={item.src}
-                    alt={`${game.title} screenshot ${screen + 1}`}
-                  />
-                ))}
-              </div>
-              <div className="store-featured__reason">
-                <strong>{reason}</strong>
-                <TagList tags={game.tags} limit={4} />
-              </div>
-              <div className="store-featured__footer">
-                <PriceBlock game={game} />
-              </div>
-            </div>
-          </article>
-        )
-      })}
+      {slides.map(({ game, reason }, index) => (
+        <FeaturedSlide
+          key={game.id}
+          game={game}
+          reason={reason}
+          onSelect={onSelect}
+          slideIndex={index}
+        />
+      ))}
     </Carousel>
   )
 }
@@ -197,6 +256,7 @@ function HomeTabs({ data, onSelect }) {
   const tab = tabs[Math.min(active, tabs.length - 1)]
   const games = tab.games.map(homeGame)
   const preview = games.find((game) => game.id === hovered) || games[0]
+  const trailerUrl = mediaUrl(preview.media?.find((item) => item.media_type === 'video')?.url)
   return (
     <section className="store-tabs" aria-label="Browse lists">
       <div className="store-tabs__list" role="tablist" aria-label="Game lists">
@@ -238,14 +298,16 @@ function HomeTabs({ data, onSelect }) {
         <aside className="store-tabs__preview" aria-label={`${preview.title} preview`}>
           <h3>{preview.title}</h3>
           <TagList tags={preview.tags} limit={5} />
-          <div className="store-tabs__screens">
-            {previewImages(preview, 4).map((item, index) => (
-              <MediaImage
-                key={item.key}
-                src={item.src}
-                alt={`${preview.title} screenshot ${index + 1}`}
-              />
-            ))}
+          <div className="store-tabs__media">
+            {trailerUrl ? (
+              <HoverVideo key={trailerUrl} src={trailerUrl} className="store-tabs__trailer" />
+            ) : null}
+            <GameScreenshots
+              key={preview.id}
+              game={preview}
+              count={trailerUrl ? 3 : 4}
+              className="store-tabs__screens"
+            />
           </div>
         </aside>
       </div>
@@ -270,44 +332,6 @@ function MobileBanner({ banner }) {
         )}
       </div>
     </section>
-  )
-}
-
-/** Left gutter of the Steam home page. */
-function StoreGutter({ tags, onBrowse }) {
-  return (
-    <aside className="store-gutter" aria-label="Store navigation">
-      <a className="store-gutter__wallet" href="#/wallet">
-        <strong>VStore Wallet</strong>
-        <span>Add funds to buy games and add-ons</span>
-      </a>
-      <nav className="store-gutter__block" aria-label="Your store">
-        <h2>Your store</h2>
-        <a href="#/discover">Home</a>
-        <a href="#/wishlist">Wishlist</a>
-        <a href="#/library">Library</a>
-        <a href="#/news">News</a>
-      </nav>
-      <nav className="store-gutter__block" aria-label="Browse categories">
-        <h2>Browse categories</h2>
-        <button type="button" onClick={() => onBrowse()}>
-          All games
-        </button>
-        <button type="button" onClick={() => onBrowse(1, '', true)}>
-          Free to Play
-        </button>
-      </nav>
-      {!!tags?.length && (
-        <nav className="store-gutter__block" aria-label="Browse by tag">
-          <h2>Browse by tag</h2>
-          {tags.slice(0, 14).map((tag) => (
-            <button type="button" key={tag.id} onClick={() => onBrowse(1, String(tag.id))}>
-              {tag.name}
-            </button>
-          ))}
-        </nav>
-      )}
-    </aside>
   )
 }
 

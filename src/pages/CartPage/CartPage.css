@@ -261,7 +261,7 @@
 .checkout-overlay {
   position: fixed;
   inset: 0;
-  z-index: 30;
+  z-index: 100;
   display: grid;
   place-items: center;
   padding: 32px;
@@ -913,7 +913,7 @@
 }
 .cart-page .cart-summary {
   position: sticky;
-  top: var(--space-4);
+  top: calc(var(--store-header-height, 64px) + var(--space-4));
 }
 @media (max-width: 860px) {
   .cart-page .cart-layout {

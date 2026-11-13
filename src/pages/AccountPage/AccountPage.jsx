@@ -8,15 +8,25 @@ import BlockedSection from './BlockedSection'
 import { useEffect, useRef, useState } from 'react'
 import { mediaUrl } from '../../api/client'
 import useOrders from '../../hooks/useOrders'
-import { formatMoney } from '../../api/cart'
 import { useWishlist } from '../../wishlist/context'
 import { updateUser, updateAvatar } from '../../api/auth'
 import fallbackAvatar from '../../assets/avatar.webp'
 import EmailVerification from '../../auth/EmailVerification'
-import Library from './Library'
 import EmailNewsSettings from './EmailNewsSettings'
 import PasswordSettings from './PasswordSettings'
 import './AccountPage.css'
+
+const ACCOUNT_SECTIONS = [
+  ['account-general', 'General'],
+  ['account-avatar', 'Avatar'],
+  ['account-security', 'Password & security'],
+  ['account-notifications', 'Email notifications'],
+  ['account-wallet', 'Wallet & currency'],
+  ['account-achievements', 'Achievements'],
+  ['account-friends', 'Friends'],
+  ['account-blocked', 'Blocked users'],
+  ['account-sessions', 'Sessions'],
+]
 
 export default function AccountPage(props) {
   return <AccountSession key={props.user.id} {...props} />
@@ -29,7 +39,6 @@ function AccountSession({
   onPasswordChanged,
   isLoggingOut,
   focusWallet,
-  focusLibrary,
 }) {
   const [values, setValues] = useState({
     full_name: user.fullName,
@@ -135,7 +144,7 @@ function AccountSession({
   return (
     <div className="account-page account-page--current">
       <div className="account-page__inner">
-        <UserLink id={user.id}>View public profile</UserLink>
+        {/* Steam "Edit Profile" header: avatar, name › Edit Profile, back to the profile. */}
         <section className="account-hero" aria-label="Account profile">
           <img
             className="account-hero__avatar"
@@ -149,9 +158,14 @@ function AccountSession({
             }}
           />
           <div className="account-hero__identity">
-            <p>{user.role}</p>
-            <h1>{user.username}</h1>
-            <p>{user.fullName}</p>
+            <h1>
+              {user.username}
+              <span className="account-hero__crumb" aria-hidden="true">
+                {' › '}
+              </span>
+              <span className="account-hero__page">Edit Profile</span>
+            </h1>
+            <p>{[user.fullName, user.role].filter(Boolean).join(' · ')}</p>
           </div>
           <div className="account-hero__stats">
             {Object.entries(stats).map(([label, value]) => (
@@ -161,142 +175,215 @@ function AccountSession({
               </div>
             ))}
           </div>
+          <UserLink id={user.id} className="account-hero__profile-link">
+            View public profile
+          </UserLink>
         </section>
-        <WalletSection focusWallet={focusWallet} />
-        <CurrencySelector profile />
-        <AccountAchievements resource={achievements} userId={user.id} />
-        <Library focusLibrary={focusLibrary} />
-        <FriendsSection />
-        <BlockedSection />
-        <section className="account-section">
-          <h2>Profile settings</h2>
-          {user.pendingEmail && (
-            <div className="account-email-status">
-              <p>
-                Active email: <strong>{user.email}</strong>
-              </p>
-              <p>
-                Pending email: <strong>{user.pendingEmail}</strong>
-              </p>
-              <p>Your email changes only after you confirm the new address.</p>
-              {user.emailVerificationSent === true && (
-                <p role="status">Confirmation email sent. Check your inbox.</p>
-              )}
-              <EmailVerification
-                key={user.pendingEmail}
-                email={user.pendingEmail}
-                delivery={user.emailVerificationSent}
-                disabled={busy}
-              />
-            </div>
-          )}
-          {!user.pendingEmail && user.emailVerified === false && (
-            <EmailVerification key={user.email} email={user.email} disabled={busy} />
-          )}
-          <form
-            className="store-form"
-            onSubmit={(event) => {
-              event.preventDefault()
-              saveProfile(true)
-            }}
-          >
-            {Object.entries({ full_name: 'Full name', email: 'Email', phone: 'Phone' }).map(
-              ([name, label]) => (
-                <label key={name}>
-                  {label}
-                  <input
-                    type={name === 'email' ? 'email' : name === 'phone' ? 'tel' : 'text'}
-                    value={values[name]}
-                    required={name === 'email'}
-                    disabled={busy}
-                    onChange={(e) => setValues((v) => ({ ...v, [name]: e.target.value }))}
-                  />
-                </label>
-              ),
-            )}
-            <label>
-              Avatar
-              <input
-                ref={avatarInput}
-                type="file"
-                accept="image/*"
-                disabled={busy}
-                onChange={handleAvatarChange}
-              />
-            </label>
-            {avatarFile && (
-              <div className="account-avatar-upload">
-                <button
-                  type="button"
-                  className="button button--secondary"
-                  disabled={busy}
-                  onClick={() => saveProfile(false)}
-                >
-                  {busy ? 'Uploading...' : 'Upload avatar now'}
-                </button>
-                <span className="account-avatar-upload__filename">({avatarFile.name})</span>
-              </div>
-            )}
-            <button className="button button--accent" disabled={busy}>
-              {busy ? 'Saving...' : 'Save profile'}
-            </button>
-            {error && (
-              <p className="store-form__error" role="alert">
-                {error}
-              </p>
-            )}
-            {message && (
-              <p className="store-form__status" role="status">
-                {message}
-              </p>
-            )}
-          </form>
-        </section>
-        <PasswordSettings onPasswordChanged={onPasswordChanged} />
-        <EmailNewsSettings />
-        <section className="account-section">
-          <h2>Session settings</h2>
-          <button
-            className="button button--secondary"
-            disabled={isLoggingOut || busy}
-            onClick={onLogoutAll}
-          >
-            Sign out of all devices
-          </button>
-        </section>
-        <section className="account-section">
-          <h2>Orders</h2>
-          {orders.loading && <p role="status">Loading orders...</p>}
-          {orders.error && (
-            <div role="alert">
-              {orders.error}
-              <button type="button" onClick={orders.retry}>
-                Retry orders
-              </button>
-            </div>
-          )}
-          {!orders.loading && !orders.error && orders.data?.length === 0 && <p>No orders yet.</p>}
-          <div className="order-list">
-            {orders.data?.map((order) => (
-              <article key={order.id}>
-                <h3>Order #{order.id}</h3>
-                <p>
-                  {new Date(order.created_at).toLocaleDateString()} /{' '}
-                  {formatMoney(order.total, order.currency)}
+
+        <div className="account-layout">
+          <AccountNav sections={ACCOUNT_SECTIONS} />
+          <div className="account-panels">
+            {/* Only the fields form submits; verification buttons stay outside it. */}
+            <div className="account-profile-form">
+              <section
+                id="account-general"
+                className="account-section account-panel"
+                aria-labelledby="account-general-title"
+              >
+                <h2 id="account-general-title">Profile settings</h2>
+                <p className="account-panel__hint">
+                  Your name and contact details. Your username and ID stay the same.
                 </p>
-                <ul>
-                  {order.items.map((item) => (
-                    <li key={item.game_id}>
-                      <a href={`#/games/${item.game_id}`}>Game #{item.game_id}</a> /{' '}
-                      {formatMoney(item.price_at_purchase, item.currency || order.currency)}
-                    </li>
-                  ))}
-                </ul>
-              </article>
-            ))}
+                {user.pendingEmail && (
+                  <div className="account-email-status">
+                    <p>
+                      Active email: <strong>{user.email}</strong>
+                    </p>
+                    <p>
+                      Pending email: <strong>{user.pendingEmail}</strong>
+                    </p>
+                    <p>Your email changes only after you confirm the new address.</p>
+                    {user.emailVerificationSent === true && (
+                      <p role="status">Confirmation email sent. Check your inbox.</p>
+                    )}
+                    <EmailVerification
+                      key={user.pendingEmail}
+                      email={user.pendingEmail}
+                      delivery={user.emailVerificationSent}
+                      disabled={busy}
+                    />
+                  </div>
+                )}
+                {!user.pendingEmail && user.emailVerified === false && (
+                  <EmailVerification key={user.email} email={user.email} disabled={busy} />
+                )}
+                <form
+                  id="account-profile-form"
+                  className="store-form account-fields"
+                  onSubmit={(event) => {
+                    event.preventDefault()
+                    saveProfile(true)
+                  }}
+                >
+                  {Object.entries({ full_name: 'Full name', email: 'Email', phone: 'Phone' }).map(
+                    ([name, label]) => (
+                      <label key={name}>
+                        {label}
+                        <input
+                          type={name === 'email' ? 'email' : name === 'phone' ? 'tel' : 'text'}
+                          value={values[name]}
+                          required={name === 'email'}
+                          disabled={busy}
+                          onChange={(e) => setValues((v) => ({ ...v, [name]: e.target.value }))}
+                        />
+                      </label>
+                    ),
+                  )}
+                </form>
+              </section>
+
+              {/* Not labelled by its heading: the file input below is the control named "Avatar". */}
+              <section id="account-avatar" className="account-section account-panel">
+                <h2 id="account-avatar-title">Avatar</h2>
+                <div className="account-avatar-editor">
+                  <div className="account-avatar-previews" aria-hidden="true">
+                    <img className="account-avatar-preview--full" src={avatarSrc} alt="" />
+                    <img className="account-avatar-preview--medium" src={avatarSrc} alt="" />
+                    <img className="account-avatar-preview--small" src={avatarSrc} alt="" />
+                  </div>
+                  <div className="account-avatar-controls">
+                    <p className="account-panel__hint">
+                      Choose a square image. It is shown on your profile, in friends lists and in
+                      messages.
+                    </p>
+                    <label className="account-avatar-choose">
+                      Avatar
+                      <input
+                        ref={avatarInput}
+                        type="file"
+                        accept="image/*"
+                        disabled={busy}
+                        onChange={handleAvatarChange}
+                      />
+                    </label>
+                    {avatarFile && (
+                      <div className="account-avatar-upload">
+                        <button
+                          type="button"
+                          className="button button--secondary"
+                          disabled={busy}
+                          onClick={() => saveProfile(false)}
+                        >
+                          {busy ? 'Uploading...' : 'Upload avatar now'}
+                        </button>
+                        <span className="account-avatar-upload__filename">({avatarFile.name})</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </section>
+
+              <div className="account-save-bar">
+                {error && (
+                  <p className="store-form__error" role="alert">
+                    {error}
+                  </p>
+                )}
+                {message && (
+                  <p className="store-form__status" role="status">
+                    {message}
+                  </p>
+                )}
+                <button
+                  type="submit"
+                  form="account-profile-form"
+                  className="button button--accent"
+                  disabled={busy}
+                >
+                  {busy ? 'Saving...' : 'Save profile'}
+                </button>
+              </div>
+            </div>
+
+            <div id="account-security" className="account-panel-slot">
+              <PasswordSettings onPasswordChanged={onPasswordChanged} />
+            </div>
+            <div id="account-notifications" className="account-panel-slot">
+              <EmailNewsSettings />
+            </div>
+            <div id="account-wallet" className="account-panel-slot">
+              <WalletSection focusWallet={focusWallet} />
+              <CurrencySelector profile />
+            </div>
+            <div id="account-achievements" className="account-panel-slot">
+              <AccountAchievements resource={achievements} userId={user.id} />
+            </div>
+            <div id="account-friends" className="account-panel-slot">
+              <FriendsSection />
+            </div>
+            <div id="account-blocked" className="account-panel-slot">
+              <BlockedSection />
+            </div>
+            <section
+              id="account-sessions"
+              className="account-section account-panel"
+              aria-labelledby="account-sessions-title"
+            >
+              <h2 id="account-sessions-title">Session settings</h2>
+              <p className="account-panel__hint">
+                Signs you out everywhere, including this browser.
+              </p>
+              <button
+                className="button button--secondary"
+                disabled={isLoggingOut || busy}
+                onClick={onLogoutAll}
+              >
+                Sign out of all devices
+              </button>
+            </section>
           </div>
-        </section>
+        </div>
       </div>
     </div>
+  )
+}
+
+/** Steam-style settings navigation that highlights the section in view. */
+function AccountNav({ sections }) {
+  const [active, setActive] = useState(sections[0][0])
+  useEffect(() => {
+    if (typeof IntersectionObserver === 'undefined') return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0]
+        if (visible) setActive(visible.target.id)
+      },
+      { rootMargin: '-20% 0px -60% 0px' },
+    )
+    for (const [id] of sections) {
+      const node = document.getElementById(id)
+      if (node) observer.observe(node)
+    }
+    return () => observer.disconnect()
+  }, [sections])
+  return (
+    <nav className="account-nav" aria-label="Account settings">
+      {sections.map(([id, label]) => (
+        <button
+          key={id}
+          type="button"
+          aria-current={active === id ? 'true' : undefined}
+          onClick={() => {
+            // The router owns the URL hash, so scroll without changing it.
+            document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            setActive(id)
+          }}
+        >
+          {label}
+        </button>
+      ))}
+    </nav>
   )
 }

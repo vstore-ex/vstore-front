@@ -9,6 +9,7 @@ import {
 import useInbox from '../../messages/useInbox'
 import useConversation from '../../messages/useConversation'
 import fallbackAvatar from '../../assets/avatar.webp'
+import ImageViewer from '../../components/ImageViewer'
 import './MessagesPage.css'
 
 const MAX_LENGTH = 4000
@@ -148,29 +149,29 @@ function ErrorNotice({ error, retry, label, compact = false }) {
     </div>
   ) : null
 }
-function MessageImage({ attachment, conversationId, index }) {
-  const [imageUrl, setImageUrl] = useState('')
+const mediaObjectUrls = new Map()
+
+function MessageImage({ attachment, conversationId, index, onView }) {
+  const key = `${conversationId}:${attachment.id}`
+  const [imageUrl, setImageUrl] = useState(() => mediaObjectUrls.get(key) || '')
   const [error, setError] = useState('')
   const [attempt, setAttempt] = useState(0)
   useEffect(() => {
+    if (mediaObjectUrls.has(key)) return
     const controller = new AbortController()
     let active = true
-    let objectUrl = ''
     getMessageAttachment(conversationId, attachment, controller.signal)
       .then((blob) => {
-        if (!active) return
-        objectUrl = URL.createObjectURL(blob)
-        setImageUrl(objectUrl)
+        if (!mediaObjectUrls.has(key)) mediaObjectUrls.set(key, URL.createObjectURL(blob))
+        if (active) setImageUrl(mediaObjectUrls.get(key))
       })
       .catch((reason) => {
         if (active && !controller.signal.aborted) setError(messageError(reason))
       })
     return () => {
       active = false
-      controller.abort()
-      if (objectUrl) URL.revokeObjectURL(objectUrl)
     }
-  }, [attachment, attempt, conversationId])
+  }, [attempt, conversationId, attachment, key])
   if (error)
     return (
       <div className="message-attachment-error" role="group" aria-label="Private image">
@@ -188,9 +189,15 @@ function MessageImage({ attachment, conversationId, index }) {
       </div>
     )
   return imageUrl ? (
-    <a className="message-image-link" href={imageUrl} target="_blank" rel="noreferrer">
+    <button
+      type="button"
+      className="message-image-link"
+      onClick={() => onView(index)}
+      aria-label={`Open image ${index + 1}`}
+      title="Open image"
+    >
       <img className="message-image" src={imageUrl} alt={`Private message image ${index + 1}`} />
-    </a>
+    </button>
   ) : (
     <div className="message-image-placeholder">
       <span className="messages-visually-hidden" role="status">
@@ -260,6 +267,7 @@ function Conversation({
   const [editing, setEditing] = useState(null)
   const [atBottom, setAtBottom] = useState(true)
   const [dragging, setDragging] = useState(false)
+  const [viewer, setViewer] = useState(null)
   const heading = useRef(null)
   const viewport = useRef(null)
   const textarea = useRef(null)
@@ -584,14 +592,24 @@ function Conversation({
                                 }
                                 aria-label="Message attachments"
                               >
-                                {item.attachments.map((attachment, index) => (
-                                  <MessageImage
-                                    key={attachment.id}
-                                    attachment={attachment}
-                                    conversationId={id}
-                                    index={index}
-                                  />
-                                ))}
+                                {item.attachments.map((attachment) => {
+                                  if (attachment.content_type !== 'image/webp') return null
+                                  const images = item.attachments.filter(
+                                    (part) => part.content_type === 'image/webp',
+                                  )
+                                  const imageIndex = images.indexOf(attachment)
+                                  return (
+                                    <MessageImage
+                                      key={attachment.id}
+                                      attachment={attachment}
+                                      conversationId={id}
+                                      index={imageIndex}
+                                      onView={(viewIndex) =>
+                                        setViewer({ images, index: viewIndex })
+                                      }
+                                    />
+                                  )
+                                })}
                               </div>
                             )}
                           </>
@@ -621,9 +639,21 @@ function Conversation({
                           </span>
                         )}
                       </div>
-                      {own && item.id === lastOwn?.id && (
-                        <span className="message-receipt">
-                          {item.read_at ? 'Read' : 'Delivered'}
+                      {own && !deleted && !editingThis && (
+                        <span
+                          className={
+                            'message-receipt' + (item.read_at ? ' message-receipt--read' : '')
+                          }
+                          title={item.read_at ? fullTime(new Date(item.read_at)) : undefined}
+                        >
+                          {item.read_at
+                            ? `✓ Read ${new Date(item.read_at).toLocaleTimeString(
+                                undefined,
+                                timeFormat,
+                              )}`
+                            : item.id === lastOwn?.id
+                              ? '✓ Delivered'
+                              : '✓ Sent'}
                         </span>
                       )}
                     </li>
@@ -811,6 +841,15 @@ function Conversation({
           </p>
         )}
       </form>
+      {viewer && (
+        <ImageViewer
+          conversationId={id}
+          images={viewer.images}
+          index={viewer.index}
+          onIndex={(index) => setViewer({ images: viewer.images, index })}
+          onClose={() => setViewer(null)}
+        />
+      )}
     </section>
   )
 }

@@ -1,0 +1,7 @@
+# Base images are pinned by digest; this keeps the digests current.
+version: 2
+updates:
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
