@@ -56,14 +56,11 @@ function GameScreenshots({ game, count, className }) {
 function featuredSlides(data) {
   const seen = new Set()
   const slides = []
-  const add = (game, reason) => {
-    if (!game || seen.has(game.id) || slides.length >= 10) return
+  for (const game of data?.featured || []) {
+    if (!game || seen.has(game.id)) continue
     seen.add(game.id)
-    slides.push({ game: homeGame(game), reason })
+    slides.push({ game: homeGame(game), reason: 'Featured' })
   }
-  for (const game of data?.featured || []) add(game, 'Featured')
-  for (const section of data?.sections || [])
-    for (const game of section.games) add(game, section.title || 'Recommended')
   return slides
 }
 
