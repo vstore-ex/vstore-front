@@ -138,7 +138,9 @@ export default function ImageViewer({ conversationId, images, index, onIndex, on
         title="Close (Esc)"
         onClick={onClose}
       >
-        ×
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M6 6l12 12M18 6L6 18" />
+        </svg>
       </button>
       {images.length > 1 && (
         <>
@@ -150,7 +152,9 @@ export default function ImageViewer({ conversationId, images, index, onIndex, on
             disabled={index === 0}
             onClick={() => onIndex(index - 1)}
           >
-            ‹
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M15 6l-6 6 6 6" />
+            </svg>
           </button>
           <button
             type="button"
@@ -160,7 +164,9 @@ export default function ImageViewer({ conversationId, images, index, onIndex, on
             disabled={index === images.length - 1}
             onClick={() => onIndex(index + 1)}
           >
-            ›
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M9 6l6 6-6 6" />
+            </svg>
           </button>
           <span className="lightbox-counter">
             {index + 1} / {images.length}
