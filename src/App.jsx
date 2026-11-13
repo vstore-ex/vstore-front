@@ -435,9 +435,12 @@ function App() {
       ) : currentView === 'support' ? (
         <SupportPage />
       ) : (
-        <DiscoverPage onProductSelect={openGame} />
+        // The footer belongs to Discover only; other pages end with their own content.
+        <>
+          <DiscoverPage onProductSelect={openGame} />
+          <Footer />
+        </>
       )}
-      <Footer />
       {(authMode || currentView === 'login') && !isLoggingOut && (
         <RegisterPage
           initialMode={authMode || 'login'}
