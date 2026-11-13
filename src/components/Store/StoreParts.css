@@ -42,8 +42,11 @@
   --carousel-gap: 12px;
   margin-top: 34px;
 }
-.store-carousel__viewport {
-  position: relative;
+.store-carousel__viewport--paged {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 32px;
+  align-items: center;
+  gap: 8px;
 }
 .store-carousel__track {
   display: grid;
@@ -65,21 +68,17 @@
   scroll-snap-align: start;
 }
 .store-carousel .store-carousel__arrow {
-  position: absolute;
-  top: 50%;
-  z-index: 2;
   display: grid;
   place-items: center;
-  width: 36px;
-  min-width: 36px;
-  height: 72px;
-  min-height: 72px;
+  width: 32px;
+  min-width: 32px;
+  height: 48px;
+  min-height: 48px;
   padding: 0;
   border: 0;
   border-radius: var(--radius-sm);
   color: var(--color-text);
-  background: rgb(0 0 0 / 45%);
-  transform: translateY(-50%);
+  background: transparent;
   cursor: pointer;
 }
 .store-carousel .store-carousel__arrow:hover {
@@ -90,12 +89,6 @@
 .store-carousel__arrow svg {
   width: 22px;
   height: 22px;
-}
-.store-carousel__arrow--prev {
-  left: -46px;
-}
-.store-carousel__arrow--next {
-  right: -46px;
 }
 .store-carousel__dots {
   display: flex;
@@ -295,15 +288,14 @@
   border-left: 1px solid rgb(255 255 255 / 6%);
 }
 
-@media (max-width: 1100px) {
-  .store-carousel__arrow--prev {
-    left: 4px;
-  }
-  .store-carousel__arrow--next {
-    right: 4px;
-  }
-}
 @media (max-width: 680px) {
+  /* Swipe and page dots keep navigation available without narrowing the cards. */
+  .store-carousel__viewport--paged {
+    display: block;
+  }
+  .store-carousel .store-carousel__arrow {
+    display: none;
+  }
   .store-row {
     flex-direction: column;
   }

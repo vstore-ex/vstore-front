@@ -438,3 +438,25 @@ describe('private message routes', () => {
     await waitFor(() => expect(window.location.hash).toBe('#/login?next=messages%2F12'))
   })
 })
+
+test('footer hides Wallet only on Discover (including #/login overlay) and restores it on other routes', async () => {
+  window.location.hash = '#/discover'
+  render(<Store initialStatus="authenticated" />)
+  await screen.findByRole('heading', { name: 'All games' })
+  const footer = document.querySelector('.store-footer')
+  expect(footer.querySelector('a[href="#/wallet"]')).toBeNull()
+  await act(async () => {
+    window.location.hash = '#/login'
+  })
+  expect(footer.querySelector('a[href="#/wallet"]')).toBeNull()
+  await act(async () => {
+    window.location.hash = '#/library'
+  })
+  await screen.findByRole('heading', { name: 'Your library' })
+  expect(footer.querySelector('a[href="#/wallet"]')).not.toBeNull()
+  await act(async () => {
+    window.location.hash = '#/discover'
+  })
+  await screen.findByRole('heading', { name: 'All games' })
+  expect(footer.querySelector('a[href="#/wallet"]')).toBeNull()
+})

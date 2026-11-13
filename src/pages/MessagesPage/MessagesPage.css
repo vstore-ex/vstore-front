@@ -613,8 +613,7 @@
   top: -34px;
   right: 6px;
   z-index: 2;
-  display: flex;
-  gap: 2px;
+  display: block;
   padding: 2px;
   border: 1px solid var(--messages-divider);
   border-radius: 10px;
@@ -1064,5 +1063,16 @@
   .message-file-warning,
   .message-send-error {
     margin-left: 44px;
+  }
+}
+
+@media (hover: none) {
+  .message-actions {
+    position: static;
+    width: fit-content;
+    margin-left: auto;
+    margin-top: 4px;
+    opacity: 1;
+    pointer-events: auto;
   }
 }

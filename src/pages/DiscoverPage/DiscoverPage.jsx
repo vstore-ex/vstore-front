@@ -365,7 +365,7 @@ function DiscoverContent({ onProductSelect }) {
   const data = layout.data
   const sections = data?.sections || []
   const curated = Boolean(
-    data?.featured ||
+    data?.featured?.length ||
     sections.some((section) => section.games.length) ||
     data?.promos.length ||
     data?.deals.length ||

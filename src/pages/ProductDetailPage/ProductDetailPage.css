@@ -1,7 +1,3 @@
-@import '@fontsource/roboto/600.css';
-@import '@fontsource/roboto/900.css';
-@import '@fontsource/inter/700.css';
-
 .product-detail-page {
   min-height: 100svh;
   color: var(--color-text);
@@ -16,7 +12,7 @@
 .product-detail-page h1 {
   margin: 0 0 32px;
   font-size: 48px;
-  font-weight: 900;
+  font-weight: 800;
   line-height: 57px;
 }
 .product-detail-page h2 {
@@ -198,10 +194,7 @@
   padding: 14px 10px;
   text-decoration: none;
   text-align: center;
-  font:
-    700 16px/19px Inter,
-    Roboto,
-    sans-serif;
+  font: 700 16px/1.3 var(--font-body);
   cursor: pointer;
 }
 .product-action--accent {

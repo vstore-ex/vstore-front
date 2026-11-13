@@ -106,18 +106,20 @@ test('a paid price cannot be presented as free and discounts require a paid orig
     discount: '-50%',
     is_free: false,
   })
-  expect(mapGame({ ...game, is_free: true, original_price: '25.00', price: '0.00' })).toMatchObject({
-    price: '€0.00',
-    originalPrice: '€25.00',
-    discount: '-100%',
-    is_free: false,
-  })
+  expect(mapGame({ ...game, is_free: true, original_price: '25.00', price: '0.00' })).toMatchObject(
+    {
+      price: '€0.00',
+      originalPrice: '€25.00',
+      discount: '-100%',
+      is_free: false,
+    },
+  )
 })
 
 test('discover preserves tag-section configuration while mapping its games', async () => {
   fetchMock.mockResolvedValue(
     jsonResponse({
-      featured: null,
+      featured: [],
       sections: [
         {
           id: 'tag-action',
@@ -150,7 +152,7 @@ test('discover preserves tag-section configuration while mapping its games', asy
 test.each([
   ['catalog', () => getGames('', undefined, 'EUR'), [{ ...game, price: false }]],
   ['detail', () => getGame('orbit', undefined, 'EUR'), { ...game, price: false }],
-  ['discover', () => getDiscover('', undefined, 'EUR'), { featured: { ...game, price: false } }],
+  ['discover', () => getDiscover('', undefined, 'EUR'), { featured: [{ ...game, price: false }] }],
   ['search', () => searchGames('orbit', undefined, 'EUR'), [{ ...game, price: false }]],
   ['wishlist', () => getWishlist(), { items: [{ game: { ...game, price: false } }] }],
 ])(

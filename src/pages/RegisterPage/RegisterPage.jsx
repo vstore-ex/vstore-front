@@ -13,7 +13,6 @@ import { passwordValidationError } from '../../utils/passwordValidation'
 import Dialog from '../../components/Dialog/Dialog'
 import chevronLeft from '../../assets/icon-chevron-left.svg'
 import authPanel from '../../assets/auth-panel.png'
-import authQr from '../../assets/auth-qr.png'
 import hcaptchaIcon from '../../assets/hcaptcha-icon.svg'
 import './RegisterPage.css'
 
@@ -441,16 +440,6 @@ function RegisterPage({
                 </p>
               )}
             </div>
-
-            {!isRegister && (
-              <aside className="qr-panel" aria-label="QR code sign in">
-                <p className="qr-panel__title">SIGN IN WITH QRCODE</p>
-                <img className="qr-panel__image" src={authQr} alt="QR code for sign in" />
-                <p className="qr-panel__copy">
-                  Use out app or other means to scan this QRcode and log in into your account
-                </p>
-              </aside>
-            )}
           </form>
         )}
       </div>

@@ -8,10 +8,10 @@ const footerLinks = [
   { label: 'News', href: '#/news' },
   { label: 'Support', href: '#/support' },
   { label: 'Wishlist', href: '#/wishlist' },
-  { label: 'Wallet', href: '#/wallet' },
+  { label: 'Wallet', href: '#/wallet', hideOnDiscover: true },
 ]
 
-function Footer() {
+function Footer({ showWallet = true }) {
   function scrollToTop() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -30,11 +30,13 @@ function Footer() {
             </p>
 
             <nav className="footer-nav" aria-label="Footer navigation">
-              {footerLinks.map(({ label, href }) => (
-                <a href={href} key={label}>
-                  {label}
-                </a>
-              ))}
+              {footerLinks
+                .filter((link) => showWallet || !link.hideOnDiscover)
+                .map(({ label, href }) => (
+                  <a href={href} key={label}>
+                    {label}
+                  </a>
+                ))}
             </nav>
           </div>
 

@@ -339,6 +339,89 @@ function App() {
       </main>
     )
 
+  let showDiscover = false
+  let page
+  if (currentView === 'notFound') {
+    page = <NotFoundPage />
+  } else if (currentView === 'userProfile') {
+    page = (
+      <UserProfilePage
+        key={selectedUserId}
+        id={selectedUserId}
+        onSignIn={() => openAuth('login')}
+      />
+    )
+  } else if (currentView === 'news') {
+    page = <NewsPage />
+  } else if (currentView === 'newsDetail') {
+    page = <NewsDetailPage key={selectedNewsId} id={selectedNewsId} />
+  } else if (currentView === 'forgotPassword') {
+    page = <PasswordResetRequestPage />
+  } else if (
+    [
+      'account',
+      'library',
+      'wallet',
+      'orders',
+      'cart',
+      'wishlist',
+      'notifications',
+      'messages',
+    ].includes(currentView) &&
+    !user
+  ) {
+    page = (
+      <p className="store-status" role="status">
+        Please sign in to continue.
+      </p>
+    )
+  } else if (currentView === 'community') {
+    page = (
+      <CommunityHubPage
+        key={selectedGameId}
+        id={selectedGameId}
+        onSignIn={() => openAuth('login')}
+      />
+    )
+  } else if (['product', 'achievements'].includes(currentView)) {
+    page = (
+      <ProductDetailPage
+        key={selectedGameId}
+        id={selectedGameId}
+        onSignIn={() => openAuth('login')}
+        showAchievements={currentView === 'achievements'}
+        onViewAllAchievements={() => navigateTo(`games/${selectedGameId}/achievements`)}
+      />
+    )
+  } else if (['library', 'orders'].includes(currentView)) {
+    // #/orders stays as an alias for old links; the separate orders list was removed.
+    page = <LibraryPage />
+  } else if (['account', 'wallet'].includes(currentView)) {
+    page = (
+      <AccountPage
+        user={user}
+        onUpdated={updateUser}
+        onPasswordChanged={handlePasswordChanged}
+        onLogoutAll={() => signOut(true)}
+        isLoggingOut={isLoggingOut}
+        focusWallet={currentView === 'wallet'}
+      />
+    )
+  } else if (currentView === 'notifications') {
+    page = <NotificationsPage />
+  } else if (currentView === 'messages') {
+    page = <MessagesPage conversationId={selectedConversationId} />
+  } else if (currentView === 'cart') {
+    page = <CartPage />
+  } else if (currentView === 'wishlist') {
+    page = <WishlistPage />
+  } else if (currentView === 'support') {
+    page = <SupportPage />
+  } else {
+    showDiscover = true
+    page = <DiscoverPage onProductSelect={openGame} />
+  }
+
   return (
     <main className="store-page">
       <Header
@@ -371,73 +454,8 @@ function App() {
           )}
         </div>
       )}
-      {currentView === 'notFound' ? (
-        <NotFoundPage />
-      ) : currentView === 'userProfile' ? (
-        <UserProfilePage
-          key={selectedUserId}
-          id={selectedUserId}
-          onSignIn={() => openAuth('login')}
-        />
-      ) : currentView === 'news' ? (
-        <NewsPage />
-      ) : currentView === 'newsDetail' ? (
-        <NewsDetailPage key={selectedNewsId} id={selectedNewsId} />
-      ) : currentView === 'forgotPassword' ? (
-        <PasswordResetRequestPage />
-      ) : [
-          'account',
-          'library',
-          'wallet',
-          'orders',
-          'cart',
-          'wishlist',
-          'notifications',
-          'messages',
-        ].includes(currentView) && !user ? (
-        <p className="store-status" role="status">
-          Please sign in to continue.
-        </p>
-      ) : currentView === 'community' ? (
-        <CommunityHubPage
-          key={selectedGameId}
-          id={selectedGameId}
-          onSignIn={() => openAuth('login')}
-        />
-      ) : ['product', 'achievements'].includes(currentView) ? (
-        <ProductDetailPage
-          key={selectedGameId}
-          id={selectedGameId}
-          onSignIn={() => openAuth('login')}
-          showAchievements={currentView === 'achievements'}
-          onViewAllAchievements={() => navigateTo(`games/${selectedGameId}/achievements`)}
-        />
-      ) : ['library', 'orders'].includes(currentView) ? (
-        // #/orders stays as an alias for old links; the separate orders list was removed.
-        <LibraryPage />
-      ) : ['account', 'wallet'].includes(currentView) ? (
-        <AccountPage
-          user={user}
-          onUpdated={updateUser}
-          onPasswordChanged={handlePasswordChanged}
-          onLogoutAll={() => signOut(true)}
-          isLoggingOut={isLoggingOut}
-          focusWallet={currentView === 'wallet'}
-        />
-      ) : currentView === 'notifications' ? (
-        <NotificationsPage />
-      ) : currentView === 'messages' ? (
-        <MessagesPage conversationId={selectedConversationId} />
-      ) : currentView === 'cart' ? (
-        <CartPage />
-      ) : currentView === 'wishlist' ? (
-        <WishlistPage />
-      ) : currentView === 'support' ? (
-        <SupportPage />
-      ) : (
-        <DiscoverPage onProductSelect={openGame} />
-      )}
-      <Footer />
+      {page}
+      <Footer showWallet={!showDiscover} />
       {(authMode || currentView === 'login') && !isLoggingOut && (
         <RegisterPage
           initialMode={authMode || 'login'}
