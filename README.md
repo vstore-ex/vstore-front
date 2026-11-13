@@ -165,6 +165,8 @@ Coverage is scoped to the modules under test and is not a whole-application cove
 commands are local; CI integration from #65 remains pending. The existing Playwright
 `test:e2e` command is unchanged and has its own running-app requirements.
 
+[Владельцы компонентов и порядок выбора reviewer](https://github.com/vstore-ex/Docs/blob/main/CONTRIBUTING.md).
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:

@@ -1,8 +1,9 @@
 # Code ownership for vstore-front.
 #
-# These rules identify the people who should review a PR. GitHub will enforce
-# them only when the main branch ruleset enables "Require review from Code
-# Owners" and direct pushes to main are disabled.
+# Reference only on GitHub Free/private; request review manually.
+# Roles and confirmation status:
+# https://github.com/vstore-ex/Docs/blob/main/CONTRIBUTING.md
+# No automatic owner review or merge enforcement is assumed.
 
 # Product ownership: storefront source, assets and documentation.
 *                           @alex-vitup @leskovivan
