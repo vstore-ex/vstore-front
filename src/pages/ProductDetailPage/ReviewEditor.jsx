@@ -47,7 +47,12 @@ export default function ReviewEditor({ gameId, review, onSaved, onCancel, onDupl
     }
   }
   return (
-    <form className="review-editor" onSubmit={submit} aria-busy={busy}>
+    <form
+      className="review-editor"
+      aria-label={review ? 'Edit your review' : 'Write a review'}
+      onSubmit={submit}
+      aria-busy={busy}
+    >
       <fieldset disabled={busy || duplicate}>
         <legend>Your verdict</legend>
         <label>
