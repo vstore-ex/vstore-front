@@ -221,6 +221,14 @@ a.notification-item__main:hover {
   background: transparent;
   cursor: pointer;
 }
+.notification-panel .notification-read-button {
+  align-self: center;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
+  margin: 0 8px 0 0;
+}
 .notification-panel .notification-read-button:hover:not(:disabled),
 .notification-panel .notification-settings-toggle:hover {
   color: var(--color-accent);
@@ -236,6 +244,12 @@ a.notification-item__main:hover {
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 2;
+}
+.notification-read-button svg {
+  display: block;
+  width: 28px;
+  height: 28px;
+  stroke-width: 2.5;
 }
 .notification-settings-toggle[aria-expanded='true'] {
   color: var(--color-accent);
