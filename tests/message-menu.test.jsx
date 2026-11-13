@@ -74,23 +74,37 @@ test('pressing the menu trigger again closes it without deleting', async () => {
   expect(onDelete).not.toHaveBeenCalled()
 })
 
-test('text selection preserves the native Copy context menu', () => {
-  setup()
+test('text selection inside this bubble preserves the native Copy menu, while outside selection does not block it', () => {
+  render(
+    <div>
+      <p>Outside text</p>
+      <MessageBubble canManage onDelete={vi.fn()}>
+        <p>Hello</p>
+      </MessageBubble>
+    </div>,
+  )
   const text = screen.getByText('Hello')
+  const outside = screen.getByText('Outside text')
   const selection = window.getSelection()
   const range = document.createRange()
-  range.selectNodeContents(text)
-  selection.removeAllRanges()
-  selection.addRange(range)
   try {
+    range.selectNodeContents(text)
+    selection.removeAllRanges()
+    selection.addRange(range)
     expect(fireEvent.contextMenu(text)).toBe(true)
     expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+
+    range.selectNodeContents(outside)
+    selection.removeAllRanges()
+    selection.addRange(range)
+    fireEvent.contextMenu(text, { clientX: 100, clientY: 100 })
+    expect(screen.getByRole('menu')).toBeInTheDocument()
   } finally {
     selection.removeAllRanges()
   }
 })
 
-test('images and links preserve their native context menus; ellipsis still offers Delete', async () => {
+test('images and links preserve native mouse and keyboard context menus; ellipsis still offers Delete', async () => {
   const user = userEvent.setup()
   const onDelete = vi.fn()
   render(
@@ -99,8 +113,12 @@ test('images and links preserve their native context menus; ellipsis still offer
       <a href="https://example.com">Attachment link</a>
     </MessageBubble>,
   )
-  expect(fireEvent.contextMenu(screen.getByRole('img'))).toBe(true)
-  expect(fireEvent.contextMenu(screen.getByRole('link'))).toBe(true)
+  const img = screen.getByRole('img')
+  const link = screen.getByRole('link')
+  expect(fireEvent.contextMenu(img)).toBe(true)
+  expect(fireEvent.contextMenu(link)).toBe(true)
+  expect(fireEvent.keyDown(link, { key: 'F10', shiftKey: true })).toBe(true)
+  expect(fireEvent.keyDown(img, { key: 'ContextMenu' })).toBe(true)
   expect(screen.queryByRole('menu')).not.toBeInTheDocument()
   await user.click(screen.getByRole('button', { name: 'Message actions' }))
   await user.click(screen.getByRole('menuitem', { name: 'Delete message' }))
@@ -134,4 +152,22 @@ test('unrelated scroll, chat autoscroll and mobile keyboard resize keep the menu
   fireEvent.resize(window)
   expect(screen.getByRole('menu')).toBeInTheDocument()
   expect(remove).toHaveFocus()
+})
+
+test('clears open menu and returns focus to the bubble if canManage becomes false', async () => {
+  const user = userEvent.setup()
+  const { rerender } = render(
+    <MessageBubble canManage onDelete={vi.fn()} data-testid="bubble">
+      <p>Hello</p>
+    </MessageBubble>,
+  )
+  await user.click(screen.getByRole('button', { name: 'Message actions' }))
+  expect(screen.getByRole('menu')).toBeInTheDocument()
+  rerender(
+    <MessageBubble canManage={false} onDelete={vi.fn()} data-testid="bubble">
+      <p>Hello</p>
+    </MessageBubble>,
+  )
+  expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+  expect(screen.getByTestId('bubble')).toHaveFocus()
 })

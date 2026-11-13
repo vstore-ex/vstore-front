@@ -8,7 +8,7 @@ const footerLinks = [
   { label: 'News', href: '#/news' },
   { label: 'Support', href: '#/support' },
   { label: 'Wishlist', href: '#/wishlist' },
-  { label: 'Wallet', href: '#/wallet' },
+  { label: 'Wallet', href: '#/wallet', hideOnDiscover: true },
 ]
 
 function Footer({ showWallet = true }) {
@@ -31,7 +31,7 @@ function Footer({ showWallet = true }) {
 
             <nav className="footer-nav" aria-label="Footer navigation">
               {footerLinks
-                .filter(({ href }) => showWallet || href !== '#/wallet')
+                .filter((link) => showWallet || !link.hideOnDiscover)
                 .map(({ label, href }) => (
                   <a href={href} key={label}>
                     {label}

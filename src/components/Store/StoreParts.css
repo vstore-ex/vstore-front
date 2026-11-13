@@ -42,7 +42,7 @@
   --carousel-gap: 12px;
   margin-top: 34px;
 }
-.store-carousel__viewport:has(> .store-carousel__arrow) {
+.store-carousel__viewport--paged {
   display: grid;
   grid-template-columns: 32px minmax(0, 1fr) 32px;
   align-items: center;
@@ -290,7 +290,7 @@
 
 @media (max-width: 680px) {
   /* Swipe and page dots keep navigation available without narrowing the cards. */
-  .store-carousel__viewport:has(> .store-carousel__arrow) {
+  .store-carousel__viewport--paged {
     display: block;
   }
   .store-carousel .store-carousel__arrow {

@@ -490,27 +490,25 @@ function DiscoverContent({ onProductSelect }) {
                 {pagination}
               </div>
               {!filters.free && (
-                <div className="store-search__filter-slot">
-                  <aside className="store-search__filters" aria-label="Narrow by tag">
-                    <h2>Narrow by tag</h2>
-                    <ResourceStatus resource={tags} label="tags" />
-                    <div className="catalog-tags" aria-label="Filter games by tag">
-                      <button type="button" aria-pressed={!filters.tag} onClick={() => navigate(1)}>
-                        All tags
+                <aside className="store-search__filters" aria-label="Narrow by tag">
+                  <h2>Narrow by tag</h2>
+                  <ResourceStatus resource={tags} label="tags" />
+                  <div className="catalog-tags" aria-label="Filter games by tag">
+                    <button type="button" aria-pressed={!filters.tag} onClick={() => navigate(1)}>
+                      All tags
+                    </button>
+                    {tags.data?.map((tag) => (
+                      <button
+                        type="button"
+                        key={tag.id}
+                        aria-pressed={filters.tag === String(tag.id)}
+                        onClick={() => navigate(1, String(tag.id))}
+                      >
+                        {tag.name}
                       </button>
-                      {tags.data?.map((tag) => (
-                        <button
-                          type="button"
-                          key={tag.id}
-                          aria-pressed={filters.tag === String(tag.id)}
-                          onClick={() => navigate(1, String(tag.id))}
-                        >
-                          {tag.name}
-                        </button>
-                      ))}
-                    </div>
-                  </aside>
-                </div>
+                    ))}
+                  </div>
+                </aside>
               )}
             </div>
           </section>

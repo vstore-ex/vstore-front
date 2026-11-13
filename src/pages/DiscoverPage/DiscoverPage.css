@@ -487,19 +487,13 @@ a.store-update:hover {
 .store-search__results {
   min-width: 0;
 }
-.store-search__filter-slot {
-  position: relative;
-  align-self: stretch;
-  min-height: 240px;
-}
 .store-search__filters {
-  position: absolute;
-  inset: 0;
-  height: 100%;
+  position: sticky;
+  top: calc(var(--store-header-height, 64px) + 16px);
   display: flex;
   flex-direction: column;
   min-height: 0;
-  max-height: min(560px, calc(100dvh - var(--store-header-height, 64px) - 32px));
+  max-height: calc(100dvh - var(--store-header-height, 64px) - 32px);
   padding: var(--space-4);
   background: var(--color-surface-raised);
 }
@@ -569,9 +563,10 @@ a.store-update:hover {
   .store-search {
     grid-template-columns: minmax(0, 1fr);
   }
-  .store-search__filter-slot {
+  .store-search__filters {
+    position: static;
     order: -1;
-    height: 280px;
+    max-height: 280px;
   }
   .store-search__filters .catalog-tags {
     flex-direction: row;

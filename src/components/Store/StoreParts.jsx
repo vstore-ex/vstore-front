@@ -143,7 +143,11 @@ export function Carousel({
           {action}
         </header>
       )}
-      <div className="store-carousel__viewport">
+      <div
+        className={
+          'store-carousel__viewport' + (pages > 1 ? ' store-carousel__viewport--paged' : '')
+        }
+      >
         {pages > 1 && (
           <button
             type="button"
