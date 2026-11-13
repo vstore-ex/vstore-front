@@ -1,0 +1,21 @@
+﻿.collection-empty {
+  width: 100%;
+  margin-top: 19px;
+  border-radius: 7px;
+  padding: clamp(24px, 4vw, 38px);
+  background: var(--color-control);
+}
+.collection-empty h2 {
+  margin: 0 0 8px;
+  color: var(--color-text);
+  font-size: 26px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+.collection-empty a {
+  color: var(--color-text);
+  text-underline-offset: 3px;
+}
+.collection-empty a:hover {
+  color: var(--color-accent);
+}

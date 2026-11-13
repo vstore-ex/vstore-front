@@ -339,7 +339,6 @@ function App() {
       </main>
     )
 
-  let showDiscover = false
   let page
   if (currentView === 'notFound') {
     page = <NotFoundPage />
@@ -418,7 +417,6 @@ function App() {
   } else if (currentView === 'support') {
     page = <SupportPage />
   } else {
-    showDiscover = true
     page = <DiscoverPage onProductSelect={openGame} />
   }
 
@@ -455,7 +453,7 @@ function App() {
         </div>
       )}
       {page}
-      <Footer showWallet={!showDiscover} />
+      {currentView !== 'messages' && <Footer />}
       {(authMode || currentView === 'login') && !isLoggingOut && (
         <RegisterPage
           initialMode={authMode || 'login'}

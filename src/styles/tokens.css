@@ -44,7 +44,7 @@
     background-color var(--duration-fast) var(--ease-standard),
     border-color var(--duration-fast) var(--ease-standard);
 
-  --font-body: 'Manrope Variable', Arial, sans-serif;
+  --font-body: 'VStore Futura', 'Manrope Variable', Arial, sans-serif;
   --font-control: var(--font-body);
   --control-height: 44px;
   --control-choice-size: 20px;

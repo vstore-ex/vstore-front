@@ -363,26 +363,6 @@
   background: var(--color-accent);
 }
 
-.wishlist-empty {
-  margin-top: 19px;
-  border-radius: 7px;
-  padding: 38px;
-  background: var(--color-control);
-}
-
-.wishlist-empty h2 {
-  margin: 0 0 8px;
-  color: var(--color-text);
-  font-size: 26px;
-  font-weight: 800;
-}
-
-.wishlist-empty p {
-  margin: 0;
-  color: rgba(238, 238, 238, 0.72);
-  font-size: 16px;
-}
-
 .wishlist-sort button:hover,
 .wishlist-sort button:focus-visible,
 .wishlist-item__remove:hover,

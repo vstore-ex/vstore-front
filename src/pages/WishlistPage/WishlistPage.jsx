@@ -1,3 +1,4 @@
+import CollectionEmptyState from '../../components/CollectionEmptyState'
 import { useEffect, useRef, useState } from 'react'
 import { useWishlist } from '../../wishlist/context'
 import { useCart } from '../../cart/context'
@@ -70,10 +71,7 @@ export default function WishlistPage() {
           </p>
         )}
         {!wishlist.loading && !wishlist.error && !wishlist.count && (
-          <section className="wishlist-empty">
-            <h2>Your wishlist is empty</h2>
-            <a href="#/discover">Browse the catalog</a>
-          </section>
+          <CollectionEmptyState className="wishlist-empty" title="Your wishlist is empty" />
         )}
         <section className="wishlist-list" aria-label="Wishlist items">
           {wishlist.items.map((item) => (
