@@ -137,11 +137,7 @@ function ProductDetails({ game, onViewAllAchievements, onSignIn }) {
             )}
           </div>
           <aside className="product-side-column" aria-label="Game details">
-            <ProductAgeRating
-              value={game.rating}
-              image={presentation.ratingImage}
-              description={presentation.ratingDescription}
-            />
+            <ProductAgeRating value={game.rating} description={presentation.ratingDescription} />
             <ProductAchievements id={game.id} onViewAll={onViewAllAchievements} />
           </aside>
         </div>
