@@ -44,7 +44,7 @@ jobs:
   build-docker:
     name: Build & Push Docker Image
     needs: [build]
-    uses: vstore-ex/vstore-infra/.github/workflows/build-and-push.yml@main
+    uses: vstore-ex/vstore-infra/.github/workflows/build-and-push.yml@30ce812110f4ace39fd9dcdc999390a0dc88a54a # pinned: SSH key only reaches reviewed code
     with:
       no-cache-filters: runtime
     permissions:
@@ -55,7 +55,7 @@ jobs:
     name: Deploy Frontend via SSH
     needs: [build-docker]
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-    uses: vstore-ex/vstore-infra/.github/workflows/deploy-service.yml@main
+    uses: vstore-ex/vstore-infra/.github/workflows/deploy-service.yml@30ce812110f4ace39fd9dcdc999390a0dc88a54a # pinned: SSH key only reaches reviewed code
     permissions:
       contents: read
     with:
