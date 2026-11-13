@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # Stage 1: Build the React / Vite SPA static bundle
 # -----------------------------------------------------------------------------
-FROM node:22-alpine AS builder
+FROM node:22-alpine@sha256:5b05da3f938f1c604b24c633646d48805a6667f378cb4908438616f3cc48a0bf AS builder
 
 WORKDIR /app
 
@@ -22,7 +22,7 @@ RUN npm run build
 # -----------------------------------------------------------------------------
 # Stage 2: Serve production assets via unprivileged (non-root) Nginx
 # -----------------------------------------------------------------------------
-FROM nginxinc/nginx-unprivileged:1.27-alpine AS runtime
+FROM nginxinc/nginx-unprivileged:1.27-alpine@sha256:65e3e85dbaed8ba248841d9d58a899b6197106c23cb0ff1a132b7bfe0547e4c0 AS runtime
 
 # Patch alpine base packages at build time: the base tag carries a frozen
 # apk snapshot (alpine 3.21.3) with fixable HIGH/CRITICAL CVEs; without this
