@@ -177,19 +177,30 @@ function ReviewFeed({ id, isFree = false, onSignIn }) {
         )}
         {alreadyReviewed ? (
           <p role="status">You already left a review for this game.</p>
-        ) : canReview ? (
+        ) : canReview && !writing ? (
           <button
-            className="product-text-button"
+            className="product-action product-action--accent review-compose__trigger"
             type="button"
             disabled={feed.loading}
             onClick={() => {
-              setWriting((value) => !value)
+              setWriting(true)
               setNotice('')
             }}
           >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m15 5 4 4M4 20l4-1L20 7a2.8 2.8 0 0 0-4-4L4 15l-1 6Z" />
+            </svg>
             Write a review
           </button>
-        ) : isAuthenticated && !orders?.loading ? (
+        ) : isAuthenticated && !canReview && !orders?.loading ? (
           <p className="review-ownership-hint" role="status">
             You must own this game in your library to write a review.
           </p>

@@ -1,5 +1,3 @@
-import { mediaUrl } from './catalog'
-
 // Optional presentation metadata lives in GameOut.meta_info (a JSON string).
 // Plain-text meta_info remains readable as additional information.
 export function productPresentation(game) {
@@ -25,7 +23,6 @@ export function productPresentation(game) {
         .find((p) => p.trim() && !/^\s*[#!]/.test(p)) ||
       '',
     releaseDate: text(meta.release_date),
-    ratingImage: mediaUrl(meta.rating_image_url),
     ratingDescription: text(meta.rating_description),
     additional: structured ? text(meta.additional_information) : text(game.meta_info),
     reviewSummary:

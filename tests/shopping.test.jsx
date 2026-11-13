@@ -208,7 +208,7 @@ describe('authenticated cart and header', () => {
     expect(header().queryByLabelText(/items in cart/)).not.toBeInTheDocument()
   })
 
-  test('reconciles a duplicate add from another session and displays the server error', async () => {
+  test('reconciles a duplicate add from another session into a cart link', async () => {
     const user = userEvent.setup()
     render(<Shop />)
     await ready()
@@ -217,7 +217,9 @@ describe('authenticated cart and header', () => {
     await user.click(gameActions().getByRole('button', { name: 'Add to cart' }))
     expect(await screen.findByRole('heading', { name: 'Orbit' })).toBeInTheDocument()
     expect(header().getByLabelText('1 items in cart')).toBeInTheDocument()
-    expect(gameActions().getByRole('alert')).toHaveTextContent('This game is already in your cart.')
+    expect(gameActions().getByRole('link', { name: 'View cart' })).toHaveAttribute('href', '#/cart')
+    expect(gameActions().queryByRole('alert')).not.toBeInTheDocument()
+    expect(gameActions().queryByRole('button', { name: 'Add to cart' })).not.toBeInTheDocument()
   })
 })
 
