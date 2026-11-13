@@ -439,7 +439,7 @@ describe('private message routes', () => {
   })
 })
 
-test('footer hides Wallet only on Discover (including #/login overlay) and restores it on other routes', async () => {
+test('footer never shows Wallet on Discover, login or Library', async () => {
   window.location.hash = '#/discover'
   render(<Store initialStatus="authenticated" />)
   await screen.findByRole('heading', { name: 'All games' })
@@ -453,10 +453,26 @@ test('footer hides Wallet only on Discover (including #/login overlay) and resto
     window.location.hash = '#/library'
   })
   await screen.findByRole('heading', { name: 'Your library' })
-  expect(footer.querySelector('a[href="#/wallet"]')).not.toBeNull()
+  expect(footer.querySelector('a[href="#/wallet"]')).toBeNull()
   await act(async () => {
     window.location.hash = '#/discover'
   })
   await screen.findByRole('heading', { name: 'All games' })
   expect(footer.querySelector('a[href="#/wallet"]')).toBeNull()
 })
+
+test.each(['#/messages', '#/messages/12'])(
+  'Messages has no footer at %s; leaving restores the footer without Wallet',
+  async (hash) => {
+    window.location.hash = hash
+    render(<Store initialStatus="authenticated" />)
+    await screen.findByRole('heading', { name: /^Messages / })
+    expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument()
+    await act(async () => {
+      window.location.hash = '#/library'
+    })
+    await screen.findByRole('heading', { name: 'Your library' })
+    expect(screen.getByRole('contentinfo')).toBeInTheDocument()
+    expect(document.querySelector('.store-footer a[href="#/wallet"]')).toBeNull()
+  },
+)

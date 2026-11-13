@@ -1,3 +1,4 @@
+import CollectionEmptyState from '../../components/CollectionEmptyState'
 import { useEffect, useRef, useState } from 'react'
 import { useCart } from '../../cart/context'
 import { cartError, formatMoney } from '../../api/cart'
@@ -286,10 +287,7 @@ export default function CartPage() {
           </div>
         )}
         {!cart.loading && !cart.error && !cart.count && (
-          <section className="cart-empty">
-            <h2>Your cart is empty</h2>
-            <a href="#/discover">Browse the catalog</a>
-          </section>
+          <CollectionEmptyState className="cart-empty" title="Your cart is empty" />
         )}
         {!!cart.count && (
           <div className="cart-layout">

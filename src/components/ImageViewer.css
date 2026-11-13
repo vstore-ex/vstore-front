@@ -24,12 +24,21 @@
   place-items: center;
   width: 44px;
   height: 44px;
+  padding: 0;
   border: 1px solid rgba(255, 255, 255, 0.35);
   border-radius: 22px;
   background: rgba(20, 24, 28, 0.8);
   color: #fff;
-  font-size: 20px;
-  line-height: 1;
+}
+.lightbox-button svg {
+  display: block;
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .lightbox-button:disabled {
   opacity: 0.35;
@@ -37,13 +46,11 @@
 .lightbox-close {
   top: 16px;
   right: 16px;
-  font-size: 26px;
 }
 .lightbox-nav {
   top: 50%;
   left: 16px;
-  margin-top: -22px;
-  font-size: 30px;
+  transform: translateY(-50%);
 }
 .lightbox-nav--next {
   left: auto;

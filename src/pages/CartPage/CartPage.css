@@ -220,27 +220,6 @@
   font-size: 12px;
 }
 
-.cart-empty {
-  width: min(821px, 100%);
-  margin-top: 34px;
-  border-radius: 7px;
-  padding: 38px;
-  background: var(--color-control);
-}
-
-.cart-empty h2 {
-  margin: 0 0 8px;
-  color: var(--color-text);
-  font-size: 26px;
-  font-weight: 800;
-}
-
-.cart-empty p {
-  margin: 0;
-  color: rgba(238, 238, 238, 0.72);
-  font-size: 16px;
-}
-
 .cart-item__actions button:hover,
 .cart-item__actions button:focus-visible {
   color: var(--color-accent);

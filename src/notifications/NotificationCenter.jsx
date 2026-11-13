@@ -168,7 +168,7 @@ export default function NotificationCenter() {
                           onClick={() => void markAsRead([notification.id])}
                         >
                           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                            <path d="M5 12.5l4.5 4.5L19 7.5" />
+                            <path d="M4 12l5 5L20 7" />
                           </svg>
                         </button>
                       )}
