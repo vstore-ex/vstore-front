@@ -21,18 +21,18 @@ function setup(layout) {
   )
 }
 
-test('admin featured list survives the real API adapter in order and deduplicates section games', async () => {
+test('admin featured list renders only admin-selected featured games in order', async () => {
   const { container } = setup({
-    featured,
+    featured: [featured[0], featured[1], featured[1]],
     sections: [{ title: 'Recommended', games: [featured[1], game(3, 'Section game')] }],
   })
   await screen.findByRole('region', { name: 'Featured & Recommended' })
-  await waitFor(() => expect(container.querySelectorAll('.store-featured__slide')).toHaveLength(3))
+  await waitFor(() => expect(container.querySelectorAll('.store-featured__slide')).toHaveLength(2))
   expect(
     Array.from(container.querySelectorAll('.store-featured__slide'), (node) =>
       node.getAttribute('aria-label'),
     ),
-  ).toEqual(['Admin first', 'Admin second', 'Section game'])
+  ).toEqual(['Admin first', 'Admin second'])
 })
 
 test('featured games render even without any sections', async () => {
@@ -42,8 +42,11 @@ test('featured games render even without any sections', async () => {
   expect(screen.getByRole('article', { name: 'Admin second' })).toBeInTheDocument()
 })
 
-test('an empty featured list falls back to the catalog when no sections are configured', async () => {
-  setup({ featured: [], sections: [] })
-  await screen.findByRole('heading', { name: 'All games' })
+test('an empty featured list omits the carousel even when sections exist', async () => {
+  setup({
+    featured: [],
+    sections: [{ title: 'Recommended', games: [game(3, 'Section game')] }],
+  })
+  await screen.findByRole('tab', { name: 'Recommended' })
   expect(screen.queryByRole('region', { name: 'Featured & Recommended' })).not.toBeInTheDocument()
 })
