@@ -10,6 +10,7 @@ import { productPresentation } from '../../api/product'
 import { ProductMarkdown, ExpandableContent, Requirements } from './ProductContent'
 import ProductAchievements from './ProductAchievements'
 import ProductReviews from './ProductReviews'
+import ProductAgeRating from './ProductAgeRating'
 import '../../components/Catalog/Catalog.css'
 import './ProductDetailPage.css'
 import NotFoundPage from '../NotFoundPage/NotFoundPage'
@@ -136,19 +137,11 @@ function ProductDetails({ game, onViewAllAchievements, onSignIn }) {
             )}
           </div>
           <aside className="product-side-column" aria-label="Game details">
-            {game.rating && (
-              <div className="product-rating">
-                {presentation.ratingImage ? (
-                  <MediaImage src={presentation.ratingImage} alt={game.rating} />
-                ) : (
-                  <strong className="product-rating__badge">{game.rating}</strong>
-                )}
-                <div>
-                  <strong>{game.rating}</strong>
-                  {presentation.ratingDescription && <span>{presentation.ratingDescription}</span>}
-                </div>
-              </div>
-            )}
+            <ProductAgeRating
+              value={game.rating}
+              image={presentation.ratingImage}
+              description={presentation.ratingDescription}
+            />
             <ProductAchievements id={game.id} onViewAll={onViewAllAchievements} />
           </aside>
         </div>
