@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # Stage 1: Build the React / Vite SPA static bundle
 # -----------------------------------------------------------------------------
-FROM node:22-alpine@sha256:5b05da3f938f1c604b24c633646d48805a6667f378cb4908438616f3cc48a0bf AS builder
+FROM node:26-alpine@sha256:6bd9ab43c0ec0190ca7b2d193906cb8b7edf6e7f4afa43ddeccd6452710bffb5 AS builder
 
 WORKDIR /app
 
